@@ -19,5 +19,9 @@ class DatabaseSeeder extends Seeder
             SettingSeeder::class,
             AdminUserSeeder::class,
         ]);
+
+        if (config('matchpoint.demo.enabled')) {
+            $this->call(DemoSeeder::class);
+        }
     }
 }

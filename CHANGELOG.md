@@ -6,6 +6,9 @@ El formato sigue Keep a Changelog y el proyecto utiliza versionado semántico.
 
 ### Added
 
+- Seeder idempotente de demostración con jugadores, equipos y tres escenarios competitivos completos.
+- Guía reproducible de cuentas, datos de prueba y recorrido funcional local.
+- Manual operativo con matriz de roles, casos de uso paso a paso, rutas y resolución de errores.
 - Laravel 12 con PHP 8.4, Bootstrap 5 y Vite.
 - Autenticación, recuperación de contraseña y perfil.
 - Administración de usuarios y roles mediante Policies.

@@ -12,4 +12,7 @@ return [
     'registrations' => [
         'queue_threshold_bytes' => (int) env('MATCHPOINT_IMPORT_QUEUE_THRESHOLD_BYTES', 524288),
     ],
+    'demo' => [
+        'enabled' => (bool) env('MATCHPOINT_SEED_DEMO', false),
+    ],
 ];

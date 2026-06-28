@@ -21,6 +21,8 @@ MatchPoint es una aplicación Laravel para administrar torneos competitivos de v
 
 Consulta [Núcleo](docs/modules/00-core-identity.md), [Jugadores](docs/modules/01-players.md), [Equipos](docs/modules/02-teams.md), [Torneos](docs/modules/03-tournaments.md), [Inscripciones](docs/modules/04-registrations.md), [Sorteo](docs/modules/05-draw-seeding.md), [Llaves](docs/modules/06-brackets.md), [Resultados](docs/modules/07-match-results.md), [Estadísticas](docs/modules/08-statistics-champions.md), [Dashboard](docs/modules/09-dashboard.md), [Grupos y liga](docs/modules/10-groups-leagues.md), [Reportes](docs/modules/11-reports.md) y [la arquitectura](docs/architecture.md).
 
+El recorrido funcional completo por roles, casos de uso y rutas está disponible en la [Guía de casos de uso](docs/user-guide-use-cases.md).
+
 ## Requisitos
 
 - PHP 8.4 con `bcmath`, `ctype`, `curl`, `dom`, `fileinfo`, `mbstring`, `openssl`, `pdo_mysql`, `tokenizer`, `xml` y `zip`.
@@ -69,6 +71,16 @@ php artisan storage:link
 npm run build
 php artisan serve
 ```
+
+### Demostración local
+
+Carga jugadores, equipos, torneos, grupos, resultados y un campeón reproducible:
+
+```bash
+php artisan db:seed --class=DemoSeeder
+```
+
+Inicia sesión con `admin@example.com` y `ChangeMe!123`. El inventario completo de cuentas, escenarios y el recorrido funcional está documentado en [docs/demo-data.md](docs/demo-data.md).
 
 En desarrollo también puedes ejecutar servidor, cola, logs y Vite juntos:
 
