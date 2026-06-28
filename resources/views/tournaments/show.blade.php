@@ -1,0 +1,137 @@
+@extends('layouts.app')
+
+@section('title', $tournament->name)
+
+@section('content')
+    <x-page-header :title="$tournament->name" :subtitle="$tournament->gameLabel()">
+        <div class="d-flex flex-wrap gap-2">
+            @can('viewRegistrations', $tournament)
+                <a class="btn btn-outline-primary" href="{{ route('tournaments.registrations.index', $tournament) }}">
+                    Inscripciones
+                </a>
+            @endcan
+
+            @if (in_array($tournament->format, [App\Enums\TournamentFormat::RoundRobin, App\Enums\TournamentFormat::League, App\Enums\TournamentFormat::GroupsKnockout], true))
+                @can('viewGroups', $tournament)
+                    <a class="btn btn-outline-primary" href="{{ route('tournaments.groups.show', $tournament) }}">Grupos y calendario</a>
+                @endcan
+            @endif
+
+            @if (in_array($tournament->format, [App\Enums\TournamentFormat::SingleElimination, App\Enums\TournamentFormat::DoubleElimination], true))
+                @can('viewDraw', $tournament)
+                    <a class="btn btn-outline-primary" href="{{ route('tournaments.draws.show', $tournament) }}">Sorteo y llave</a>
+                @endcan
+            @endif
+
+            @can('duplicate', $tournament)
+                <form method="post" action="{{ route('tournaments.duplicate', $tournament) }}">
+                    @csrf
+                    <button class="btn btn-outline-secondary">Duplicar</button>
+                </form>
+            @endcan
+
+            @if (in_array($tournament->status, [App\Enums\TournamentStatus::Draft, App\Enums\TournamentStatus::Registration], true))
+                @can('update', $tournament)
+                    <a class="btn btn-primary" href="{{ route('tournaments.edit', $tournament) }}">Editar</a>
+                @endcan
+            @endif
+        </div>
+    </x-page-header>
+
+    <x-field-error name="status" />
+    <x-field-error name="tournament" />
+
+    <div class="mp-card p-4 mb-4">
+        <div class="d-flex flex-wrap justify-content-between gap-3 mb-4">
+            <div>
+                <span class="badge {{ $tournament->status->badgeClass() }} mb-2">
+                    {{ $tournament->status->label() }}
+                </span>
+                <p class="mp-muted mb-0">{{ $tournament->description ?: 'Sin descripción.' }}</p>
+            </div>
+            <div class="text-end">
+                <div class="mp-muted small">Inicio</div>
+                <strong>{{ $tournament->starts_at->format('d/m/Y H:i') }}</strong>
+            </div>
+        </div>
+
+        <div class="mp-status-flow">
+            @foreach (App\Enums\TournamentStatus::cases() as $status)
+                <span class="mp-status-step {{ $tournament->status === $status ? 'active' : '' }}">
+                    {{ $status->label() }}
+                </span>
+                @if (! $loop->last)
+                    <span class="mp-muted">→</span>
+                @endif
+            @endforeach
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        @foreach ([
+            ['Modalidad', $tournament->participant_type->label()],
+            ['Formato', $tournament->format->label()],
+            ['Cupos', $tournament->max_participants],
+            ['Serie', $tournament->best_of->label()],
+        ] as [$label, $value])
+            <div class="col-sm-6 col-xl-3">
+                <div class="mp-card p-4 h-100">
+                    <div class="mp-muted small mb-2">{{ $label }}</div>
+                    <div class="h5 fw-bold mb-0">{{ $value }}</div>
+                </div>
+            </div>
+        @endforeach
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="mp-card p-4">
+                <h2 class="h5 fw-bold mb-3">Calendario</h2>
+                <dl class="row mb-0">
+                    <dt class="col-sm-6">Inicio de inscripciones</dt>
+                    <dd class="col-sm-6">{{ $tournament->registration_starts_at?->format('d/m/Y H:i') ?? 'Por definir' }}</dd>
+                    <dt class="col-sm-6">Fin de inscripciones</dt>
+                    <dd class="col-sm-6">{{ $tournament->registration_ends_at?->format('d/m/Y H:i') ?? 'Por definir' }}</dd>
+                    <dt class="col-sm-6">Inicio del torneo</dt>
+                    <dd class="col-sm-6">{{ $tournament->starts_at->format('d/m/Y H:i') }}</dd>
+                    <dt class="col-sm-6">Final estimada</dt>
+                    <dd class="col-sm-6">{{ $tournament->ends_at?->format('d/m/Y H:i') ?? 'Por definir' }}</dd>
+                    <dt class="col-sm-6">Creado por</dt>
+                    <dd class="col-sm-6">{{ $tournament->creator?->name ?? 'Sistema' }}</dd>
+                </dl>
+            </div>
+        </div>
+
+        @can('update', $tournament)
+            <div class="col-lg-5">
+                <div class="mp-card p-4 mb-4">
+                    <h2 class="h5 fw-bold">Cambiar estado</h2>
+                    <p class="mp-muted">Sólo se muestran transiciones válidas desde el estado actual.</p>
+
+                    @forelse ($transitions as $transition)
+                        <form class="d-inline-block me-1 mb-2" method="post" action="{{ route('tournaments.status', $tournament) }}">
+                            @csrf
+                            @method('PATCH')
+                            <input type="hidden" name="status" value="{{ $transition->value }}">
+                            <button class="btn btn-outline-primary">{{ $transition->label() }}</button>
+                        </form>
+                    @empty
+                        <div class="alert alert-secondary mb-0">Este estado no admite más transiciones.</div>
+                    @endforelse
+                </div>
+
+                @can('delete', $tournament)
+                    <div class="mp-card p-4 border-danger">
+                        <h2 class="h5 fw-bold text-danger">Zona de riesgo</h2>
+                        <p class="mp-muted">Sólo pueden eliminarse borradores y torneos cancelados.</p>
+                        <form method="post" action="{{ route('tournaments.destroy', $tournament) }}" data-confirm="¿Eliminar definitivamente este torneo?">
+                            @csrf
+                            @method('DELETE')
+                            <button class="btn btn-outline-danger w-100">Eliminar torneo</button>
+                        </form>
+                    </div>
+                @endcan
+            </div>
+        @endcan
+    </div>
+@endsection

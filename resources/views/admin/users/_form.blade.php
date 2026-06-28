@@ -1,0 +1,10 @@
+@php($selectedRoles = old('roles', isset($user) ? $user->roles->pluck('id')->all() : []))
+<div class="row g-3">
+    <div class="col-md-6"><label class="form-label" for="name">Nombre completo</label><input class="form-control" id="name" name="name" value="{{ old('name', $user->name ?? '') }}" required maxlength="120"><x-field-error name="name" /></div>
+    <div class="col-md-6"><label class="form-label" for="email">Correo electrónico</label><input class="form-control" id="email" name="email" type="email" value="{{ old('email', $user->email ?? '') }}" required><x-field-error name="email" /></div>
+    <div class="col-md-6"><label class="form-label" for="password">Contraseña {{ isset($user) ? '(opcional)' : '' }}</label><input class="form-control" id="password" name="password" type="password" {{ isset($user) ? '' : 'required' }}><x-field-error name="password" /></div>
+    <div class="col-md-6"><label class="form-label" for="password_confirmation">Confirmar contraseña</label><input class="form-control" id="password_confirmation" name="password_confirmation" type="password" {{ isset($user) ? '' : 'required' }}></div>
+    <div class="col-12"><label class="form-label d-block">Roles</label><div class="d-flex flex-wrap gap-3">@foreach ($roles as $role)<div class="form-check"><input class="form-check-input" id="role-{{ $role->id }}" name="roles[]" type="checkbox" value="{{ $role->id }}" @checked(in_array($role->id, $selectedRoles))><label class="form-check-label" for="role-{{ $role->id }}">{{ $role->name }}</label></div>@endforeach</div><x-field-error name="roles" /></div>
+    <div class="col-12"><input type="hidden" name="is_active" value="0"><div class="form-check form-switch"><input class="form-check-input" id="is_active" name="is_active" type="checkbox" value="1" @checked(old('is_active', $user->is_active ?? true))><label class="form-check-label" for="is_active">Cuenta activa</label></div></div>
+</div>
+<div class="d-flex gap-2 mt-4"><button class="btn btn-primary" type="submit">{{ $submitLabel }}</button><a class="btn btn-outline-secondary" href="{{ route('admin.users.index') }}">Cancelar</a></div>

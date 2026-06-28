@@ -1,0 +1,140 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Enums\BestOf;
+use App\Enums\GameType;
+use App\Enums\ParticipantType;
+use App\Enums\TournamentFormat;
+use App\Enums\TournamentStatus;
+use App\Models\AuditLog;
+use App\Models\Tournament;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class TournamentManagementTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_administrator_can_create_update_duplicate_and_delete_draft(): void
+    {
+        $admin = $this->administrator();
+
+        $this->actingAs($admin)->post(route('tournaments.store'), $this->validData())
+            ->assertRedirect();
+
+        $tournament = Tournament::query()->where('name', 'Copa MatchPoint')->firstOrFail();
+        $this->assertSame(TournamentStatus::Draft, $tournament->status);
+        $this->assertSame('copa-matchpoint', $tournament->slug);
+        $this->assertSame($admin->id, $tournament->created_by);
+
+        $this->actingAs($admin)->put(route('tournaments.update', $tournament), [
+            ...$this->validData(),
+            'name' => 'Copa MatchPoint Pro',
+            'best_of' => BestOf::Three->value,
+        ])->assertRedirect(route('tournaments.show', $tournament));
+
+        $this->assertDatabaseHas('tournaments', [
+            'id' => $tournament->id,
+            'name' => 'Copa MatchPoint Pro',
+            'slug' => 'copa-matchpoint',
+            'best_of' => 3,
+        ]);
+
+        $this->actingAs($admin)->post(route('tournaments.duplicate', $tournament))->assertRedirect();
+        $copy = Tournament::query()->where('id', '!=', $tournament->id)->firstOrFail();
+        $this->assertSame(TournamentStatus::Draft, $copy->status);
+        $this->assertNotSame($tournament->slug, $copy->slug);
+        $this->assertNull($copy->registration_starts_at);
+
+        $this->actingAs($admin)->delete(route('tournaments.destroy', $copy))->assertRedirect(route('tournaments.index'));
+        $this->assertSoftDeleted('tournaments', ['id' => $copy->id]);
+    }
+
+    public function test_tournament_follows_only_allowed_status_transitions(): void
+    {
+        $admin = $this->administrator();
+        $tournament = Tournament::factory()->create([
+            'created_by' => $admin,
+            'status' => TournamentStatus::Draft,
+            'ends_at' => null,
+        ]);
+
+        foreach ([TournamentStatus::Registration, TournamentStatus::InProgress, TournamentStatus::Finished] as $status) {
+            $this->actingAs($admin)->patch(route('tournaments.status', $tournament), [
+                'status' => $status->value,
+            ])->assertRedirect();
+            $this->assertSame($status, $tournament->refresh()->status);
+        }
+
+        $this->assertNotNull($tournament->ends_at);
+
+        $this->actingAs($admin)->patch(route('tournaments.status', $tournament), [
+            'status' => TournamentStatus::Draft->value,
+        ])->assertSessionHasErrors('status');
+        $this->assertSame(TournamentStatus::Finished, $tournament->refresh()->status);
+    }
+
+    public function test_active_tournament_cannot_be_reconfigured_or_deleted(): void
+    {
+        $admin = $this->administrator();
+        $tournament = Tournament::factory()->status(TournamentStatus::InProgress)->create(['created_by' => $admin]);
+
+        $this->actingAs($admin)->put(route('tournaments.update', $tournament), $this->validData())
+            ->assertSessionHasErrors('tournament');
+        $this->actingAs($admin)->delete(route('tournaments.destroy', $tournament))
+            ->assertSessionHasErrors('tournament');
+
+        $this->assertDatabaseHas('tournaments', ['id' => $tournament->id, 'deleted_at' => null]);
+    }
+
+    public function test_custom_game_is_required_and_standard_game_discards_custom_value(): void
+    {
+        $admin = $this->administrator();
+
+        $this->actingAs($admin)->post(route('tournaments.store'), [
+            ...$this->validData(),
+            'game' => GameType::Other->value,
+            'custom_game' => null,
+        ])->assertSessionHasErrors('custom_game');
+
+        $this->actingAs($admin)->post(route('tournaments.store'), [
+            ...$this->validData(),
+            'custom_game' => 'No debe persistir',
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('tournaments', ['name' => 'Copa MatchPoint', 'custom_game' => null]);
+    }
+
+    public function test_duplication_and_status_changes_are_audited(): void
+    {
+        $admin = $this->administrator();
+        $tournament = Tournament::factory()->create(['created_by' => $admin]);
+
+        $this->actingAs($admin)->post(route('tournaments.duplicate', $tournament));
+        $this->actingAs($admin)->patch(route('tournaments.status', $tournament), [
+            'status' => TournamentStatus::Registration->value,
+        ]);
+
+        $this->assertTrue(AuditLog::query()->where('action', 'tournament.duplicated')->where('auditable_id', $tournament->id)->exists());
+        $this->assertTrue(AuditLog::query()->where('action', 'tournament.status_changed')->where('auditable_id', $tournament->id)->exists());
+    }
+
+    private function validData(): array
+    {
+        return [
+            'name' => 'Copa MatchPoint',
+            'description' => 'Competencia oficial de EA Sports FC.',
+            'game' => GameType::EaSportsFc->value,
+            'custom_game' => null,
+            'participant_type' => ParticipantType::Individual->value,
+            'max_participants' => 16,
+            'format' => TournamentFormat::SingleElimination->value,
+            'best_of' => BestOf::One->value,
+            'registration_starts_at' => now()->addDay()->format('Y-m-d H:i:s'),
+            'registration_ends_at' => now()->addDays(2)->format('Y-m-d H:i:s'),
+            'starts_at' => now()->addDays(3)->format('Y-m-d H:i:s'),
+            'ends_at' => null,
+        ];
+    }
+}

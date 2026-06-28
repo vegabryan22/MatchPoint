@@ -1,0 +1,6 @@
+@extends('layouts.app')
+@section('title', $user->name)
+@section('content')
+<x-page-header :title="$user->name" subtitle="Detalle de identidad y acceso"><a class="btn btn-primary" href="{{ route('admin.users.edit', $user) }}">Editar usuario</a></x-page-header>
+<div class="row g-4"><div class="col-lg-8"><div class="mp-card p-4"><div class="d-flex align-items-center gap-3 mb-4"><span class="mp-avatar" style="width:64px;height:64px;font-size:1.5rem">{{ mb_strtoupper(mb_substr($user->name, 0, 1)) }}</span><div><h2 class="h4 mb-1">{{ $user->name }}</h2><span class="mp-muted">{{ $user->email }}</span></div></div><dl class="row mb-0"><dt class="col-sm-4">Estado</dt><dd class="col-sm-8">{{ $user->is_active ? 'Activo' : 'Inactivo' }}</dd><dt class="col-sm-4">Último acceso</dt><dd class="col-sm-8">{{ $user->last_login_at?->format('d/m/Y H:i') ?? 'Nunca' }}</dd><dt class="col-sm-4">Creado</dt><dd class="col-sm-8">{{ $user->created_at->format('d/m/Y H:i') }}</dd></dl></div></div><div class="col-lg-4"><div class="mp-card p-4"><h2 class="h5 fw-bold">Roles</h2>@foreach($user->roles as $role)<div class="border rounded-3 p-3 mb-2"><strong>{{ $role->name }}</strong><div class="mp-muted small">{{ $role->description }}</div></div>@endforeach</div></div></div>
+@endsection
