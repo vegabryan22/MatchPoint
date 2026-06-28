@@ -4,6 +4,10 @@ El formato sigue Keep a Changelog y el proyecto utiliza versionado semántico.
 
 ## [Unreleased]
 
+### Fixed
+
+- El formulario de resultados respeta el ancho disponible junto al sidebar y mantiene visibles rival, marcadores y acciones.
+
 ### Added
 
 - Seeder idempotente de demostración con jugadores, equipos y tres escenarios competitivos completos.

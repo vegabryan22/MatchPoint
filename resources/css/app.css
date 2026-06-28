@@ -90,7 +90,12 @@ a { text-decoration: none; }
 
 .mp-sidebar .nav-link.active { box-shadow: inset 3px 0 var(--mp-primary); }
 
-.mp-main { min-height: 100vh; margin-left: 260px; }
+.mp-main {
+    width: calc(100% - 260px);
+    min-width: 0;
+    min-height: 100vh;
+    margin-left: 260px;
+}
 
 .mp-topbar {
     position: sticky;
@@ -102,7 +107,12 @@ a { text-decoration: none; }
     backdrop-filter: blur(16px);
 }
 
-.mp-content { padding: 1.5rem; }
+.mp-content {
+    width: 100%;
+    min-width: 0;
+    padding: 1.5rem;
+    overflow-x: clip;
+}
 
 .mp-card {
     background: var(--mp-card);
@@ -362,12 +372,17 @@ a { text-decoration: none; }
 
 .mp-result-player {
     display: flex;
+    min-width: 0;
     gap: .75rem;
     align-items: center;
     font-size: clamp(1rem, 2vw, 1.35rem);
 }
 
 .mp-result-player.text-end { justify-content: flex-end; }
+
+.mp-result-player strong { overflow-wrap: anywhere; }
+
+.mp-result-form { min-width: 0; }
 
 .mp-result-side {
     display: inline-grid;
@@ -402,6 +417,8 @@ a { text-decoration: none; }
     border: 1px solid var(--mp-border);
     border-radius: 14px;
 }
+
+.mp-score-row > * { min-width: 0; }
 
 .mp-score-game {
     color: var(--mp-muted);
@@ -566,7 +583,7 @@ a { text-decoration: none; }
 @media (max-width: 991.98px) {
     .mp-sidebar { transform: translateX(-100%); }
     .mp-sidebar.show { transform: translateX(0); box-shadow: 15px 0 50px rgba(0, 0, 0, .3); }
-    .mp-main { margin-left: 0; }
+    .mp-main { width: 100%; margin-left: 0; }
     .mp-content { padding: 1rem; }
 }
 
@@ -574,7 +591,7 @@ a { text-decoration: none; }
     .mp-result-versus { gap: .5rem; }
     .mp-result-player { flex-direction: column; text-align: center !important; }
     .mp-result-player.text-end { flex-direction: column-reverse; }
-    .mp-score-row { grid-template-columns: 60px 1fr auto 1fr; gap: .4rem; padding: .6rem; }
+    .mp-score-row { grid-template-columns: 60px minmax(0, 1fr) auto minmax(0, 1fr); gap: .4rem; padding: .6rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {

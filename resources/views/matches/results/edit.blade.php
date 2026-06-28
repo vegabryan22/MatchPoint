@@ -31,7 +31,7 @@
     @endif
 
     <form
-        class="needs-validation"
+        class="needs-validation mp-result-form"
         method="post"
         action="{{ $isCorrection ? route('matches.results.update', $match) : route('matches.results.store', $match) }}"
         data-ajax-form
