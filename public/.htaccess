@@ -1,11 +1,12 @@
 <IfModule mod_rewrite.c>
-    DirectoryIndex index.php
-
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
     </IfModule>
 
     RewriteEngine On
+
+    # Send the document root to Laravel when DirectoryIndex is disabled.
+    RewriteRule ^$ index.php [L]
 
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
