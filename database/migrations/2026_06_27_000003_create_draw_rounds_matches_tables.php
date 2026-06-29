@@ -16,7 +16,7 @@ return new class extends Migration
             $table->boolean('avoid_rematches')->default(false);
             $table->unsignedInteger('version')->default(1);
             $table->json('metadata')->nullable();
-            $table->timestamp('generated_at');
+            $table->dateTime('generated_at');
             $table->timestamps();
         });
 
@@ -26,7 +26,7 @@ return new class extends Migration
             $table->string('name');
             $table->unsignedSmallInteger('number');
             $table->string('bracket', 30)->default('main');
-            $table->timestamp('starts_at')->nullable();
+            $table->dateTime('starts_at')->nullable();
             $table->timestamps();
             $table->unique(['tournament_id', 'bracket', 'number']);
         });
@@ -42,7 +42,7 @@ return new class extends Migration
             $table->unsignedBigInteger('winner_id')->nullable();
             $table->string('status', 30)->default('pending')->index();
             $table->unsignedTinyInteger('best_of');
-            $table->timestamp('scheduled_at')->nullable()->index();
+            $table->dateTime('scheduled_at')->nullable()->index();
             $table->timestamps();
             $table->unique(['round_id', 'sequence']);
             $table->index(['participant_type', 'participant_a_id', 'participant_b_id']);

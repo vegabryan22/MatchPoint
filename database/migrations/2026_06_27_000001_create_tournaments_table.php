@@ -21,10 +21,10 @@ return new class extends Migration
             $table->string('format', 40)->index();
             $table->unsignedTinyInteger('best_of');
             $table->string('status', 30)->index();
-            $table->timestamp('registration_starts_at')->nullable();
-            $table->timestamp('registration_ends_at')->nullable();
-            $table->timestamp('starts_at')->index();
-            $table->timestamp('ends_at')->nullable();
+            $table->dateTime('registration_starts_at')->nullable();
+            $table->dateTime('registration_ends_at')->nullable();
+            $table->dateTime('starts_at')->index();
+            $table->dateTime('ends_at')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

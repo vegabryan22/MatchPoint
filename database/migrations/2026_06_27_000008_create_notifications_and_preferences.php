@@ -13,7 +13,7 @@ return new class extends Migration
             $t->string('type');
             $t->morphs('notifiable');
             $t->text('data');
-            $t->timestamp('read_at')->nullable();
+            $t->dateTime('read_at')->nullable();
             $t->timestamps();
         });
         Schema::create('notification_preferences', function (Blueprint $t): void {
@@ -31,7 +31,7 @@ return new class extends Migration
             $t->foreignId('match_id')->constrained('matches')->cascadeOnDelete();
             $t->foreignId('user_id')->constrained()->cascadeOnDelete();
             $t->string('window', 10);
-            $t->timestamp('sent_at');
+            $t->dateTime('sent_at');
             $t->unique(['match_id', 'user_id', 'window']);
         });
     }

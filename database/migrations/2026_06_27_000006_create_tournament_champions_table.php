@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('participant_type', 30);
             $table->unsignedBigInteger('participant_id');
             $table->foreignId('deciding_match_id')->nullable()->constrained('matches')->nullOnDelete();
-            $table->timestamp('crowned_at');
+            $table->dateTime('crowned_at');
             $table->timestamps();
             $table->index(['participant_type', 'participant_id']);
             $table->index('crowned_at');

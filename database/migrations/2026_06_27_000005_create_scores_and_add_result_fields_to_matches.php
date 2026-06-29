@@ -12,7 +12,7 @@ return new class extends Migration
             $table->unsignedInteger('duration_seconds')->nullable()->after('scheduled_at');
             $table->text('observations')->nullable()->after('duration_seconds');
             $table->foreignId('completed_by')->nullable()->after('observations')->constrained('users')->nullOnDelete();
-            $table->timestamp('completed_at')->nullable()->after('completed_by')->index();
+            $table->dateTime('completed_at')->nullable()->after('completed_by')->index();
         });
 
         Schema::create('scores', function (Blueprint $table): void {

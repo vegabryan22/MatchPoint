@@ -23,7 +23,7 @@ return new class extends Migration
         Schema::table('tournament_players', function (Blueprint $table): void {
             $table->string('section', 80)->nullable()->index();
             $table->string('controller_platform', 10)->nullable();
-            $table->timestamp('controller_acknowledged_at')->nullable();
+            $table->dateTime('controller_acknowledged_at')->nullable();
             $table->string('public_reference', 16)->nullable()->unique();
         });
     }
