@@ -76,6 +76,7 @@ class TournamentBracketTest extends TestCase
     {
         [$admin, $tournament] = $this->generateBracket(TournamentFormat::SingleElimination, 4);
         $viewer = User::factory()->create(['is_active' => true]);
+        $tournament->players()->firstOrFail()->update(['user_id' => $viewer->id]);
         $tournament->update(['status' => TournamentStatus::InProgress]);
         $match = $tournament->rounds()->where('number', 1)->firstOrFail()->matches()->firstOrFail();
 
@@ -96,6 +97,23 @@ class TournamentBracketTest extends TestCase
         $this->assertStringContainsString('mp-world-team is-winner', $after['html']);
         $this->assertStringContainsString('>3</strong>', $after['html']);
         $this->assertSame($match->participant_a_id, GameMatch::query()->findOrFail($match->winner_next_match_id)->participant_a_id);
+    }
+
+    public function test_in_progress_bracket_renders_inline_forms_and_mobile_referee_mode(): void
+    {
+        [$admin, $tournament] = $this->generateBracket(TournamentFormat::SingleElimination, 4);
+        $tournament->update(['status' => TournamentStatus::InProgress]);
+
+        $response = $this->actingAs($admin)->get(route('tournaments.draws.show', $tournament))
+            ->assertOk()
+            ->assertSee('Modo árbitro')
+            ->assertSee('Ingreso rápido de marcadores')
+            ->assertSee('data-inline-result-form', false)
+            ->assertSee('data-score-step="1"', false)
+            ->assertSee('data-score-step="-1"', false);
+
+        $this->assertSame(3, substr_count($response->getContent(), '<article class="mp-world-match'));
+        $this->assertSame(2, substr_count($response->getContent(), '<article class="mp-mobile-match'));
     }
 
     public function test_single_elimination_with_48_players_uses_64_slots_and_16_byes(): void

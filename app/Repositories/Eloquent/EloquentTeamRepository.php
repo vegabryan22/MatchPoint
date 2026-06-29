@@ -11,6 +11,10 @@ final class EloquentTeamRepository implements TeamRepositoryInterface
     public function paginate(array $filters, int $perPage = 15): LengthAwarePaginator
     {
         return Team::query()
+            ->when(! ($filters['is_admin'] ?? false), fn ($query) => $query->where(function ($query) use ($filters): void {
+                $query->where('managed_by', $filters['user_id'])
+                    ->orWhereHas('tournaments', fn ($query) => $query->whereKey($filters['visible_tournament_ids']));
+            }))
             ->withCount('players')
             ->when($filters['search'] ?? null, fn ($query, $search) => $query->where('name', 'like', "%{$search}%"))
             ->when(

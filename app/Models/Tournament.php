@@ -65,6 +65,20 @@ class Tournament extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    public function organizers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'tournament_organizers')
+            ->withPivot(['id', 'assigned_by', 'is_primary', 'assigned_at'])
+            ->withTimestamps();
+    }
+
+    public function officials(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'tournament_officials')
+            ->withPivot(['id', 'assigned_by', 'role', 'is_active', 'assigned_at'])
+            ->withTimestamps();
+    }
+
     /** @return BelongsToMany<Player, $this> */
     public function players(): BelongsToMany
     {

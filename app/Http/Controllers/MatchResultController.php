@@ -41,9 +41,20 @@ final class MatchResultController extends Controller
         $url = route('tournaments.draws.show', $match->tournament);
 
         if ($request->expectsJson()) {
-            $request->session()->flash('success', $message);
+            $freshMatch = $match->fresh('scores');
 
-            return response()->json(['message' => $message, 'redirect' => $url]);
+            if (! $request->boolean('inline')) {
+                $request->session()->flash('success', $message);
+            }
+
+            return response()->json([
+                'message' => $message,
+                'redirect' => $url,
+                'match_id' => $freshMatch->id,
+                'status' => $freshMatch->status->label(),
+                'score_a' => $freshMatch->scores->sum('participant_a_score'),
+                'score_b' => $freshMatch->scores->sum('participant_b_score'),
+            ]);
         }
 
         return redirect($url)->with('success', $message);

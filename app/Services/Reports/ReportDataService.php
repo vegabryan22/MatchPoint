@@ -22,7 +22,10 @@ final class ReportDataService
 
     public function build(ReportType $type, array $filters): array
     {
-        $tournament = isset($filters['tournament_id']) ? Tournament::query()->findOrFail($filters['tournament_id']) : null;
+        $filters['visible_tournament_ids'] ??= Tournament::query()->pluck('id')->all();
+        $tournament = isset($filters['tournament_id'])
+            ? Tournament::query()->whereKey($filters['visible_tournament_ids'])->findOrFail($filters['tournament_id'])
+            : null;
 
         return match ($type) {
             ReportType::Summary => $this->summary($tournament),
@@ -83,7 +86,7 @@ final class ReportDataService
     private function statistics(array $filters): array
     {
         $type = ParticipantType::tryFrom($filters['participant_type'] ?? '') ?? ParticipantType::Individual;
-        $ranking = $this->statistics->ranking(['participant_type' => $type->value])['ranking'];
+        $ranking = $this->statistics->ranking(['participant_type' => $type->value, 'visible_tournament_ids' => $filters['visible_tournament_ids']])['ranking'];
         $rows = $ranking->map(fn ($row): array => [$row['rank'], $row['name'], $row['played'], $row['wins'], $row['draws'], $row['losses'], $row['goals_for'], $row['goals_against'], $row['goal_difference'], $row['streak']])->all();
 
         return $this->data('Estadísticas · '.$type->label(), ['#', 'Participante', 'PJ', 'V', 'E', 'D', 'GF', 'GC', 'DG', 'Racha'], $rows);
@@ -91,7 +94,7 @@ final class ReportDataService
 
     private function champions(array $filters): array
     {
-        $records = TournamentChampion::query()->with('tournament')->latest('crowned_at')->get();
+        $records = TournamentChampion::query()->with('tournament')->whereIn('tournament_id', $filters['visible_tournament_ids'])->latest('crowned_at')->get();
         $maps = collect(ParticipantType::cases())->mapWithKeys(fn ($type): array => [$type->value => $this->statisticsRepository->participants($type, $records->where('participant_type', $type)->pluck('participant_id')->all())]);
         $rows = $records->map(fn ($record): array => [$maps[$record->participant_type->value]->get($record->participant_id)?->nickname ?? $maps[$record->participant_type->value]->get($record->participant_id)?->name ?? 'Participante', $record->tournament->name, $record->tournament->gameLabel(), $record->crowned_at->format('d/m/Y')])->all();
 

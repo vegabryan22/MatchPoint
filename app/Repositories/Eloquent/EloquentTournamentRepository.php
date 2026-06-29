@@ -3,14 +3,18 @@
 namespace App\Repositories\Eloquent;
 
 use App\Models\Tournament;
+use App\Models\User;
 use App\Repositories\Contracts\TournamentRepositoryInterface;
+use App\Services\TournamentAccessService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 final class EloquentTournamentRepository implements TournamentRepositoryInterface
 {
-    public function paginate(array $filters, int $perPage = 15): LengthAwarePaginator
+    public function __construct(private readonly TournamentAccessService $access) {}
+
+    public function paginate(array $filters, User $user, int $perPage = 15): LengthAwarePaginator
     {
-        return Tournament::query()
+        return $this->access->visibleQuery($user)
             ->with('creator')
             ->when($filters['search'] ?? null, fn ($query, $search) => $query->where('name', 'like', "%{$search}%"))
             ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))

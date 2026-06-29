@@ -22,6 +22,7 @@ use App\Http\Controllers\TournamentController;
 use App\Http\Controllers\TournamentDrawController;
 use App\Http\Controllers\TournamentGroupController;
 use App\Http\Controllers\TournamentRegistrationController;
+use App\Http\Controllers\TournamentStaffController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
@@ -72,6 +73,11 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     Route::get('/tournaments/{tournament}/registrations/export/csv', [TournamentRegistrationController::class, 'exportCsv'])->name('tournaments.registrations.export.csv');
     Route::get('/tournaments/{tournament}/registrations/export/xlsx', [TournamentRegistrationController::class, 'exportXlsx'])->name('tournaments.registrations.export.xlsx');
     Route::get('/tournaments/{tournament}/draw', [TournamentDrawController::class, 'show'])->name('tournaments.draws.show');
+    Route::get('/tournaments/{tournament}/staff', [TournamentStaffController::class, 'index'])->name('tournaments.staff.index');
+    Route::post('/tournaments/{tournament}/staff/organizers', [TournamentStaffController::class, 'storeOrganizer'])->name('tournaments.staff.organizers.store');
+    Route::delete('/tournaments/{tournament}/staff/organizers/{organizer}', [TournamentStaffController::class, 'destroyOrganizer'])->name('tournaments.staff.organizers.destroy');
+    Route::post('/tournaments/{tournament}/staff/officials', [TournamentStaffController::class, 'storeOfficial'])->name('tournaments.staff.officials.store');
+    Route::delete('/tournaments/{tournament}/staff/officials/{official}', [TournamentStaffController::class, 'destroyOfficial'])->name('tournaments.staff.officials.destroy');
     Route::get('/tournaments/{tournament}/draw/live', [TournamentDrawController::class, 'live'])->middleware('throttle:30,1')->name('tournaments.draws.live');
     Route::get('/tournaments/{tournament}/draw/create', [TournamentDrawController::class, 'create'])->name('tournaments.draws.create');
     Route::post('/tournaments/{tournament}/draw/preview', [TournamentDrawController::class, 'preview'])->name('tournaments.draws.preview');

@@ -140,6 +140,18 @@ La vista `/tournaments/{slug}/draw` consulta cada cinco segundos el endpoint aut
 
 El endpoint requiere un usuario activo, aplica la Policy `viewDraw` y tiene límite de 30 consultas por minuto. No permite modificar resultados ni expone una llave privada a usuarios anónimos.
 
+### Modo árbitro móvil
+
+En pantallas menores de 768 píxeles, la composición horizontal se sustituye por una lista vertical agrupada por ronda. Sólo aparecen partidos con ambos participantes definidos. Cada tarjeta permite registrar el resultado sin abandonar la llave:
+
+- BO1 muestra inmediatamente los dos marcadores y controles táctiles `−` y `+`;
+- BO3 y BO5 despliegan sus juegos dentro de la misma tarjeta;
+- el botón de opciones abre el formulario completo para duración y observaciones;
+- las correcciones permanecen plegadas y solicitan confirmación antes de recalcular la ronda siguiente;
+- los errores de validación se muestran dentro de la tarjeta y el éxito mediante toast.
+
+Mientras un formulario inline contiene cambios sin guardar, la actualización automática de la llave se pausa para evitar pérdida de datos. Al guardar, se reanuda y se solicita una sincronización inmediata.
+
 ## Pruebas
 
 La suite verifica:

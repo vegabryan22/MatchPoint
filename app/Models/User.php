@@ -74,6 +74,20 @@ class User extends Authenticatable
         return $this->hasMany(AuditLog::class);
     }
 
+    public function organizedTournaments(): BelongsToMany
+    {
+        return $this->belongsToMany(Tournament::class, 'tournament_organizers')
+            ->withPivot(['id', 'assigned_by', 'is_primary', 'assigned_at'])
+            ->withTimestamps();
+    }
+
+    public function officiatedTournaments(): BelongsToMany
+    {
+        return $this->belongsToMany(Tournament::class, 'tournament_officials')
+            ->withPivot(['id', 'assigned_by', 'role', 'is_active', 'assigned_at'])
+            ->withTimestamps();
+    }
+
     /** @return HasOne<Player, $this> */
     public function player(): HasOne
     {

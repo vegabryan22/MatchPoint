@@ -13,6 +13,10 @@ final class EloquentPlayerRepository implements PlayerRepositoryInterface
     public function paginate(array $filters, int $perPage = 15): LengthAwarePaginator
     {
         return Player::query()
+            ->when(! ($filters['is_admin'] ?? false), fn ($query) => $query->where(function ($query) use ($filters): void {
+                $query->where('managed_by', $filters['user_id'])
+                    ->orWhereHas('tournaments', fn ($query) => $query->whereKey($filters['visible_tournament_ids']));
+            }))
             ->when($filters['search'] ?? null, function ($query, string $search): void {
                 $query->where(function ($query) use ($search): void {
                     $query->where('name', 'like', "%{$search}%")

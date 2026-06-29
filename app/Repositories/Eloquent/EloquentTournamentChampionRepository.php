@@ -31,6 +31,7 @@ final class EloquentTournamentChampionRepository implements TournamentChampionRe
     {
         return TournamentChampion::query()
             ->with(['tournament', 'decidingMatch'])
+            ->whereIn('tournament_id', $filters['visible_tournament_ids'])
             ->when($filters['participant_type'] ?? null, fn ($query, $type) => $query->where('participant_type', $type))
             ->when($filters['game'] ?? null, fn ($query, $game) => $query->whereHas('tournament', fn ($query) => $query->where('game', $game)))
             ->when($filters['year'] ?? null, fn ($query, $year) => $query->whereYear('crowned_at', $year))
@@ -39,9 +40,10 @@ final class EloquentTournamentChampionRepository implements TournamentChampionRe
             ->withQueryString();
     }
 
-    public function years(): array
+    public function years(array $visibleTournamentIds): array
     {
         return TournamentChampion::query()
+            ->whereIn('tournament_id', $visibleTournamentIds)
             ->orderByDesc('crowned_at')
             ->get(['crowned_at'])
             ->pluck('crowned_at')

@@ -138,12 +138,17 @@
                                         $goalsB = $match->scores->sum('participant_b_score');
                                     @endphp
                                     <div class="col-md-6 col-xl-4"><div class="mp-dashboard-match h-100">
-                                        <div class="d-flex justify-content-between mb-2"><span class="badge text-bg-secondary">{{ $match->group->name }}</span><span class="small mp-muted">{{ $match->status->label() }}</span></div>
-                                        <div class="d-flex justify-content-between fw-bold"><span>{{ $nameA }}</span><span>{{ $match->status === App\Enums\MatchStatus::Completed ? $goalsA : '—' }}</span></div>
-                                        <div class="d-flex justify-content-between fw-bold mt-2"><span>{{ $nameB }}</span><span>{{ $match->status === App\Enums\MatchStatus::Completed ? $goalsB : '—' }}</span></div>
+                                        <div class="d-flex justify-content-between mb-2"><span class="badge text-bg-secondary">{{ $match->group->name }}</span><span class="small mp-muted" data-inline-status>{{ $match->status->label() }}</span></div>
+                                        <div class="d-flex justify-content-between fw-bold"><span>{{ $nameA }}</span><span data-inline-score-a>{{ $match->status === App\Enums\MatchStatus::Completed ? $goalsA : '—' }}</span></div>
+                                        <div class="d-flex justify-content-between fw-bold mt-2"><span>{{ $nameB }}</span><span data-inline-score-b>{{ $match->status === App\Enums\MatchStatus::Completed ? $goalsB : '—' }}</span></div>
                                         @can('recordResult', $match)
                                             @if ($tournament->status === App\Enums\TournamentStatus::InProgress)
-                                                <a class="btn btn-sm btn-outline-primary w-100 mt-3" href="{{ route('matches.results.edit', $match) }}">{{ $match->status === App\Enums\MatchStatus::Completed ? 'Corregir' : 'Registrar resultado' }}</a>
+                                                @include('matches.results._quick-form', [
+                                                    'match' => $match,
+                                                    'instance' => 'group-'.$round->id,
+                                                    'participantAName' => $nameA,
+                                                    'participantBName' => $nameB,
+                                                ])
                                             @endif
                                         @endcan
                                     </div></div>

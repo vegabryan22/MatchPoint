@@ -9,6 +9,25 @@ window.bootstrap = bootstrap;
 
 document.querySelectorAll('.toast').forEach((element) => new bootstrap.Toast(element).show());
 
+const showToast = (message, variant = 'success') => {
+    let container = document.querySelector('[data-dynamic-toast-container]');
+    if (! container) {
+        container = document.createElement('div');
+        container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        container.dataset.dynamicToastContainer = '';
+        document.body.append(container);
+    }
+    const toastElement = document.createElement('div');
+    toastElement.className = `toast text-bg-${variant} border-0`;
+    toastElement.setAttribute('role', 'status');
+    toastElement.innerHTML = `<div class="d-flex"><div class="toast-body"></div><button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
+    toastElement.querySelector('.toast-body').textContent = message;
+    container.append(toastElement);
+    const toast = new bootstrap.Toast(toastElement, { delay: 3500 });
+    toastElement.addEventListener('hidden.bs.toast', () => toastElement.remove());
+    toast.show();
+};
+
 document.querySelector('[data-theme-toggle]')?.addEventListener('click', () => {
     const root = document.documentElement;
     const theme = root.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
@@ -130,6 +149,87 @@ document.querySelectorAll('[data-ajax-form]').forEach((form) => {
     });
 });
 
+document.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-score-step]');
+    if (! button) return;
+
+    const input = document.getElementById(button.dataset.scoreTarget);
+    if (! input) return;
+    const nextValue = Math.max(0, Math.min(99, Number(input.value || 0) + Number(button.dataset.scoreStep)));
+    input.value = String(nextValue);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+});
+
+document.addEventListener('input', (event) => {
+    const form = event.target.closest('[data-inline-result-form]');
+    if (form) form.dataset.dirty = 'true';
+});
+
+document.addEventListener('submit', async (event) => {
+    const form = event.target.closest('[data-inline-result-form]');
+    if (! form) return;
+    event.preventDefault();
+
+    if (! form.checkValidity()) {
+        revealValidationErrors(form);
+        return;
+    }
+
+    const isCorrection = Boolean(form.querySelector('input[name="_method"][value="PUT"]'));
+    if (isCorrection && ! window.confirm('¿Guardar esta corrección y recalcular la siguiente ronda?')) return;
+
+    const errorBox = form.querySelector('[data-inline-result-errors]');
+    const submitButton = form.querySelector('[data-inline-submit]');
+    errorBox?.classList.add('d-none');
+    submitButton?.setAttribute('disabled', 'disabled');
+
+    try {
+        const response = await fetch(form.action, {
+            method: 'POST',
+            body: new FormData(form),
+            headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        });
+        const payload = await response.json();
+        if (! response.ok) {
+            const messages = Object.values(payload.errors ?? {}).flat();
+            if (errorBox) {
+                errorBox.replaceChildren(...messages.map((message) => {
+                    const item = document.createElement('div');
+                    item.textContent = message;
+                    return item;
+                }));
+                errorBox.classList.remove('d-none');
+            }
+            return;
+        }
+
+        const card = form.closest('.mp-world-match, .mp-mobile-match, .mp-dashboard-match');
+        card?.classList.add('is-completed');
+        card?.querySelector('[data-inline-status]')?.replaceChildren(payload.status);
+        card?.querySelector('[data-inline-score-a]')?.replaceChildren(String(payload.score_a));
+        card?.querySelector('[data-inline-score-b]')?.replaceChildren(String(payload.score_b));
+        form.dataset.dirty = 'false';
+        if (! isCorrection) {
+            const method = document.createElement('input');
+            method.type = 'hidden';
+            method.name = '_method';
+            method.value = 'PUT';
+            form.append(method);
+            form.querySelector('summary')?.replaceChildren('Corregir marcador');
+            submitButton?.replaceChildren('Guardar corrección');
+        }
+        showToast(payload.message);
+        document.querySelector('[data-bracket-stage]')?.dispatchEvent(new Event('matchpoint:refresh'));
+    } catch {
+        if (errorBox) {
+            errorBox.textContent = 'No fue posible guardar. Verifica la conexión e inténtalo nuevamente.';
+            errorBox.classList.remove('d-none');
+        }
+    } finally {
+        submitButton?.removeAttribute('disabled');
+    }
+});
+
 document.querySelectorAll('[data-bracket-stage]').forEach((stage) => {
     let zoom = 1;
     const zoomLabel = document.querySelector('[data-bracket-zoom="reset"]');
@@ -171,7 +271,11 @@ document.querySelectorAll('[data-bracket-stage]').forEach((stage) => {
     bindScroll();
 
     if (stage.dataset.bracketLiveUrl) {
-        window.setInterval(async () => {
+        const refreshBracket = async () => {
+            if (stage.querySelector('[data-inline-result-form][data-dirty="true"]')) {
+                if (liveStatus) liveStatus.textContent = 'Marcador pendiente de guardar';
+                return;
+            }
             try {
                 const response = await fetch(stage.dataset.bracketLiveUrl, {
                     cache: 'no-store',
@@ -192,7 +296,9 @@ document.querySelectorAll('[data-bracket-stage]').forEach((stage) => {
             } catch {
                 if (liveStatus) liveStatus.textContent = 'Reconectando actualización automática…';
             }
-        }, 5000);
+        };
+        stage.addEventListener('matchpoint:refresh', refreshBracket);
+        window.setInterval(refreshBracket, 5000);
     }
 });
 

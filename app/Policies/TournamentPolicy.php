@@ -5,9 +5,12 @@ namespace App\Policies;
 use App\Enums\RoleName;
 use App\Models\Tournament;
 use App\Models\User;
+use App\Services\TournamentAccessService;
 
 final class TournamentPolicy
 {
+    public function __construct(private readonly TournamentAccessService $access) {}
+
     public function viewAny(User $user): bool
     {
         return $user->is_active;
@@ -15,73 +18,76 @@ final class TournamentPolicy
 
     public function view(User $user, Tournament $tournament): bool
     {
-        return $user->is_active;
+        return $this->access->canView($user, $tournament);
     }
 
     public function create(User $user): bool
     {
-        return $this->managesTournaments($user);
+        return $user->is_active && ($user->isAdministrator() || $user->hasRole(RoleName::Organizer));
     }
 
     public function update(User $user, Tournament $tournament): bool
     {
-        return $this->managesTournaments($user);
+        return $this->access->canManage($user, $tournament);
     }
 
     public function delete(User $user, Tournament $tournament): bool
     {
-        return $this->managesTournaments($user);
+        return $this->access->canManage($user, $tournament);
     }
 
     public function duplicate(User $user, Tournament $tournament): bool
     {
-        return $this->managesTournaments($user);
+        return $this->access->canManage($user, $tournament);
     }
 
     public function viewRegistrations(User $user, Tournament $tournament): bool
     {
-        return $user->is_active;
+        return $this->access->canView($user, $tournament);
     }
 
     public function manageRegistrations(User $user, Tournament $tournament): bool
     {
-        return $this->managesTournaments($user);
+        return $this->access->canManage($user, $tournament);
     }
 
     public function managePublicForms(User $user, Tournament $tournament): bool
     {
-        return $this->managesTournaments($user);
+        return $this->access->canManage($user, $tournament);
     }
 
     public function viewDraw(User $user, Tournament $tournament): bool
     {
-        return $user->is_active;
+        return $this->access->canView($user, $tournament);
     }
 
     public function manageDraw(User $user, Tournament $tournament): bool
     {
-        return $this->managesTournaments($user);
+        return $this->access->canManage($user, $tournament);
     }
 
     public function manageMatches(User $user, Tournament $tournament): bool
     {
-        return $this->managesTournaments($user)
-            || $user->hasRole(RoleName::Referee);
+        return $this->access->canRecordMatches($user, $tournament);
     }
 
     public function viewGroups(User $user, Tournament $tournament): bool
     {
-        return $user->is_active;
+        return $this->access->canView($user, $tournament);
     }
 
     public function manageGroups(User $user, Tournament $tournament): bool
     {
-        return $this->managesTournaments($user);
+        return $this->access->canManage($user, $tournament);
     }
 
-    private function managesTournaments(User $user): bool
+    public function manageOrganizers(User $user, Tournament $tournament): bool
     {
-        return $user->hasRole(RoleName::Administrator)
-            || $user->hasRole(RoleName::Organizer);
+        return $this->access->canManageOrganizers($user);
+    }
+
+    public function manageOfficials(User $user, Tournament $tournament): bool
+    {
+        return $this->access->canManageOfficials($user, $tournament);
     }
 }

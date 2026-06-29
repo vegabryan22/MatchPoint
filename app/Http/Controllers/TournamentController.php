@@ -30,7 +30,7 @@ final class TournamentController extends Controller
     public function index(TournamentFilterRequest $request): View
     {
         return view('tournaments.index', [
-            'tournaments' => $this->tournaments->paginate($request->validated()),
+            'tournaments' => $this->tournaments->paginate($request->validated(), $request->user()),
             ...$this->filterOptions(),
         ]);
     }

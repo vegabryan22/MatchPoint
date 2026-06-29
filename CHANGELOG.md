@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-06-29 — Aislamiento y personal por torneo
+
+- Organizadores limitados a torneos asignados y registros propios.
+- Administradores pueden asignar, transferir y retirar organizadores.
+- Árbitros vinculados explícitamente a cada torneo.
+- Dashboard, estadísticas, campeones, reportes, jugadores y equipos aplican visibilidad por torneo.
+- Nuevas Policies, auditoría, migración y pruebas contra acceso cruzado.
+
+## 2026-06-29 — Ingreso móvil de resultados
+
+- Nuevo modo árbitro móvil con partidos agrupados verticalmente por ronda.
+- Marcadores BO1 directamente en la tarjeta y series BO3/BO5 desplegables.
+- Controles táctiles, teclado numérico, guardado AJAX, errores inline y toast de confirmación.
+- Las correcciones recalculan la llave sin abandonar la pantalla.
+- El refresco en vivo se pausa mientras existan cambios locales sin guardar.
+
 ## 2026-06-28 — Llaves en vivo y niveles académicos
 
 - Las llaves proyectadas se actualizan automáticamente cada cinco segundos desde otra sesión autenticada.

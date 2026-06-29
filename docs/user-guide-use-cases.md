@@ -461,6 +461,32 @@ El organizador activa esta modalidad desde `/tournaments/{slug}/edit`, configura
 5. La proyección consulta cambios cada cinco segundos y muestra automáticamente marcador, ganador y avance de ronda.
 6. Si se corrige un resultado, la proyección refleja la corrección en el siguiente ciclo.
 
+### UC-29C — Registrar un resultado rápidamente desde el celular
+
+1. Abrir la llave con una cuenta de administrador, organizador o árbitro.
+2. En móvil, desplazarse por la lista vertical `Modo árbitro` hasta la ronda correspondiente.
+3. Utilizar los botones `−` y `+` o tocar el campo para abrir el teclado numérico.
+4. En BO3 o BO5, desplegar la serie y completar únicamente los juegos necesarios.
+5. Pulsar `Guardar resultado`; la tarjeta confirma mediante toast y actualiza ganador, marcador y siguiente ronda.
+6. Para duración u observaciones, pulsar el botón `⋯` sin perder el acceso al formulario completo.
+7. Para corregir, desplegar `Corregir marcador`, modificar y confirmar el recálculo.
+
+### UC-30 — Asignar o transferir organizadores
+
+1. Iniciar sesión como administrador y abrir el torneo.
+2. Entrar en `Personal`.
+3. Seleccionar una cuenta con rol Organizador.
+4. Marcar `Organizador principal` para transferir la responsabilidad principal.
+5. Agregar colaboradores adicionales o retirar asignaciones anteriores.
+6. El organizador retirado deja de ver inmediatamente el torneo, dashboard, estadísticas y reportes relacionados.
+
+### UC-31 — Asignar árbitros a un torneo
+
+1. Como administrador u organizador asignado, abrir `Torneo → Personal`.
+2. Seleccionar una cuenta activa con rol Árbitro.
+3. Asignarla; el árbitro verá únicamente ese torneo y podrá registrar resultados.
+4. Para revocar el acceso, pulsar `Quitar`; la capacidad se elimina inmediatamente.
+
 ### UC-43 — Asignar equipo, selección y escudo del videojuego
 
 **Actor:** administrador u organizador.

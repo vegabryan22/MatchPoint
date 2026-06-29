@@ -5,6 +5,7 @@ namespace App\Http\Requests\Reports;
 use App\Enums\ParticipantType;
 use App\Enums\ReportFormat;
 use App\Enums\ReportType;
+use App\Services\TournamentAccessService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -32,6 +33,9 @@ final class ExportReportRequest extends FormRequest
             $type = ReportType::tryFrom((string) $this->input('type'));
             if ($type?->requiresTournament() && ! $this->filled('tournament_id')) {
                 $validator->errors()->add('tournament_id', 'Selecciona un torneo para este reporte.');
+            }
+            if ($this->filled('tournament_id') && ! app(TournamentAccessService::class)->visibleQuery($this->user())->whereKey($this->integer('tournament_id'))->exists()) {
+                $validator->errors()->add('tournament_id', 'No tienes acceso a ese torneo.');
             }
         }];
     }

@@ -18,5 +18,5 @@ interface TournamentChampionRepositoryInterface
     public function paginate(array $filters, int $perPage = 18): LengthAwarePaginator;
 
     /** @return list<int> */
-    public function years(): array;
+    public function years(array $visibleTournamentIds): array;
 }

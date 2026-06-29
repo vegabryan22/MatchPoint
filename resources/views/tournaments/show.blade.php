@@ -4,7 +4,8 @@
 
 @section('content')
     <x-page-header :title="$tournament->name" :subtitle="$tournament->gameLabel()">
-        <div class="d-flex flex-wrap gap-2">
+    <div class="d-flex flex-wrap gap-2">
+        @if(auth()->user()->can('manageOrganizers', $tournament) || auth()->user()->can('manageOfficials', $tournament))<a class="btn btn-outline-primary" href="{{ route('tournaments.staff.index', $tournament) }}">Personal</a>@endif
             @can('viewRegistrations', $tournament)
                 <a class="btn btn-outline-primary" href="{{ route('tournaments.registrations.index', $tournament) }}">
                     Inscripciones

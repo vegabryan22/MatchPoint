@@ -8,6 +8,7 @@ use App\Enums\ParticipantType;
 use App\Enums\TournamentFormat;
 use App\Models\GameMatch;
 use App\Models\TournamentChampion;
+use App\Models\User;
 use App\Repositories\Contracts\GameMatchRepositoryInterface;
 use App\Repositories\Contracts\GroupStageRepositoryInterface;
 use App\Repositories\Contracts\StatisticsRepositoryInterface;
@@ -27,6 +28,7 @@ final class TournamentChampionService
         private readonly TournamentRegistrationRepositoryInterface $registrations,
         private readonly StandingsService $standings,
         private readonly AuditService $audit,
+        private readonly TournamentAccessService $access,
     ) {}
 
     public function sync(int $matchId, ?int $actorId = null): void
@@ -63,14 +65,15 @@ final class TournamentChampionService
         });
     }
 
-    public function paginate(array $filters): array
+    public function paginate(array $filters, User $user): array
     {
+        $filters['visible_tournament_ids'] = $this->access->visibleQuery($user)->pluck('id')->all();
         $champions = $this->champions->paginate($filters);
         $this->resolveParticipants($champions);
 
         return [
             'champions' => $champions,
-            'years' => $this->champions->years(),
+            'years' => $this->champions->years($filters['visible_tournament_ids']),
             'filters' => $filters,
         ];
     }

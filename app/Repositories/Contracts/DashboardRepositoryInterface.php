@@ -23,7 +23,7 @@ interface DashboardRepositoryInterface
     public function recentChampions(array $filters, int $limit = 5): Collection;
 
     /** @return Collection<int, Tournament> */
-    public function tournaments(): Collection;
+    public function tournaments(array $filters): Collection;
 
     /** @return Collection<int, AuditLog> */
     public function recentActivity(int $limit = 6): Collection;

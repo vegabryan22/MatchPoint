@@ -4,16 +4,25 @@ namespace App\Services;
 
 use App\Enums\ParticipantType;
 use App\Models\GameMatch;
+use App\Models\Tournament;
+use App\Models\User;
 use App\Repositories\Contracts\StatisticsRepositoryInterface;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
 final class StatisticsService
 {
-    public function __construct(private readonly StatisticsRepositoryInterface $statistics) {}
+    public function __construct(
+        private readonly StatisticsRepositoryInterface $statistics,
+        private readonly TournamentAccessService $access,
+    ) {}
 
-    public function ranking(array $filters): array
+    public function ranking(array $filters, ?User $user = null): array
     {
+        if ($user !== null) {
+            $filters['visible_tournament_ids'] = $this->access->visibleQuery($user)->pluck('id')->all();
+        }
+        $filters['visible_tournament_ids'] ??= Tournament::query()->pluck('id')->all();
         $type = ParticipantType::tryFrom($filters['participant_type'] ?? '') ?? ParticipantType::Individual;
         $filters['participant_type'] = $type;
         $matches = $this->statistics->completedMatches($filters);
@@ -62,13 +71,14 @@ final class StatisticsService
         return [
             'ranking' => $ranking,
             'participantType' => $type,
-            'tournaments' => $this->statistics->tournaments(),
+            'tournaments' => $this->statistics->tournaments($filters['visible_tournament_ids']),
             'filters' => $filters,
         ];
     }
 
-    public function participant(ParticipantType $type, int $participantId, array $filters): array
+    public function participant(ParticipantType $type, int $participantId, array $filters, User $user): array
     {
+        $filters['visible_tournament_ids'] = $this->access->visibleQuery($user)->pluck('id')->all();
         $filters['participant_type'] = $type->value;
         $rankingData = $this->ranking($filters);
         $row = $rankingData['ranking']->firstWhere('participant_id', $participantId);

@@ -16,7 +16,8 @@ class TournamentRegistrationAuthorizationTest extends TestCase
     {
         $user = User::factory()->create();
         $tournament = $this->registrationTournament();
-        $player = Player::factory()->create();
+        $player = Player::factory()->create(['user_id' => $user->id]);
+        $tournament->players()->attach($player, ['source' => 'manual', 'registered_at' => now()]);
         $file = UploadedFile::fake()->createWithContent('players.csv', "nickname,email\nA,a@example.com\n");
 
         $this->actingAs($user)->get(route('tournaments.registrations.index', $tournament))->assertOk();

@@ -14,6 +14,7 @@ class Team extends Model
     use HasFactory;
 
     protected $fillable = [
+        'managed_by',
         'name',
         'logo_path',
         'description',

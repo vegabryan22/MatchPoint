@@ -170,8 +170,9 @@ class GroupStageTest extends TestCase
 
     public function test_regular_user_can_view_but_cannot_generate_groups(): void
     {
-        [$admin, $tournament] = $this->competition(TournamentFormat::RoundRobin, 4);
+        [$admin, $tournament, $players] = $this->competition(TournamentFormat::RoundRobin, 4);
         $user = User::factory()->create();
+        $players->first()->update(['user_id' => $user->id]);
 
         $this->actingAs($user)->get(route('tournaments.groups.show', $tournament))->assertOk();
         $this->actingAs($user)->post(route('tournaments.groups.store', $tournament), [

@@ -16,10 +16,13 @@ final class DashboardService
     public function __construct(
         private readonly DashboardRepositoryInterface $dashboard,
         private readonly StatisticsRepositoryInterface $statistics,
+        private readonly TournamentAccessService $access,
     ) {}
 
     public function summary(array $filters, User $user): array
     {
+        $filters['visible_tournament_ids'] = $this->access->visibleQuery($user)->pluck('id')->all();
+        $filters['is_admin'] = $user->isAdministrator();
         $upcomingMatches = $this->dashboard->upcomingMatches($filters);
         $recentResults = $this->dashboard->recentResults($filters);
         $recentChampions = $this->dashboard->recentChampions($filters);
@@ -35,7 +38,7 @@ final class DashboardService
             'recentActivity' => $user->can('viewAny', AuditLog::class)
                 ? $this->dashboard->recentActivity()
                 : collect(),
-            'tournaments' => $this->dashboard->tournaments(),
+            'tournaments' => $this->dashboard->tournaments($filters),
             'filters' => $filters,
             'generatedAt' => now(),
         ];

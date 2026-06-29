@@ -13,13 +13,13 @@ class TournamentAuthorizationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_authenticated_user_can_view_but_not_manage_tournaments(): void
+    public function test_authenticated_user_cannot_view_or_manage_unrelated_tournaments(): void
     {
         $user = User::factory()->create();
         $tournament = Tournament::factory()->create();
 
         $this->actingAs($user)->get(route('tournaments.index'))->assertOk();
-        $this->actingAs($user)->get(route('tournaments.show', $tournament))->assertOk();
+        $this->actingAs($user)->get(route('tournaments.show', $tournament))->assertForbidden();
         $this->actingAs($user)->get(route('tournaments.create'))->assertForbidden();
         $this->actingAs($user)->get(route('tournaments.edit', $tournament))->assertForbidden();
         $this->actingAs($user)->post(route('tournaments.duplicate', $tournament))->assertForbidden();
@@ -35,6 +35,7 @@ class TournamentAuthorizationTest extends TestCase
         ]);
         $organizer->roles()->attach($role);
         $tournament = Tournament::factory()->create();
+        $tournament->organizers()->attach($organizer, ['assigned_by' => $organizer->id, 'is_primary' => true, 'assigned_at' => now()]);
 
         $this->actingAs($organizer)->get(route('tournaments.create'))->assertOk();
         $this->actingAs($organizer)->get(route('tournaments.edit', $tournament))->assertOk();

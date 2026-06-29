@@ -1,3 +1,4 @@
+<div class="mp-desktop-bracket">
 @foreach($bracketSections as $section)
     <section class="mp-world-section">
         <header class="mp-world-section-header">
@@ -45,3 +46,32 @@
         </div>
     </section>
 @endforeach
+</div>
+
+<div class="mp-mobile-results">
+    <div class="mp-mobile-results-heading">
+        <div><div class="mp-eyebrow">Modo árbitro</div><h2>Ingreso rápido de marcadores</h2></div>
+        <span>Actualización en vivo</span>
+    </div>
+    @foreach($bracketSections as $sectionIndex => $section)
+        @foreach($section['rounds'] as $roundIndex => $round)
+            @php
+                $visibleMatches = collect($round['matches'])->filter(fn ($matchData) => $matchData['model']->participant_a_id && $matchData['model']->participant_b_id);
+            @endphp
+            @if($visibleMatches->isNotEmpty())
+                <section class="mp-mobile-round">
+                    <div class="mp-mobile-round-title"><h3>{{ $round['name'] }}</h3><span>{{ $visibleMatches->count() }} partidos</span></div>
+                    <div class="mp-mobile-match-list">
+                        @foreach($visibleMatches as $matchData)
+                            @include('tournaments.draws._world-match', [
+                                'matchData' => $matchData,
+                                'mobile' => true,
+                                'instance' => 'mobile-'.$sectionIndex.'-'.$roundIndex,
+                            ])
+                        @endforeach
+                    </div>
+                </section>
+            @endif
+        @endforeach
+    @endforeach
+</div>

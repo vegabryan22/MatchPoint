@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Player;
 use App\Models\Team;
+use App\Models\User;
 use App\Repositories\Contracts\PlayerRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -16,10 +17,14 @@ use Throwable;
 
 final class PlayerService
 {
-    public function __construct(private readonly PlayerRepositoryInterface $players) {}
+    public function __construct(private readonly PlayerRepositoryInterface $players, private readonly TournamentAccessService $access) {}
 
-    public function paginate(array $filters): LengthAwarePaginator
+    public function paginate(array $filters, User $user): LengthAwarePaginator
     {
+        $filters['user_id'] = $user->id;
+        $filters['is_admin'] = $user->isAdministrator();
+        $filters['visible_tournament_ids'] = $this->access->visibleQuery($user)->pluck('id')->all();
+
         return $this->players->paginate($filters);
     }
 
@@ -44,8 +49,9 @@ final class PlayerService
         return $players;
     }
 
-    public function create(array $data): Player
+    public function create(array $data, ?User $actor = null): Player
     {
+        $data['managed_by'] = $actor?->id;
         /** @var UploadedFile|null $photo */
         $photo = Arr::pull($data, 'photo');
         $newPath = $photo?->store('players', 'public');

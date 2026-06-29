@@ -19,5 +19,5 @@ interface StatisticsRepositoryInterface
     public function participants(ParticipantType $type, array $ids): SupportCollection;
 
     /** @return Collection<int, Tournament> */
-    public function tournaments(): Collection;
+    public function tournaments(array $visibleTournamentIds): Collection;
 }

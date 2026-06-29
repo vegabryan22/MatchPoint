@@ -56,6 +56,26 @@ class MatchResultTest extends TestCase
         $this->assertTrue(AuditLog::query()->where('action', 'match.result_recorded')->where('auditable_id', $match->id)->exists());
     }
 
+    public function test_inline_mobile_result_returns_score_payload_without_leaving_bracket(): void
+    {
+        $admin = $this->administrator();
+        [$match, $destination] = $this->pendingMatch(BestOf::One, $admin, true);
+
+        $this->actingAs($admin)->postJson(route('matches.results.store', $match), [
+            'inline' => true,
+            'games' => [['participant_a_score' => 4, 'participant_b_score' => 2]],
+        ])->assertOk()->assertJson([
+            'message' => 'Resultado registrado y llave actualizada.',
+            'match_id' => $match->id,
+            'status' => MatchStatus::Completed->label(),
+            'score_a' => 4,
+            'score_b' => 2,
+        ]);
+
+        $this->assertSame($match->participant_a_id, $destination->refresh()->participant_a_id);
+        $this->assertFalse(session()->has('success'));
+    }
+
     public function test_bo3_finishes_when_participant_reaches_two_wins(): void
     {
         $admin = $this->administrator();
@@ -146,6 +166,7 @@ class MatchResultTest extends TestCase
             ['name' => RoleName::Referee->label()],
         );
         $referee->roles()->attach($role);
+        $match->tournament->officials()->attach($referee, ['assigned_by' => $admin->id, 'role' => 'referee', 'is_active' => true, 'assigned_at' => now()]);
         $payload = ['games' => [['participant_a_score' => 1, 'participant_b_score' => 0]]];
 
         $this->actingAs($regularUser)->post(route('matches.results.store', $match), $payload)->assertForbidden();

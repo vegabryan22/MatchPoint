@@ -22,6 +22,7 @@ final class EloquentStatisticsRepository implements StatisticsRepositoryInterfac
             ->where('participant_type', $filters['participant_type'])
             ->whereNotNull('participant_a_id')
             ->whereNotNull('participant_b_id')
+            ->whereIn('tournament_id', $filters['visible_tournament_ids'])
             ->when($filters['tournament_id'] ?? null, fn ($query, $id) => $query->where('tournament_id', $id))
             ->when($filters['game'] ?? null, fn ($query, $game) => $query->whereHas('tournament', fn ($query) => $query->where('game', $game)))
             ->when($filters['date_from'] ?? null, fn ($query, $date) => $query->whereDate('completed_at', '>=', $date))
@@ -43,8 +44,8 @@ final class EloquentStatisticsRepository implements StatisticsRepositoryInterfac
             ->keyBy('id');
     }
 
-    public function tournaments(): Collection
+    public function tournaments(array $visibleTournamentIds): Collection
     {
-        return Tournament::query()->orderByDesc('starts_at')->get(['id', 'name', 'slug']);
+        return Tournament::query()->whereKey($visibleTournamentIds)->orderByDesc('starts_at')->get(['id', 'name', 'slug']);
     }
 }

@@ -18,7 +18,7 @@ class TournamentDrawAuthorizationTest extends TestCase
     {
         $user = User::factory()->create();
         $tournament = $this->registrationTournament();
-        $players = Player::factory()->count(2)->create();
+        $players = collect([Player::factory()->create(['user_id' => $user->id]), Player::factory()->create()]);
         $tournament->players()->attach($players->pluck('id')->all(), [
             'registered_by' => $user->id,
             'source' => 'manual',
@@ -43,6 +43,7 @@ class TournamentDrawAuthorizationTest extends TestCase
         $referee = User::factory()->create();
         $referee->roles()->attach($role);
         $tournament = $this->registrationTournament();
+        $tournament->officials()->attach($referee, ['assigned_by' => $tournament->created_by, 'role' => 'referee', 'is_active' => true, 'assigned_at' => now()]);
 
         $this->assertTrue($referee->can('manageMatches', $tournament));
         $this->assertFalse($referee->can('manageDraw', $tournament));

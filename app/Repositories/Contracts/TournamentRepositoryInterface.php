@@ -3,12 +3,13 @@
 namespace App\Repositories\Contracts;
 
 use App\Models\Tournament;
+use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 interface TournamentRepositoryInterface
 {
     /** @return LengthAwarePaginator<int, Tournament> */
-    public function paginate(array $filters, int $perPage = 15): LengthAwarePaginator;
+    public function paginate(array $filters, User $user, int $perPage = 15): LengthAwarePaginator;
 
     public function create(array $attributes): Tournament;
 

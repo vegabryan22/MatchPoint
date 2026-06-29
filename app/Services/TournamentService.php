@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\GameType;
+use App\Enums\RoleName;
 use App\Enums\TournamentStatus;
 use App\Models\Tournament;
 use App\Models\User;
@@ -28,9 +29,9 @@ final class TournamentService
         private readonly AuditService $audit,
     ) {}
 
-    public function paginate(array $filters): LengthAwarePaginator
+    public function paginate(array $filters, User $user): LengthAwarePaginator
     {
-        return $this->tournaments->paginate($filters);
+        return $this->tournaments->paginate($filters, $user);
     }
 
     public function create(array $data, User $creator): Tournament
@@ -41,7 +42,12 @@ final class TournamentService
         $data['status'] = TournamentStatus::Draft;
         $data['created_by'] = $creator->getKey();
 
-        return DB::transaction(fn (): Tournament => $this->tournaments->create($data));
+        return DB::transaction(function () use ($data, $creator): Tournament {
+            $tournament = $this->tournaments->create($data);
+            $this->assignCreatorAsOrganizer($tournament, $creator);
+
+            return $tournament;
+        });
     }
 
     public function update(Tournament $tournament, array $data): Tournament
@@ -85,6 +91,7 @@ final class TournamentService
         });
 
         $this->audit->record('tournament.duplicated', $tournament, [], ['copy_id' => $copy->id]);
+        $this->assignCreatorAsOrganizer($copy, $creator);
 
         return $copy;
     }
@@ -174,5 +181,18 @@ final class TournamentService
         }
 
         return $slug;
+    }
+
+    private function assignCreatorAsOrganizer(Tournament $tournament, User $creator): void
+    {
+        if (! $creator->hasRole(RoleName::Organizer)) {
+            return;
+        }
+
+        $tournament->organizers()->syncWithoutDetaching([$creator->id => [
+            'assigned_by' => $creator->id,
+            'is_primary' => true,
+            'assigned_at' => now(),
+        ]]);
     }
 }

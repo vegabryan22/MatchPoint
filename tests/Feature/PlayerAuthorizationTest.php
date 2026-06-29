@@ -16,7 +16,7 @@ class PlayerAuthorizationTest extends TestCase
     public function test_authenticated_user_can_view_players_but_cannot_manage_them(): void
     {
         $user = User::factory()->create();
-        $player = Player::factory()->create();
+        $player = Player::factory()->create(['user_id' => $user->id]);
 
         $this->actingAs($user)->get(route('players.index'))->assertOk();
         $this->actingAs($user)->get(route('players.show', $player))->assertOk();
@@ -33,7 +33,7 @@ class PlayerAuthorizationTest extends TestCase
             'slug' => RoleName::Organizer->value,
         ]);
         $organizer->roles()->attach($role);
-        $player = Player::factory()->create();
+        $player = Player::factory()->create(['managed_by' => $organizer->id]);
 
         $this->actingAs($organizer)->get(route('players.create'))->assertOk();
         $this->actingAs($organizer)->get(route('players.edit', $player))->assertOk();

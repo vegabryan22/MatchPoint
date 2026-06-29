@@ -12,6 +12,6 @@ final class TournamentChampionController extends Controller
 
     public function index(ChampionFilterRequest $request): View
     {
-        return view('champions.index', $this->champions->paginate($request->validated()));
+        return view('champions.index', $this->champions->paginate($request->validated(), $request->user()));
     }
 }

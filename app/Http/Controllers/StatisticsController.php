@@ -13,11 +13,11 @@ final class StatisticsController extends Controller
 
     public function index(StatisticsFilterRequest $request): View
     {
-        return view('statistics.index', $this->statistics->ranking($request->validated()));
+        return view('statistics.index', $this->statistics->ranking($request->validated(), $request->user()));
     }
 
     public function show(StatisticsFilterRequest $request, ParticipantType $type, int $participant): View
     {
-        return view('statistics.show', $this->statistics->participant($type, $participant, $request->validated()));
+        return view('statistics.show', $this->statistics->participant($type, $participant, $request->validated(), $request->user()));
     }
 }

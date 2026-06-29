@@ -20,6 +20,7 @@ final class EloquentDashboardRepository implements DashboardRepositoryInterface
 {
     public function metrics(array $filters): array
     {
+        $visibleIds = $filters['visible_tournament_ids'];
         $matches = fn (): Builder => $this->matchQuery($filters);
         $goals = Score::query()
             ->whereHas('gameMatch', function (Builder $query) use ($filters): void {
@@ -30,11 +31,12 @@ final class EloquentDashboardRepository implements DashboardRepositoryInterface
             ->sum(fn (Score $score): int => $score->participant_a_score + $score->participant_b_score);
 
         return [
-            'players' => Player::query()->count(),
-            'active_players' => Player::query()->where('is_active', true)->count(),
-            'teams' => Team::query()->count(),
-            'active_teams' => Team::query()->where('is_active', true)->count(),
+            'players' => Player::query()->when(! $filters['is_admin'], fn ($query) => $query->whereHas('tournaments', fn ($query) => $query->whereKey($visibleIds)))->count(),
+            'active_players' => Player::query()->where('is_active', true)->when(! $filters['is_admin'], fn ($query) => $query->whereHas('tournaments', fn ($query) => $query->whereKey($visibleIds)))->count(),
+            'teams' => Team::query()->when(! $filters['is_admin'], fn ($query) => $query->whereHas('tournaments', fn ($query) => $query->whereKey($visibleIds)))->count(),
+            'active_teams' => Team::query()->where('is_active', true)->when(! $filters['is_admin'], fn ($query) => $query->whereHas('tournaments', fn ($query) => $query->whereKey($visibleIds)))->count(),
             'tournaments' => Tournament::query()
+                ->whereKey($visibleIds)
                 ->when($filters['participant_type'] ?? null, fn ($query, $type) => $query->where('participant_type', $type))
                 ->when($filters['tournament_id'] ?? null, fn ($query, $id) => $query->whereKey($id))
                 ->count(),
@@ -74,6 +76,7 @@ final class EloquentDashboardRepository implements DashboardRepositoryInterface
     {
         return TournamentChampion::query()
             ->with('tournament')
+            ->whereIn('tournament_id', $filters['visible_tournament_ids'])
             ->when($filters['participant_type'] ?? null, fn ($query, $type) => $query->where('participant_type', $type))
             ->when($filters['tournament_id'] ?? null, fn ($query, $id) => $query->where('tournament_id', $id))
             ->when($filters['date_from'] ?? null, fn ($query, $date) => $query->whereDate('crowned_at', '>=', $date))
@@ -83,9 +86,9 @@ final class EloquentDashboardRepository implements DashboardRepositoryInterface
             ->get();
     }
 
-    public function tournaments(): Collection
+    public function tournaments(array $filters): Collection
     {
-        return Tournament::query()->orderByDesc('starts_at')->get(['id', 'name', 'slug']);
+        return Tournament::query()->whereKey($filters['visible_tournament_ids'])->orderByDesc('starts_at')->get(['id', 'name', 'slug']);
     }
 
     public function recentActivity(int $limit = 6): Collection
@@ -122,6 +125,7 @@ final class EloquentDashboardRepository implements DashboardRepositoryInterface
     private function applyMatchFilters(Builder $query, array $filters, bool $completedDates): void
     {
         $query
+            ->whereIn('tournament_id', $filters['visible_tournament_ids'])
             ->when($filters['participant_type'] ?? null, fn ($query, $type) => $query->where('participant_type', $type))
             ->when($filters['tournament_id'] ?? null, fn ($query, $id) => $query->where('tournament_id', $id));
 

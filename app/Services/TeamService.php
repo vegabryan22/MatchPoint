@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Team;
+use App\Models\User;
 use App\Repositories\Contracts\TeamRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\UploadedFile;
@@ -16,10 +17,15 @@ final class TeamService
     public function __construct(
         private readonly TeamRepositoryInterface $teams,
         private readonly AuditService $audit,
+        private readonly TournamentAccessService $access,
     ) {}
 
-    public function paginate(array $filters): LengthAwarePaginator
+    public function paginate(array $filters, User $user): LengthAwarePaginator
     {
+        $filters['user_id'] = $user->id;
+        $filters['is_admin'] = $user->isAdministrator();
+        $filters['visible_tournament_ids'] = $this->access->visibleQuery($user)->pluck('id')->all();
+
         return $this->teams->paginate($filters);
     }
 
@@ -28,8 +34,9 @@ final class TeamService
         return $team->load(['players' => fn ($query) => $query->orderByDesc('player_team.is_captain')->orderBy('nickname')]);
     }
 
-    public function create(array $data): Team
+    public function create(array $data, ?User $actor = null): Team
     {
+        $data['managed_by'] = $actor?->id;
         /** @var UploadedFile|null $logo */
         $logo = Arr::pull($data, 'logo');
         $playerIds = array_map('intval', Arr::pull($data, 'player_ids', []));

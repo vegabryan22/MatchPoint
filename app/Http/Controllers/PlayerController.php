@@ -21,7 +21,7 @@ final class PlayerController extends Controller
     public function index(PlayerFilterRequest $request): View
     {
         return view('players.index', [
-            'players' => $this->players->paginate($request->validated()),
+            'players' => $this->players->paginate($request->validated(), $request->user()),
             'countries' => $this->players->countries(),
             'levels' => PlayerLevel::cases(),
         ]);
@@ -36,7 +36,7 @@ final class PlayerController extends Controller
 
     public function store(StorePlayerRequest $request): RedirectResponse
     {
-        $player = $this->players->create($request->validated());
+        $player = $this->players->create($request->validated(), $request->user());
 
         return redirect()->route('players.show', $player)->with('success', 'Jugador creado correctamente.');
     }

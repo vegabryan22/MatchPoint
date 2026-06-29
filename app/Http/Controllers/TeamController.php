@@ -22,7 +22,7 @@ final class TeamController extends Controller
 
     public function index(TeamFilterRequest $request): View
     {
-        return view('teams.index', ['teams' => $this->teams->paginate($request->validated())]);
+        return view('teams.index', ['teams' => $this->teams->paginate($request->validated(), $request->user())]);
     }
 
     public function create(): View
@@ -34,7 +34,7 @@ final class TeamController extends Controller
 
     public function store(StoreTeamRequest $request): RedirectResponse
     {
-        $team = $this->teams->create($request->validated());
+        $team = $this->teams->create($request->validated(), $request->user());
 
         return redirect()->route('teams.show', $team)->with('success', 'Equipo creado correctamente.');
     }
