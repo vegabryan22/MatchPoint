@@ -23,6 +23,11 @@ class TournamentStaffAccessTest extends TestCase
         $second->roles()->attach($role);
         $tournament = Tournament::factory()->create(['created_by' => $admin]);
 
+        $this->actingAs($admin)->get(route('tournaments.staff.index', $tournament))
+            ->assertOk()
+            ->assertSee('Organizadores')
+            ->assertSee('Árbitros');
+
         $this->actingAs($admin)->post(route('tournaments.staff.organizers.store', $tournament), ['user_id' => $first->id, 'is_primary' => 1])->assertRedirect();
         $this->actingAs($admin)->post(route('tournaments.staff.organizers.store', $tournament), ['user_id' => $second->id, 'is_primary' => 1])->assertRedirect();
 
