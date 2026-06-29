@@ -8,6 +8,7 @@ enum TournamentCapacity: int
     case Eight = 8;
     case Sixteen = 16;
     case ThirtyTwo = 32;
+    case FortyEight = 48;
     case SixtyFour = 64;
     case OneHundredTwentyEight = 128;
 }

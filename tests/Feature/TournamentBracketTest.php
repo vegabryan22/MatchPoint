@@ -7,6 +7,7 @@ use App\Enums\DrawMethod;
 use App\Enums\MatchSlot;
 use App\Enums\MatchStatus;
 use App\Enums\TournamentFormat;
+use App\Enums\TournamentStatus;
 use App\Events\MatchCompleted;
 use App\Models\AuditLog;
 use App\Models\GameMatch;
@@ -19,6 +20,40 @@ use Tests\TestCase;
 class TournamentBracketTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_bracket_renders_world_cup_layout_with_rounds_teams_and_scores(): void
+    {
+        [$admin, $tournament] = $this->generateBracket(TournamentFormat::SingleElimination, 8);
+        $match = $tournament->rounds()->where('number', 1)->firstOrFail()->matches()->firstOrFail();
+        $match->update(['winner_id' => $match->participant_a_id, 'status' => MatchStatus::Completed]);
+        $match->scores()->create([
+            'game_number' => 1,
+            'participant_a_score' => 3,
+            'participant_b_score' => 1,
+            'winner_id' => $match->participant_a_id,
+            'created_by' => $admin->id,
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('tournaments.draws.show', $tournament))
+            ->assertOk()
+            ->assertSee('Llave estilo Copa del Mundo')
+            ->assertSee('mp-world-bracket is-symmetric', false)
+            ->assertSee('data-bracket-side="left"', false)
+            ->assertSee('data-bracket-side="center"', false)
+            ->assertSee('data-bracket-side="right"', false)
+            ->assertSee('mp-world-cup', false)
+            ->assertSee('Copa MatchPoint')
+            ->assertSee('mp-world-team is-winner', false)
+            ->assertSee('data-bracket-fullscreen', false)
+            ->assertSee('3');
+
+        $content = $response->getContent();
+
+        $this->assertSame(2, substr_count($content, 'data-bracket-side="left"'));
+        $this->assertSame(1, substr_count($content, 'data-bracket-side="center"'));
+        $this->assertSame(2, substr_count($content, 'data-bracket-side="right"'));
+        $this->assertSame(7, substr_count($content, '<article class="mp-world-match'));
+    }
 
     public function test_single_elimination_generates_every_round_and_destination(): void
     {
@@ -35,6 +70,41 @@ class TournamentBracketTest extends TestCase
         $this->assertSame($firstMatch->winner_next_match_id, $secondMatch->winner_next_match_id);
         $this->assertSame(MatchSlot::A, $firstMatch->winner_next_slot);
         $this->assertSame(MatchSlot::B, $secondMatch->winner_next_slot);
+    }
+
+    public function test_projected_bracket_endpoint_reflects_results_recorded_from_another_session(): void
+    {
+        [$admin, $tournament] = $this->generateBracket(TournamentFormat::SingleElimination, 4);
+        $viewer = User::factory()->create(['is_active' => true]);
+        $tournament->update(['status' => TournamentStatus::InProgress]);
+        $match = $tournament->rounds()->where('number', 1)->firstOrFail()->matches()->firstOrFail();
+
+        $before = $this->actingAs($viewer)->getJson(route('tournaments.draws.live', $tournament))
+            ->assertOk()
+            ->assertJsonStructure(['version', 'html'])
+            ->json();
+
+        $this->actingAs($admin)->post(route('matches.results.store', $match), [
+            'games' => [['participant_a_score' => 3, 'participant_b_score' => 1]],
+        ])->assertRedirect(route('tournaments.draws.show', $tournament));
+
+        $after = $this->actingAs($viewer)->getJson(route('tournaments.draws.live', $tournament))
+            ->assertOk()
+            ->json();
+
+        $this->assertNotSame($before['version'], $after['version']);
+        $this->assertStringContainsString('mp-world-team is-winner', $after['html']);
+        $this->assertStringContainsString('>3</strong>', $after['html']);
+        $this->assertSame($match->participant_a_id, GameMatch::query()->findOrFail($match->winner_next_match_id)->participant_a_id);
+    }
+
+    public function test_single_elimination_with_48_players_uses_64_slots_and_16_byes(): void
+    {
+        [, $tournament] = $this->generateBracket(TournamentFormat::SingleElimination, 48);
+
+        $this->assertSame(6, $tournament->rounds()->count());
+        $this->assertSame(63, $tournament->matches()->count());
+        $this->assertSame(16, $tournament->rounds()->where('number', 1)->firstOrFail()->matches()->where('status', MatchStatus::Bye)->count());
     }
 
     public function test_first_round_byes_are_propagated_to_the_next_round(): void

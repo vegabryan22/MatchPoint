@@ -16,6 +16,21 @@ Para cargar los datos automáticamente junto con los seeders base, configura `MA
 php artisan migrate --seed
 ```
 
+Para generar llaves adicionales de 32, 48 y 64 participantes, además de un Mundial 48 completo:
+
+```bash
+php artisan db:seed --class=LargeBracketDemoSeeder
+```
+
+El seeder crea 64 participantes reutilizables y genera:
+
+- llave de 32: 31 partidos;
+- eliminación simple de 48: 63 espacios, 47 partidos reales y 16 pases automáticos;
+- llave de 64: 63 partidos;
+- Mundial 48 oficial: 12 grupos, 72 partidos de grupos, ranking de terceros y llave de 32 con 31 partidos.
+
+Si existen selecciones nacionales, las asigna de forma rotativa.
+
 La opción está desactivada de forma predeterminada para impedir que datos ficticios lleguen accidentalmente a producción.
 
 ## Cuentas disponibles
@@ -25,6 +40,8 @@ La opción está desactivada de forma predeterminada para impedir que datos fict
 | Administrador | `admin@example.com` | `ChangeMe!123` | Recorrido completo, configuración y auditoría |
 | Organizador | `organizer@example.com` | `DemoOrganizador!123` | Torneos, inscripciones, sorteos y reportes |
 | Árbitro | `referee@example.com` | `DemoArbitro!123` | Consulta de llaves y registro de resultados |
+
+La demostración asigna Costa Rica, Argentina, Brasil, Francia, España, Alemania, Japón y Marruecos a las inscripciones. Sus banderas, nombres y escudos aparecen en la llave mundialista y en el formulario de resultados.
 
 Estas credenciales son exclusivamente locales. Configura `MATCHPOINT_ADMIN_PASSWORD` con una contraseña única antes de cualquier despliegue.
 
@@ -51,6 +68,7 @@ Estas credenciales son exclusivamente locales. Configura `MATCHPOINT_ADMIN_PASSW
 - Inscripciones abiertas.
 - Seis de dieciséis cupos ocupados.
 - Preparado para probar altas, bajas, búsqueda, CSV, Excel y generación del sorteo.
+- Formulario público sin cuenta disponible en `/inscripcion/clasificatorio-fc-costa-rica`.
 
 También se crean dieciséis jugadores centroamericanos y cuatro equipos con plantillas y capitanes.
 

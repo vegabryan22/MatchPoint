@@ -17,20 +17,35 @@
                 <div class="mp-card p-4">
                     <div class="mp-eyebrow">Configuración</div>
                     <h2 class="h4 fw-bold">Generar calendario</h2>
-                    <p class="mp-muted">Los participantes se distribuyen por serpentina y cada grupo utiliza el método circular sin cruces repetidos.</p>
+                    @if($tournament->format === App\Enums\TournamentFormat::WorldCup48)
+                        <p class="mp-muted">Formato estricto: 12 grupos de cuatro. Clasifican los dos primeros y los ocho mejores terceros.</p>
+                        <div class="alert {{ $participants->count() === 48 ? 'alert-success' : 'alert-warning' }}">
+                            Inscritos: <strong>{{ $participants->count() }}/48</strong>
+                            @if($participants->count() < 48) · Faltan {{ 48 - $participants->count() }} participantes.@endif
+                        </div>
+                    @else
+                        <p class="mp-muted">Los participantes se distribuyen por serpentina y cada grupo utiliza el método circular sin cruces repetidos.</p>
+                    @endif
                     @can('manageGroups', $tournament)
                         <form method="post" action="{{ route('tournaments.groups.store', $tournament) }}">
                             @csrf
                             <div class="row g-3">
-                                <div class="col-sm-6">
-                                    <label class="form-label" for="group_count">Cantidad de grupos</label>
-                                    <input class="form-control" id="group_count" name="group_count" type="number" min="1" max="16" value="{{ old('group_count', $tournament->format === App\Enums\TournamentFormat::GroupsKnockout ? 2 : 1) }}">
-                                </div>
-                                <div class="col-sm-6">
-                                    <label class="form-label" for="qualifiers_per_group">Clasificados por grupo</label>
-                                    <input class="form-control" id="qualifiers_per_group" name="qualifiers_per_group" type="number" min="0" max="8" value="{{ old('qualifiers_per_group', $tournament->format === App\Enums\TournamentFormat::GroupsKnockout ? 2 : 0) }}">
-                                </div>
-                                <div class="col-12"><button class="btn btn-primary">Generar grupos y jornadas</button></div>
+                                @if($tournament->format === App\Enums\TournamentFormat::WorldCup48)
+                                    <input type="hidden" name="group_count" value="12">
+                                    <input type="hidden" name="qualifiers_per_group" value="2">
+                                    <div class="col-sm-6"><div class="mp-card p-3"><div class="small mp-muted">Grupos</div><strong>12 × 4 participantes</strong></div></div>
+                                    <div class="col-sm-6"><div class="mp-card p-3"><div class="small mp-muted">Fase eliminatoria</div><strong>32 clasificados</strong></div></div>
+                                @else
+                                    <div class="col-sm-6">
+                                        <label class="form-label" for="group_count">Cantidad de grupos</label>
+                                        <input class="form-control" id="group_count" name="group_count" type="number" min="1" max="16" value="{{ old('group_count', $tournament->format === App\Enums\TournamentFormat::GroupsKnockout ? 2 : 1) }}">
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label class="form-label" for="qualifiers_per_group">Clasificados por grupo</label>
+                                        <input class="form-control" id="qualifiers_per_group" name="qualifiers_per_group" type="number" min="0" max="8" value="{{ old('qualifiers_per_group', $tournament->format === App\Enums\TournamentFormat::GroupsKnockout ? 2 : 0) }}">
+                                    </div>
+                                @endif
+                                <div class="col-12"><button class="btn btn-primary" @disabled($tournament->format === App\Enums\TournamentFormat::WorldCup48 && $participants->count() !== 48)>Generar grupos y jornadas</button></div>
                             </div>
                         </form>
                     @else
@@ -53,7 +68,7 @@
     @else
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
             <div class="mp-muted">{{ $groups->count() }} grupos · {{ $groups->sum(fn ($group) => $group->matches->count()) }} partidos</div>
-            @if ($tournament->format === App\Enums\TournamentFormat::GroupsKnockout && $knockoutRounds->isEmpty())
+            @if (in_array($tournament->format, [App\Enums\TournamentFormat::GroupsKnockout, App\Enums\TournamentFormat::WorldCup48], true) && $knockoutRounds->isEmpty())
                 @can('manageGroups', $tournament)
                     <form method="post" action="{{ route('tournaments.groups.qualify', $tournament) }}" data-confirm="¿Confirmar posiciones y generar la fase eliminatoria?">
                         @csrf
@@ -87,6 +102,16 @@
                 </div>
             @endforeach
         </div>
+
+        @if($tournament->format === App\Enums\TournamentFormat::WorldCup48)
+            <section class="mp-card overflow-hidden mb-4">
+                <div class="p-4 border-bottom"><div class="mp-eyebrow">Clasificación adicional</div><h2 class="h5 fw-bold mb-0">Ranking de mejores terceros</h2></div>
+                <div class="table-responsive"><table class="table align-middle mb-0">
+                    <thead><tr><th>#</th><th>Grupo</th><th>Participante</th><th>PJ</th><th>DG</th><th>GF</th><th>Pts</th><th>Estado</th></tr></thead>
+                    <tbody>@foreach($bestThirds as $row)<tr class="{{ $row['qualified_as_third'] ? 'table-success' : '' }}"><td>{{ $row['third_place_rank'] }}</td><td>{{ $row['group_name'] }}</td><td class="fw-bold">{{ $row['name'] }}</td><td>{{ $row['played'] }}</td><td>{{ $row['goal_difference'] > 0 ? '+' : '' }}{{ $row['goal_difference'] }}</td><td>{{ $row['goals_for'] }}</td><td class="fw-bold">{{ $row['points'] }}</td><td><span class="badge {{ $row['qualified_as_third'] ? 'text-bg-success' : 'text-bg-secondary' }}">{{ $row['qualified_as_third'] ? 'Clasifica' : 'Eliminado' }}</span></td></tr>@endforeach</tbody>
+                </table></div>
+            </section>
+        @endif
 
         <section class="mp-card p-4 mb-4">
             <div class="mp-eyebrow">Calendario</div>

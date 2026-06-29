@@ -7,10 +7,13 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GameClubController;
 use App\Http\Controllers\MatchResultController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PublicFormQrController;
+use App\Http\Controllers\QuickRegistrationController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\StatisticsController;
 use App\Http\Controllers\TeamController;
@@ -22,6 +25,13 @@ use App\Http\Controllers\TournamentRegistrationController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
+
+Route::get('/inscripcion/{tournament}', [QuickRegistrationController::class, 'create'])
+    ->middleware('throttle:60,1')->name('quick-registrations.create');
+Route::post('/inscripcion/{tournament}', [QuickRegistrationController::class, 'store'])
+    ->middleware('throttle:10,1')->name('quick-registrations.store');
+Route::get('/inscripcion/{tournament}/confirmacion/{reference}', [QuickRegistrationController::class, 'confirmation'])
+    ->middleware('throttle:60,1')->name('quick-registrations.confirmation');
 
 Route::middleware('guest')->group(function (): void {
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
@@ -48,15 +58,21 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     Route::resource('players', PlayerController::class);
     Route::patch('/teams/{team}/status', [TeamController::class, 'toggleStatus'])->name('teams.status');
     Route::resource('teams', TeamController::class);
+    Route::post('/game-clubs/import/popular', [GameClubController::class, 'importPopular'])->middleware('throttle:2,1')->name('game-clubs.import-popular');
+    Route::resource('game-clubs', GameClubController::class)->except(['show']);
     Route::post('/tournaments/{tournament}/duplicate', [TournamentController::class, 'duplicate'])->name('tournaments.duplicate');
+    Route::get('/tournaments/{tournament}/public-forms/{form}/qr', [PublicFormQrController::class, 'image'])->name('public-forms.qr');
+    Route::get('/tournaments/{tournament}/public-forms/{form}/poster', [PublicFormQrController::class, 'poster'])->name('public-forms.poster');
     Route::patch('/tournaments/{tournament}/status', [TournamentController::class, 'transition'])->name('tournaments.status');
     Route::get('/tournaments/{tournament}/registrations', [TournamentRegistrationController::class, 'index'])->name('tournaments.registrations.index');
     Route::post('/tournaments/{tournament}/registrations', [TournamentRegistrationController::class, 'store'])->name('tournaments.registrations.store');
     Route::delete('/tournaments/{tournament}/registrations/{participant}', [TournamentRegistrationController::class, 'destroy'])->name('tournaments.registrations.destroy');
+    Route::patch('/tournaments/{tournament}/registrations/{participant}/game-club', [TournamentRegistrationController::class, 'assignGameClub'])->name('tournaments.registrations.game-club');
     Route::post('/tournaments/{tournament}/registrations/import', [TournamentRegistrationController::class, 'import'])->name('tournaments.registrations.import');
     Route::get('/tournaments/{tournament}/registrations/export/csv', [TournamentRegistrationController::class, 'exportCsv'])->name('tournaments.registrations.export.csv');
     Route::get('/tournaments/{tournament}/registrations/export/xlsx', [TournamentRegistrationController::class, 'exportXlsx'])->name('tournaments.registrations.export.xlsx');
     Route::get('/tournaments/{tournament}/draw', [TournamentDrawController::class, 'show'])->name('tournaments.draws.show');
+    Route::get('/tournaments/{tournament}/draw/live', [TournamentDrawController::class, 'live'])->middleware('throttle:30,1')->name('tournaments.draws.live');
     Route::get('/tournaments/{tournament}/draw/create', [TournamentDrawController::class, 'create'])->name('tournaments.draws.create');
     Route::post('/tournaments/{tournament}/draw/preview', [TournamentDrawController::class, 'preview'])->name('tournaments.draws.preview');
     Route::post('/tournaments/{tournament}/draw', [TournamentDrawController::class, 'store'])->name('tournaments.draws.store');

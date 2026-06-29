@@ -430,6 +430,70 @@ El importador acepta hasta 5.000 filas, ignora filas vacías y conserva las fila
 - CSV: `GET /tournaments/{slug}/registrations/export/csv`.
 - Excel: `GET /tournaments/{slug}/registrations/export/xlsx`.
 
+### UC-42 — Inscribirse públicamente sin cuenta
+
+**Actor:** estudiante o participante sin sesión.
+
+**Ruta:** `GET /inscripcion/{slug}`.
+
+**Precondiciones:** torneo individual en Inscripciones, formulario público habilitado, fecha vigente, cupos disponibles y sin sorteo o grupos generados.
+
+**Pasos:**
+
+1. Abrir el enlace compartido por el organizador.
+2. Escribir nombre completo y nombre de usuario competitivo.
+3. Seleccionar el nivel habilitado: Sétimo 7, Octavo 8, Noveno 9, Décimo 10, Undécimo 11 o Duodécimo 12.
+4. Seleccionar control PS4 o PS5.
+5. Confirmar que llevará su propio control cargado y funcional.
+6. Presionar **Confirmar inscripción**.
+7. Guardar una captura del comprobante y su código.
+
+**Resultado esperado:** se crea un jugador competitivo mínimo sin cuenta, correo ni contraseña y queda inscrito directamente en el torneo.
+
+El organizador activa esta modalidad desde `/tournaments/{slug}/edit`, configura los niveles académicos y comparte el enlace mostrado en la administración de inscripciones.
+
+### UC-29B — Proyectar una llave mientras se registran resultados
+
+1. Iniciar sesión en el equipo conectado al proyector.
+2. Abrir `/tournaments/{slug}/draw` y activar `Pantalla completa`.
+3. Iniciar otra sesión como administrador, organizador o árbitro.
+4. Abrir el partido correspondiente desde la llave y registrar el resultado.
+5. La proyección consulta cambios cada cinco segundos y muestra automáticamente marcador, ganador y avance de ronda.
+6. Si se corrige un resultado, la proyección refleja la corrección en el siguiente ciclo.
+
+### UC-43 — Asignar equipo, selección y escudo del videojuego
+
+**Actor:** administrador u organizador.
+
+**Pasos:**
+
+1. Abrir `/game-clubs` y crear clubes o selecciones con nombre, tipo, país, videojuegos disponibles e imagen.
+   Si no desea cargarlos manualmente, presionar **Importar catálogo** y elegir clubes populares, selecciones mundialistas o ambos.
+2. Abrir `/tournaments/{slug}/registrations`.
+3. Seleccionar el club o selección escogida junto a cada participante.
+4. Presionar **Guardar**.
+5. Abrir la llave o el formulario de resultado para comprobar nombre y escudo.
+
+La selección pertenece al torneo actual; no modifica las elecciones históricas del jugador.
+
+### UC-44 — Generar QR para publicidad
+
+**Actor:** administrador u organizador.
+
+**Precondición:** formulario público habilitado en el torneo.
+
+**Pasos:**
+
+1. Abrir `/tournaments/{slug}`.
+2. Localizar **QR del formulario público**.
+3. Probar **Abrir formulario** y confirmar la URL.
+4. Elegir **Descargar PNG** para redes sociales o impresión convencional.
+5. Elegir **Descargar SVG** para diseño gráfico sin pérdida de calidad.
+6. Usar **Imprimir afiche** para obtener una página lista para publicidad.
+7. Antes de publicar, confirmar que `APP_URL` contiene el dominio HTTPS y no `127.0.0.1`.
+
+**Resultado esperado:** el QR dirige al formulario público exacto del torneo y no depende de servicios externos.
+
 ## 11. Sorteo y llaves de eliminación
 
 ### UC-27 — Generar un sorteo
@@ -486,6 +550,25 @@ La llave sólo puede regenerarse antes de registrar resultados. Eliminarla desbl
 
 Cada grupo debe tener al menos dos participantes. En grupos más eliminación, el total de clasificados debe formar una potencia de dos.
 
+### UC-29A — Generar Mundial 48
+
+**Actores:** administrador u organizador.
+
+**Precondiciones:** formato `Mundial 48`, capacidad 48 y exactamente 48 participantes inscritos.
+
+**Pasos:**
+
+1. Crear el torneo con formato **Mundial 48 · 12 grupos + eliminación** y 48 cupos.
+2. Abrir **Grupos/Calendario**.
+3. Revisar el contador `Inscritos 48/48`.
+4. Generar automáticamente 12 grupos de cuatro y tres jornadas.
+5. Registrar los 72 resultados de grupos.
+6. Revisar el ranking global de terceros.
+7. Clasificar a los 24 participantes directos y los ocho mejores terceros.
+8. Abrir la llave de 32 generada.
+
+Con menos de 48 inscritos, MatchPoint muestra cuántos faltan y bloquea la generación. Para eliminación simple con 48 inscritos se crea una llave de 64 espacios y 16 pases automáticos.
+
 ### UC-30 — Clasificar a la fase eliminatoria
 
 **Actores:** administrador u organizador.
@@ -535,7 +618,7 @@ Los resultados sólo pueden registrarse cuando el torneo está en curso.
 
 - Mejor de 1 requiere una victoria; mejor de 3 requiere dos; mejor de 5 requiere tres.
 - No pueden agregarse juegos después de definir la serie.
-- Los empates sólo se permiten en BO1 de grupos, Round Robin o liga.
+- Los empates sólo se permiten en BO1 de grupos, Mundial 48, Round Robin o liga.
 - Cada marcador admite valores entre 0 y 99.
 - La duración admite entre 1 y 600 minutos.
 
@@ -732,6 +815,9 @@ Las rutas `POST`, `PUT`, `PATCH` y `DELETE` se ejecutan desde formularios proteg
 | POST | `/forgot-password` | Enviar enlace de recuperación |
 | GET | `/reset-password/{token}` | Mostrar cambio de contraseña |
 | POST | `/reset-password` | Guardar nueva contraseña |
+| GET | `/inscripcion/{tournament}` | Mostrar inscripción rápida |
+| POST | `/inscripcion/{tournament}` | Registrar participante; 10 solicitudes/minuto |
+| GET | `/inscripcion/{tournament}/confirmacion/{reference}` | Mostrar comprobante |
 
 #### Sesión, panel y cuenta personal
 
@@ -751,6 +837,25 @@ Las rutas `POST`, `PUT`, `PATCH` y `DELETE` se ejecutan desde formularios proteg
 | GET | `/champions` | Usuario activo |
 | GET | `/reports` | Administrador u organizador |
 | POST | `/reports/export` | Administrador u organizador; 10 solicitudes/minuto |
+
+#### Equipos y selecciones del videojuego
+
+| Método | Ruta | Permiso |
+| --- | --- | --- |
+| GET | `/game-clubs` | Usuario activo |
+| GET | `/game-clubs/create` | Administrador u organizador |
+| POST | `/game-clubs` | Administrador u organizador |
+| GET | `/game-clubs/{game_club}/edit` | Administrador u organizador |
+| PUT/PATCH | `/game-clubs/{game_club}` | Administrador u organizador |
+| DELETE | `/game-clubs/{game_club}` | Administrador u organizador |
+| POST | `/game-clubs/import/popular` | Administrador u organizador; 2 solicitudes/minuto |
+
+#### QR de formularios públicos
+
+| Método | Ruta | Permiso |
+| --- | --- | --- |
+| GET | `/tournaments/{tournament}/public-forms/{form}/qr` | Administrador u organizador |
+| GET | `/tournaments/{tournament}/public-forms/{form}/poster` | Administrador u organizador |
 
 #### Jugadores
 
@@ -804,6 +909,7 @@ Las rutas `POST`, `PUT`, `PATCH` y `DELETE` se ejecutan desde formularios proteg
 | POST | `/tournaments/{tournament}/registrations/import` | Administrador u organizador |
 | GET | `/tournaments/{tournament}/registrations/export/csv` | Usuario activo |
 | GET | `/tournaments/{tournament}/registrations/export/xlsx` | Usuario activo |
+| PATCH | `/tournaments/{tournament}/registrations/{participant}/game-club` | Administrador u organizador |
 
 #### Sorteos y llaves
 

@@ -15,4 +15,8 @@ return [
     'demo' => [
         'enabled' => (bool) env('MATCHPOINT_SEED_DEMO', false),
     ],
+    'sports_db' => [
+        'base_url' => env('THESPORTSDB_BASE_URL', 'https://www.thesportsdb.com/api/v1/json'),
+        'api_key' => env('THESPORTSDB_API_KEY', '123'),
+    ],
 ];

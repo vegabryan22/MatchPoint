@@ -19,6 +19,7 @@
             <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}"><span>◈</span> Dashboard</a>
             <a class="nav-link {{ request()->routeIs('players.*') ? 'active' : '' }}" href="{{ route('players.index') }}"><span>♙</span> Jugadores</a>
             <a class="nav-link {{ request()->routeIs('teams.*') ? 'active' : '' }}" href="{{ route('teams.index') }}"><span>⬡</span> Equipos</a>
+            <a class="nav-link {{ request()->routeIs('game-clubs.*') ? 'active' : '' }}" href="{{ route('game-clubs.index') }}"><span>⚽</span> Equipos y selecciones</a>
             <a class="nav-link {{ request()->routeIs('tournaments.*') ? 'active' : '' }}" href="{{ route('tournaments.index') }}"><span>◇</span> Torneos</a>
             <a class="nav-link {{ request()->routeIs('statistics.*') ? 'active' : '' }}" href="{{ route('statistics.index') }}"><span>↗</span> Estadísticas</a>
             <a class="nav-link {{ request()->routeIs('champions.*') ? 'active' : '' }}" href="{{ route('champions.index') }}"><span>♛</span> Campeones</a>

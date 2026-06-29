@@ -100,6 +100,12 @@ final class EloquentTournamentRegistrationRepository implements TournamentRegist
         $tournament->teams()->detach($participantId);
     }
 
+    public function assignGameClub(Tournament $tournament, int $participantId, ?int $gameClubId): void
+    {
+        $relation = $this->isIndividual($tournament) ? $tournament->players() : $tournament->teams();
+        $relation->updateExistingPivot($participantId, ['game_club_id' => $gameClubId]);
+    }
+
     private function isIndividual(Tournament $tournament): bool
     {
         return $tournament->participant_type === ParticipantType::Individual;

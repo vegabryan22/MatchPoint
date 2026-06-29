@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Registrations\AssignGameClubRequest;
 use App\Http\Requests\Registrations\ImportRegistrationsRequest;
 use App\Http\Requests\Registrations\RegistrationFilterRequest;
 use App\Http\Requests\Registrations\StoreRegistrationRequest;
 use App\Jobs\ImportTournamentRegistrations;
+use App\Models\GameClub;
 use App\Models\Tournament;
 use App\Services\TournamentRegistrationExportService;
 use App\Services\TournamentRegistrationImportService;
@@ -36,6 +38,11 @@ final class TournamentRegistrationController extends Controller
             'candidates' => $this->registrations->candidates($tournament, $filters['candidate_search'] ?? null),
             'registeredCount' => $count,
             'remainingSlots' => max(0, $tournament->max_participants - $count),
+            'gameClubs' => GameClub::query()
+                ->whereHas('availabilities', fn ($query) => $query->where('game', $tournament->game->value))
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(),
         ]);
     }
 
@@ -52,6 +59,14 @@ final class TournamentRegistrationController extends Controller
         $this->registrations->remove($tournament, $participant, $request->user());
 
         return back()->with('success', 'Inscripción retirada correctamente.');
+    }
+
+    public function assignGameClub(AssignGameClubRequest $request, Tournament $tournament, int $participant): RedirectResponse
+    {
+        $clubId = $request->validated('game_club_id');
+        $this->registrations->assignGameClub($tournament, $participant, $clubId === null ? null : (int) $clubId, $request->user());
+
+        return back()->with('success', 'Equipo del videojuego actualizado.');
     }
 
     public function import(ImportRegistrationsRequest $request, Tournament $tournament): RedirectResponse

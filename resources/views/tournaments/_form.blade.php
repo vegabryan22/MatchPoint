@@ -1,5 +1,7 @@
 @php
-    $dateValue = static fn ($value) => $value?->format('Y-m-d\TH:i');
+    $dateValue = static fn ($value) => $value?->format('Y-m-d H:i');
+    $selectedLevels = collect(old('quick_registration_levels', $tournament->quick_registration_levels ?? []));
+    $availableLevels = App\Enums\AcademicLevel::cases();
 @endphp
 
 <div class="row g-4">
@@ -57,15 +59,50 @@
 </div>
 
 <hr class="my-4">
+<h2 class="h5 fw-bold mb-3">Inscripción pública rápida</h2>
+<div class="row g-4">
+    <div class="col-12">
+        <input type="hidden" name="quick_registration_enabled" value="0">
+        <div class="form-check form-switch">
+            <input class="form-check-input" id="quick_registration_enabled" name="quick_registration_enabled" type="checkbox" value="1" @checked(old('quick_registration_enabled', $tournament->quick_registration_enabled ?? false))>
+            <label class="form-check-label" for="quick_registration_enabled">Permitir inscripción pública sin cuenta</label>
+        </div>
+        <div class="form-text">Disponible únicamente para modalidad individual.</div>
+    </div>
+    <div class="col-md-5">
+        <fieldset>
+            <legend class="form-label">Niveles habilitados</legend>
+            <div class="row g-2">
+                @foreach($availableLevels as $level)
+                    <div class="col-6 col-sm-4">
+                        <div class="form-check mp-academic-level-option">
+                            <input class="form-check-input" id="academic-level-{{ $level->value }}" name="quick_registration_levels[]" type="checkbox" value="{{ $level->value }}" @checked($selectedLevels->contains($level->value))>
+                            <label class="form-check-label" for="academic-level-{{ $level->value }}">{{ $level->label() }}</label>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </fieldset>
+        <div class="form-text">Marca todos los niveles académicos que podrán inscribirse.</div>
+        <x-field-error name="quick_registration_levels" />
+    </div>
+    <div class="col-md-7">
+        <label class="form-label" for="quick_registration_notice">Aviso para participantes</label>
+        <textarea class="form-control" id="quick_registration_notice" name="quick_registration_notice" rows="4" maxlength="1000" placeholder="Debes llevar tu propio control PS4 o PS5.">{{ old('quick_registration_notice', $tournament->quick_registration_notice ?? 'Cada participante debe llevar su propio control PS4 o PS5, cargado y en buen estado.') }}</textarea>
+        <x-field-error name="quick_registration_notice" />
+    </div>
+</div>
+
+<hr class="my-4">
 <h2 class="h5 fw-bold mb-3">Calendario</h2>
 <div class="row g-4">
-    <div class="col-md-6 col-lg-3"><label class="form-label" for="registration_starts_at">Inicio de inscripciones</label><input class="form-control" id="registration_starts_at" name="registration_starts_at" type="datetime-local" value="{{ old('registration_starts_at', isset($tournament) ? $dateValue($tournament->registration_starts_at) : '') }}"><x-field-error name="registration_starts_at" /></div>
-    <div class="col-md-6 col-lg-3"><label class="form-label" for="registration_ends_at">Fin de inscripciones</label><input class="form-control" id="registration_ends_at" name="registration_ends_at" type="datetime-local" value="{{ old('registration_ends_at', isset($tournament) ? $dateValue($tournament->registration_ends_at) : '') }}"><x-field-error name="registration_ends_at" /></div>
-    <div class="col-md-6 col-lg-3"><label class="form-label" for="starts_at">Inicio del torneo</label><input class="form-control" id="starts_at" name="starts_at" type="datetime-local" value="{{ old('starts_at', isset($tournament) ? $dateValue($tournament->starts_at) : now()->addWeek()->format('Y-m-d\TH:i')) }}" required><x-field-error name="starts_at" /></div>
-    <div class="col-md-6 col-lg-3"><label class="form-label" for="ends_at">Final estimada</label><input class="form-control" id="ends_at" name="ends_at" type="datetime-local" value="{{ old('ends_at', isset($tournament) ? $dateValue($tournament->ends_at) : '') }}"><x-field-error name="ends_at" /></div>
+    <div class="col-md-6 col-lg-3"><label class="form-label" for="registration_starts_at">Inicio de inscripciones</label><input class="form-control js-datetime-picker" id="registration_starts_at" name="registration_starts_at" type="text" autocomplete="off" placeholder="Seleccionar fecha y hora" value="{{ old('registration_starts_at', isset($tournament) ? $dateValue($tournament->registration_starts_at) : '') }}"><x-field-error name="registration_starts_at" /></div>
+    <div class="col-md-6 col-lg-3"><label class="form-label" for="registration_ends_at">Fin de inscripciones</label><input class="form-control js-datetime-picker" id="registration_ends_at" name="registration_ends_at" type="text" autocomplete="off" placeholder="Seleccionar fecha y hora" value="{{ old('registration_ends_at', isset($tournament) ? $dateValue($tournament->registration_ends_at) : '') }}"><x-field-error name="registration_ends_at" /></div>
+    <div class="col-md-6 col-lg-3"><label class="form-label" for="starts_at">Inicio del torneo</label><input class="form-control js-datetime-picker" id="starts_at" name="starts_at" type="text" autocomplete="off" placeholder="Seleccionar fecha y hora" value="{{ old('starts_at', isset($tournament) ? $dateValue($tournament->starts_at) : now()->addWeek()->format('Y-m-d H:i')) }}" required><x-field-error name="starts_at" /></div>
+    <div class="col-md-6 col-lg-3"><label class="form-label" for="ends_at">Final estimada</label><input class="form-control js-datetime-picker" id="ends_at" name="ends_at" type="text" autocomplete="off" placeholder="Seleccionar fecha y hora" value="{{ old('ends_at', isset($tournament) ? $dateValue($tournament->ends_at) : '') }}"><x-field-error name="ends_at" /></div>
 </div>
 
 <div class="d-flex gap-2 mt-4">
-    <button class="btn btn-primary" type="submit">{{ $submitLabel }}</button>
+    <button class="btn btn-primary" type="submit" data-submit-button>{{ $submitLabel }}</button>
     <a class="btn btn-outline-secondary" href="{{ route('tournaments.index') }}">Cancelar</a>
 </div>

@@ -37,6 +37,9 @@ class Tournament extends Model
         'registration_ends_at',
         'starts_at',
         'ends_at',
+        'quick_registration_enabled',
+        'quick_registration_levels',
+        'quick_registration_notice',
     ];
 
     protected function casts(): array
@@ -51,6 +54,8 @@ class Tournament extends Model
             'registration_ends_at' => 'datetime',
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
+            'quick_registration_enabled' => 'boolean',
+            'quick_registration_levels' => 'array',
         ];
     }
 
@@ -64,7 +69,7 @@ class Tournament extends Model
     public function players(): BelongsToMany
     {
         return $this->belongsToMany(Player::class, 'tournament_players')
-            ->withPivot(['id', 'registered_by', 'source', 'seed', 'registered_at'])
+            ->withPivot(['id', 'registered_by', 'source', 'seed', 'registered_at', 'academic_level', 'controller_platform', 'controller_acknowledged_at', 'public_reference', 'game_club_id'])
             ->withTimestamps();
     }
 
@@ -72,7 +77,7 @@ class Tournament extends Model
     public function teams(): BelongsToMany
     {
         return $this->belongsToMany(Team::class, 'tournament_teams')
-            ->withPivot(['id', 'registered_by', 'source', 'seed', 'registered_at'])
+            ->withPivot(['id', 'registered_by', 'source', 'seed', 'registered_at', 'game_club_id'])
             ->withTimestamps();
     }
 

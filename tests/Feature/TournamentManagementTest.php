@@ -106,6 +106,54 @@ class TournamentManagementTest extends TestCase
         $this->assertDatabaseHas('tournaments', ['name' => 'Copa MatchPoint', 'custom_game' => null]);
     }
 
+    public function test_quick_registration_levels_are_stored_from_checkbox_selection(): void
+    {
+        $admin = $this->administrator();
+
+        $this->actingAs($admin)->get(route('tournaments.create'))
+            ->assertOk()
+            ->assertSee('Sétimo 7')
+            ->assertSee('Octavo 8')
+            ->assertSee('Noveno 9')
+            ->assertSee('Décimo 10')
+            ->assertSee('Undécimo 11')
+            ->assertSee('Duodécimo 12');
+
+        $this->actingAs($admin)->post(route('tournaments.store'), [
+            ...$this->validData(),
+            'quick_registration_enabled' => '1',
+            'quick_registration_levels' => ['7', '8', '9'],
+            'quick_registration_notice' => 'Traer control propio.',
+        ])->assertRedirect();
+
+        $tournament = Tournament::query()->where('name', 'Copa MatchPoint')->firstOrFail();
+
+        $this->assertTrue($tournament->quick_registration_enabled);
+        $this->assertSame(['7', '8', '9'], $tournament->quick_registration_levels);
+    }
+
+    public function test_world_cup_format_requires_capacity_48(): void
+    {
+        $admin = $this->administrator();
+
+        $this->actingAs($admin)->post(route('tournaments.store'), [
+            ...$this->validData(),
+            'format' => TournamentFormat::WorldCup48->value,
+            'max_participants' => 32,
+        ])->assertSessionHasErrors('max_participants');
+
+        $this->actingAs($admin)->post(route('tournaments.store'), [
+            ...$this->validData(),
+            'format' => TournamentFormat::WorldCup48->value,
+            'max_participants' => 48,
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('tournaments', [
+            'format' => TournamentFormat::WorldCup48->value,
+            'max_participants' => 48,
+        ]);
+    }
+
     public function test_duplication_and_status_changes_are_audited(): void
     {
         $admin = $this->administrator();

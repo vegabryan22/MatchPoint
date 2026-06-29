@@ -11,7 +11,7 @@
                 </a>
             @endcan
 
-            @if (in_array($tournament->format, [App\Enums\TournamentFormat::RoundRobin, App\Enums\TournamentFormat::League, App\Enums\TournamentFormat::GroupsKnockout], true))
+            @if (in_array($tournament->format, [App\Enums\TournamentFormat::RoundRobin, App\Enums\TournamentFormat::League, App\Enums\TournamentFormat::GroupsKnockout, App\Enums\TournamentFormat::WorldCup48], true))
                 @can('viewGroups', $tournament)
                     <a class="btn btn-outline-primary" href="{{ route('tournaments.groups.show', $tournament) }}">Grupos y calendario</a>
                 @endcan
@@ -40,6 +40,10 @@
 
     <x-field-error name="status" />
     <x-field-error name="tournament" />
+
+    @if($publicForm)
+        <x-public-form-share :tournament="$tournament" :public-form="$publicForm" />
+    @endif
 
     <div class="mp-card p-4 mb-4">
         <div class="d-flex flex-wrap justify-content-between gap-3 mb-4">

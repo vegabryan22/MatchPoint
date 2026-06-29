@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Enums\GameClubType;
 use App\Enums\MatchStatus;
 use App\Enums\TournamentStatus;
+use App\Models\GameClub;
 use App\Models\Player;
 use App\Models\Team;
 use App\Models\Tournament;
@@ -26,6 +28,10 @@ class DemoSeederTest extends TestCase
 
         $this->assertSame(16, Player::query()->count());
         $this->assertSame(4, Team::query()->count());
+        $this->assertSame(8, GameClub::query()->count());
+        $this->assertSame(8, GameClub::query()->where('team_type', GameClubType::NationalTeam)->count());
+        $this->assertDatabaseHas('game_clubs', ['name' => 'Costa Rica', 'country_code' => 'CR']);
+        $this->assertSame(8, $completed->playerRegistrations()->whereNotNull('game_club_id')->count());
         $this->assertSame(3, Tournament::query()->count());
         $this->assertSame(TournamentStatus::Finished, $completed->status);
         $this->assertSame(7, $completed->matches()->where('status', MatchStatus::Completed)->count());

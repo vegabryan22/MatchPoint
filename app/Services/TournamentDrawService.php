@@ -6,6 +6,7 @@ use App\Enums\DrawMethod;
 use App\Enums\ParticipantType;
 use App\Enums\TournamentFormat;
 use App\Enums\TournamentStatus;
+use App\Models\GameClub;
 use App\Models\Tournament;
 use App\Models\User;
 use App\Repositories\Contracts\TournamentDrawRepositoryInterface;
@@ -25,6 +26,7 @@ final class TournamentDrawService
         private readonly RematchAwarePairingService $pairings,
         private readonly BracketGenerationService $brackets,
         private readonly AuditService $audit,
+        private readonly BracketPresentationService $presentation,
     ) {}
 
     public function participants(Tournament $tournament): Collection
@@ -129,10 +131,15 @@ final class TournamentDrawService
 
     public function details(Tournament $tournament): array
     {
-        $tournament->load(['draw.generator', 'rounds.matches']);
+        $tournament->load(['draw.generator', 'rounds.matches.scores', 'champion']);
         $participants = $this->participants($tournament)->keyBy('id');
+        $clubs = GameClub::query()->whereIn('id', $participants->pluck('pivot.game_club_id')->filter()->unique())->get()->keyBy('id');
 
-        return ['tournament' => $tournament, 'participantsById' => $participants];
+        return [
+            'tournament' => $tournament,
+            'participantsById' => $participants,
+            ...$this->presentation->present($tournament, $participants, $clubs),
+        ];
     }
 
     private function ensureDrawable(Tournament $tournament): void

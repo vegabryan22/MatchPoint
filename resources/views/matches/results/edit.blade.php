@@ -45,13 +45,13 @@
         <div class="mp-card p-4 mb-4">
             <div class="mp-result-versus mb-4">
                 <div class="mp-result-player">
-                    <span class="mp-result-side">A</span>
-                    <strong>{{ $participantAName }}</strong>
+                    @if($clubA?->crestUrl())<img class="mp-game-club-crest" src="{{ $clubA->crestUrl() }}" alt="Escudo de {{ $clubA->name }}" referrerpolicy="no-referrer">@else<span class="mp-result-side">{{ $clubA?->countryFlag() ?? 'A' }}</span>@endif
+                    <div><strong>{{ $participantAName }}</strong>@if($clubA)<div class="mp-muted small">{{ $clubA->name }}</div>@endif</div>
                 </div>
                 <div class="mp-result-vs">VS</div>
                 <div class="mp-result-player text-end">
-                    <strong>{{ $participantBName }}</strong>
-                    <span class="mp-result-side">B</span>
+                    <div><strong>{{ $participantBName }}</strong>@if($clubB)<div class="mp-muted small">{{ $clubB->name }}</div>@endif</div>
+                    @if($clubB?->crestUrl())<img class="mp-game-club-crest" src="{{ $clubB->crestUrl() }}" alt="Escudo de {{ $clubB->name }}" referrerpolicy="no-referrer">@else<span class="mp-result-side">{{ $clubB?->countryFlag() ?? 'B' }}</span>@endif
                 </div>
             </div>
 

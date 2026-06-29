@@ -8,6 +8,7 @@ use App\Enums\MatchStatus;
 use App\Enums\TournamentFormat;
 use App\Enums\TournamentStatus;
 use App\Events\MatchCompleted;
+use App\Models\GameClub;
 use App\Models\GameMatch;
 use App\Models\User;
 use App\Repositories\Contracts\GameMatchRepositoryInterface;
@@ -29,11 +30,15 @@ final class MatchResultService
     {
         $match->load(['tournament', 'round', 'scores', 'completedBy']);
         $participants = $this->registrations->all($match->tournament)->keyBy('id');
+        $participantA = $participants->get($match->participant_a_id);
+        $participantB = $participants->get($match->participant_b_id);
 
         return [
             'match' => $match,
-            'participantA' => $participants->get($match->participant_a_id),
-            'participantB' => $participants->get($match->participant_b_id),
+            'participantA' => $participantA,
+            'participantB' => $participantB,
+            'clubA' => $participantA?->pivot?->game_club_id ? GameClub::query()->find($participantA->pivot->game_club_id) : null,
+            'clubB' => $participantB?->pivot?->game_club_id ? GameClub::query()->find($participantB->pivot->game_club_id) : null,
         ];
     }
 
@@ -138,7 +143,7 @@ final class MatchResultService
         $participantBWins = 0;
         $normalizedGames = [];
         $drawAllowed = $match->round?->bracket === BracketType::Group
-            && in_array($match->tournament->format, [TournamentFormat::RoundRobin, TournamentFormat::League, TournamentFormat::GroupsKnockout], true)
+            && in_array($match->tournament->format, [TournamentFormat::RoundRobin, TournamentFormat::League, TournamentFormat::GroupsKnockout, TournamentFormat::WorldCup48], true)
             && $bestOf === 1;
 
         foreach ($games as $index => $game) {

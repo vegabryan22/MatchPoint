@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Enums\BestOf;
 use App\Enums\ControllerType;
 use App\Enums\DrawMethod;
+use App\Enums\GameClubType;
 use App\Enums\GameType;
 use App\Enums\MatchStatus;
 use App\Enums\ParticipantType;
@@ -13,6 +14,7 @@ use App\Enums\RegistrationSource;
 use App\Enums\RoleName;
 use App\Enums\TournamentFormat;
 use App\Enums\TournamentStatus;
+use App\Models\GameClub;
 use App\Models\GameMatch;
 use App\Models\Player;
 use App\Models\Role;
@@ -44,8 +46,15 @@ class DemoSeeder extends Seeder
     public function run(): void
     {
         $this->call([RoleSeeder::class, SettingSeeder::class, AdminUserSeeder::class]);
+        $gameTeams = $this->createDemoGameTeams();
 
         if (Tournament::query()->where('slug', self::COMPLETED_SLUG)->exists()) {
+            Tournament::query()->where('slug', self::REGISTRATION_SLUG)->update([
+                'quick_registration_enabled' => true,
+                'quick_registration_levels' => json_encode(['7', '8', '9', '10', '11', '12']),
+                'quick_registration_notice' => 'Debes llevar tu propio control PS4 o PS5, cargado y en buen estado.',
+            ]);
+            $this->assignGameClubs($gameTeams);
             $this->command?->warn('Los datos de demostración ya existen; no se generaron duplicados.');
 
             return;
@@ -69,6 +78,7 @@ class DemoSeeder extends Seeder
         $this->createCompletedTournament($players->take(8)->all(), $organizer, $referee);
         $this->createGroupsTournament($players->slice(4, 8)->values()->all(), $organizer, $referee);
         $this->createRegistrationTournament($players->take(6)->all(), $organizer);
+        $this->assignGameClubs($gameTeams);
 
         $this->command?->info('Datos de demostración creados correctamente.');
     }
@@ -263,6 +273,9 @@ class DemoSeeder extends Seeder
             'registration_ends_at' => now()->addWeek(),
             'starts_at' => now()->addWeeks(2),
             'ends_at' => now()->addWeeks(2)->addDay(),
+            'quick_registration_enabled' => true,
+            'quick_registration_levels' => ['7', '8', '9', '10', '11', '12'],
+            'quick_registration_notice' => 'Debes llevar tu propio control PS4 o PS5, cargado y en buen estado.',
         ], $organizer);
         $this->registerPlayers($tournament, $players, $organizer);
     }
@@ -292,5 +305,35 @@ class DemoSeeder extends Seeder
                 ],
             ],
         )->all());
+    }
+
+    private function createDemoGameTeams(): Collection
+    {
+        $definitions = [
+            ['Costa Rica', 'CR'], ['Argentina', 'AR'], ['Brazil', 'BR'], ['France', 'FR'],
+            ['Spain', 'ES'], ['Germany', 'DE'], ['Japan', 'JP'], ['Morocco', 'MA'],
+        ];
+
+        return collect($definitions)->map(function (array $definition): GameClub {
+            [$name, $countryCode] = $definition;
+
+            $club = GameClub::query()->updateOrCreate(
+                ['team_type' => GameClubType::NationalTeam->value, 'name' => $name],
+                ['country_code' => $countryCode, 'is_active' => true],
+            );
+            $club->availabilities()->firstOrCreate(['game' => GameType::EaSportsFc->value]);
+
+            return $club;
+        });
+    }
+
+    private function assignGameClubs(Collection $clubs): void
+    {
+        Tournament::query()->whereIn('slug', [self::COMPLETED_SLUG, self::GROUPS_SLUG, self::REGISTRATION_SLUG])->get()
+            ->each(function (Tournament $tournament) use ($clubs): void {
+                $tournament->playerRegistrations()->orderBy('id')->get()->each(
+                    fn ($registration, int $index) => $registration->update(['game_club_id' => $clubs[$index % $clubs->count()]->id]),
+                );
+            });
     }
 }

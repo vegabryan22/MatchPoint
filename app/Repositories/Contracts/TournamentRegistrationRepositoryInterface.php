@@ -27,4 +27,6 @@ interface TournamentRegistrationRepositoryInterface
     public function register(Tournament $tournament, int $participantId, int $userId, RegistrationSource $source): void;
 
     public function remove(Tournament $tournament, int $participantId): void;
+
+    public function assignGameClub(Tournament $tournament, int $participantId, ?int $gameClubId): void;
 }

@@ -12,7 +12,7 @@ final class SingleEliminationBracketGenerator implements BracketGeneratorInterfa
 {
     public function supports(TournamentFormat $format): bool
     {
-        return in_array($format, [TournamentFormat::SingleElimination, TournamentFormat::GroupsKnockout], true);
+        return in_array($format, [TournamentFormat::SingleElimination, TournamentFormat::GroupsKnockout, TournamentFormat::WorldCup48], true);
     }
 
     public function build(Tournament $tournament, array $plan): BracketBlueprint

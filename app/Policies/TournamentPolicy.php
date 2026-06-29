@@ -48,6 +48,11 @@ final class TournamentPolicy
         return $this->managesTournaments($user);
     }
 
+    public function managePublicForms(User $user, Tournament $tournament): bool
+    {
+        return $this->managesTournaments($user);
+    }
+
     public function viewDraw(User $user, Tournament $tournament): bool
     {
         return $user->is_active;

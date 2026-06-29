@@ -1,5 +1,24 @@
 # Módulo 6: llaves y avance automático
 
+## Presentación estilo Copa del Mundo
+
+La ruta `/tournaments/{slug}/draw` presenta la llave principal como un cuadro simétrico de competición:
+
+- rondas iniciales distribuidas entre los extremos izquierdo y derecho;
+- avance visual de ambos lados hacia la final central;
+- copa dorada permanente en el centro y nombre del campeón cuando se define;
+- líneas y troncos visuales de avance;
+- participante A/B y marcador acumulado por serie;
+- ganador resaltado;
+- cuadro de campeón;
+- secciones separadas para llave principal, perdedores y finales;
+- zoom entre 70% y 140%;
+- desplazamiento por arrastre;
+- modo de pantalla completa;
+- adaptación responsive con desplazamiento horizontal.
+
+`BracketPresentationService` transforma modelos y resultados en datos de presentación. Para la llave principal divide cada ronda previa a la final en dos mitades, conserva el orden de secuencia del lado izquierdo e invierte el orden de las columnas derechas para que ambos recorridos converjan en el centro. La vista Blade conserva únicamente composición visual y autorización de acciones.
+
 ## Objetivo
 
 Construir la llave completa de eliminación simple o doble y representar cada avance como un grafo persistente. Un partido finalizado envía automáticamente al ganador y, cuando corresponde, al perdedor a su siguiente espacio sin recalcular el torneo.
@@ -113,7 +132,13 @@ No se agregan rutas mutables nuevas. La llave completa reutiliza:
 
 ## Interfaz
 
-La vista agrupa llave principal, perdedores y finales. Cada sección dispone las rondas horizontalmente, permite desplazamiento táctil, identifica estados, resalta ganadores y explica cuándo se activa la final de reinicio. Mantiene modo oscuro y diseño responsive.
+La vista agrupa llave principal, perdedores y finales. La llave principal usa una composición izquierda-centro-derecha inspirada en cuadros mundialistas; la final y la copa ocupan el eje central. Las llaves de perdedores y finales de eliminación doble conservan una disposición horizontal porque no forman un árbol simétrico. Cada sección permite desplazamiento táctil, identifica estados, resalta ganadores y explica cuándo se activa la final de reinicio. Mantiene modo oscuro y diseño responsive.
+
+### Proyección en vivo
+
+La vista `/tournaments/{slug}/draw` consulta cada cinco segundos el endpoint autenticado `/tournaments/{slug}/draw/live`. Cuando otra sesión registra o corrige un resultado, el ganador, marcador y siguiente enfrentamiento se actualizan sin recargar la página. La sincronización conserva zoom, desplazamiento horizontal y pantalla completa. Si la conexión falla, la interfaz informa que está reconectando y reintenta en el siguiente ciclo.
+
+El endpoint requiere un usuario activo, aplica la Policy `viewDraw` y tiene límite de 30 consultas por minuto. No permite modificar resultados ni expone una llave privada a usuarios anónimos.
 
 ## Pruebas
 
@@ -127,6 +152,7 @@ La suite verifica:
 - Destinos separados para ganador y perdedor.
 - Activación de la final de reinicio.
 - Permisos específicos del árbitro.
+- Distribución simétrica de rondas, final central, copa y ausencia de partidos duplicados.
 
 ## Integración con resultados
 

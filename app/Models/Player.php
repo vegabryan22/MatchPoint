@@ -26,6 +26,7 @@ class Player extends Model
         'preferred_controller',
         'level',
         'is_active',
+        'is_quick_entry',
     ];
 
     protected function casts(): array
@@ -34,6 +35,7 @@ class Player extends Model
             'preferred_controller' => ControllerType::class,
             'level' => PlayerLevel::class,
             'is_active' => 'boolean',
+            'is_quick_entry' => 'boolean',
         ];
     }
 
@@ -55,7 +57,7 @@ class Player extends Model
     public function tournaments(): BelongsToMany
     {
         return $this->belongsToMany(Tournament::class, 'tournament_players')
-            ->withPivot(['registered_by', 'source', 'seed', 'registered_at'])
+            ->withPivot(['registered_by', 'source', 'seed', 'registered_at', 'academic_level', 'controller_platform', 'controller_acknowledged_at', 'public_reference', 'game_club_id'])
             ->withTimestamps();
     }
 

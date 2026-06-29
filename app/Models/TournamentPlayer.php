@@ -20,6 +20,11 @@ class TournamentPlayer extends Model
         'source',
         'seed',
         'registered_at',
+        'academic_level',
+        'controller_platform',
+        'controller_acknowledged_at',
+        'public_reference',
+        'game_club_id',
     ];
 
     protected function casts(): array
@@ -27,6 +32,7 @@ class TournamentPlayer extends Model
         return [
             'source' => RegistrationSource::class,
             'registered_at' => 'datetime',
+            'controller_acknowledged_at' => 'datetime',
         ];
     }
 
@@ -46,5 +52,10 @@ class TournamentPlayer extends Model
     public function registrar(): BelongsTo
     {
         return $this->belongsTo(User::class, 'registered_by');
+    }
+
+    public function gameClub(): BelongsTo
+    {
+        return $this->belongsTo(GameClub::class);
     }
 }

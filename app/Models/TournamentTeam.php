@@ -20,6 +20,7 @@ class TournamentTeam extends Model
         'source',
         'seed',
         'registered_at',
+        'game_club_id',
     ];
 
     protected function casts(): array
@@ -46,5 +47,10 @@ class TournamentTeam extends Model
     public function registrar(): BelongsTo
     {
         return $this->belongsTo(User::class, 'registered_by');
+    }
+
+    public function gameClub(): BelongsTo
+    {
+        return $this->belongsTo(GameClub::class);
     }
 }

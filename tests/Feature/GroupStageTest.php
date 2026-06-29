@@ -51,6 +51,60 @@ class GroupStageTest extends TestCase
         $this->assertSame(3, $tournament->rounds()->where('bracket', BracketType::Group)->count());
     }
 
+    public function test_world_cup_48_requires_every_participant_before_generating_groups(): void
+    {
+        [$admin, $tournament] = $this->competition(TournamentFormat::WorldCup48, 47);
+
+        $this->actingAs($admin)->post(route('tournaments.groups.store', $tournament), [
+            'group_count' => 12,
+            'qualifiers_per_group' => 2,
+        ])->assertSessionHasErrors('groups');
+
+        $this->assertSame(0, $tournament->groups()->count());
+    }
+
+    public function test_world_cup_48_generates_twelve_groups_and_qualifies_eight_best_thirds(): void
+    {
+        [$admin, $tournament] = $this->competition(TournamentFormat::WorldCup48, 48);
+        $this->generate($admin, $tournament, 12, 2);
+
+        $this->assertSame(12, $tournament->groups()->count());
+        $this->assertSame(array_fill(0, 12, 4), $tournament->groups()->withCount('participants')->get()->pluck('participants_count')->all());
+        $this->assertSame(3, $tournament->rounds()->where('bracket', BracketType::Group)->count());
+        $this->assertSame(72, $tournament->matches()->whereNotNull('group_id')->count());
+
+        $tournament->update(['status' => TournamentStatus::InProgress]);
+        foreach ($tournament->matches()->whereNotNull('group_id')->get() as $match) {
+            $goals = ($match->participant_a_id % 4) + 1;
+            $match->update(['winner_id' => $match->participant_a_id, 'status' => MatchStatus::Completed, 'completed_at' => now()]);
+            $match->scores()->create(['game_number' => 1, 'participant_a_score' => $goals, 'participant_b_score' => 0, 'winner_id' => $match->participant_a_id]);
+        }
+
+        $details = app(GroupStageService::class)->details($tournament);
+        $directIds = $details['standings']->flatMap(fn ($table) => $table->take(2)->pluck('participant_id'));
+        $bestThirdIds = $details['bestThirds']->take(8)->pluck('participant_id');
+        $this->assertCount(8, $bestThirdIds);
+
+        $this->actingAs($admin)->post(route('tournaments.groups.qualify', $tournament))
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $firstRoundIds = $tournament->rounds()->where('bracket', BracketType::Main)->where('number', 1)->firstOrFail()
+            ->matches->flatMap(fn ($match) => [$match->participant_a_id, $match->participant_b_id])->filter()->unique();
+        $this->assertCount(32, $firstRoundIds);
+        $this->assertCount(24, $firstRoundIds->intersect($directIds));
+        $this->assertCount(8, $firstRoundIds->intersect($bestThirdIds));
+        $this->assertSame(5, $tournament->rounds()->where('bracket', BracketType::Main)->count());
+        $this->assertSame(31, $tournament->matches()->whereNull('group_id')->count());
+
+        $response = $this->actingAs($admin)->get(route('tournaments.draws.show', $tournament))
+            ->assertOk()
+            ->assertSee('Clasificación de grupos')
+            ->assertSee('mp-world-bracket is-symmetric', false);
+
+        $this->assertSame(31, substr_count($response->getContent(), '<article class="mp-world-match'));
+    }
+
     public function test_group_result_accepts_draw_and_updates_points_table(): void
     {
         [$admin, $tournament] = $this->competition(TournamentFormat::RoundRobin, 3);

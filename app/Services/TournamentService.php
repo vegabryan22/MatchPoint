@@ -36,6 +36,7 @@ final class TournamentService
     public function create(array $data, User $creator): Tournament
     {
         $this->normalizeCustomGame($data);
+        $this->normalizeQuickRegistration($data);
         $data['slug'] = $this->uniqueSlug($data['name']);
         $data['status'] = TournamentStatus::Draft;
         $data['created_by'] = $creator->getKey();
@@ -47,6 +48,7 @@ final class TournamentService
     {
         $this->ensureEditable($tournament);
         $this->normalizeCustomGame($data);
+        $this->normalizeQuickRegistration($data);
 
         return DB::transaction(fn (): Tournament => $this->tournaments->update($tournament, $data));
     }
@@ -76,6 +78,9 @@ final class TournamentService
                 'registration_ends_at' => null,
                 'starts_at' => $start,
                 'ends_at' => $duration === null ? null : $start->copy()->addSeconds($duration),
+                'quick_registration_enabled' => false,
+                'quick_registration_levels' => $tournament->quick_registration_levels,
+                'quick_registration_notice' => $tournament->quick_registration_notice,
             ]);
         });
 
@@ -137,6 +142,23 @@ final class TournamentService
     {
         if (($data['game'] ?? null) !== GameType::Other->value) {
             $data['custom_game'] = null;
+        }
+    }
+
+    private function normalizeQuickRegistration(array &$data): void
+    {
+        if (array_key_exists('quick_registration_enabled', $data)) {
+            $data['quick_registration_enabled'] = (bool) $data['quick_registration_enabled']
+                && ($data['participant_type'] ?? null) === 'individual';
+        }
+
+        if (array_key_exists('quick_registration_levels', $data)) {
+            $data['quick_registration_levels'] = collect($data['quick_registration_levels'])
+                ->map(fn (string $level): string => trim($level))
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
         }
     }
 

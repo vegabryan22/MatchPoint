@@ -4,6 +4,23 @@
 
 Completar los formatos no eliminatorios con distribución equilibrada, calendario sin cruces repetidos, resultados con empates, posiciones 3/1/0 y clasificación automática hacia una llave eliminatoria.
 
+## Preset Mundial 48
+
+`TournamentFormat::WorldCup48` implementa un modo estricto inspirado en el Mundial 2026:
+
+- capacidad obligatoria de 48 participantes;
+- 12 grupos de cuatro;
+- tres jornadas y seis partidos por grupo;
+- 72 partidos de fase de grupos;
+- clasificación directa de los dos primeros de cada grupo;
+- ranking global de los terceros por puntos, diferencia de goles, goles a favor y nombre como desempate determinista;
+- clasificación de los ocho mejores terceros;
+- llave eliminatoria de 32 participantes, cinco rondas y 31 partidos.
+
+El calendario no puede generarse con 47 o menos participantes. La interfaz muestra `Inscritos X/48` y la cantidad faltante. No se crean grupos incompletos ni partidos ficticios porque alterarían la igualdad de jornadas.
+
+La capacidad 48 también está disponible para eliminación simple. En ese caso el motor crea una llave de 64 espacios y concede 16 pases automáticos. Si se inscriben menos participantes, calcula los pases según la siguiente potencia de dos.
+
 ## Arquitectura
 
 ```text

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\BestOf;
 use App\Enums\GameType;
 use App\Enums\ParticipantType;
+use App\Enums\PublicFormType;
 use App\Enums\TournamentCapacity;
 use App\Enums\TournamentFormat;
 use App\Enums\TournamentStatus;
@@ -13,6 +14,7 @@ use App\Http\Requests\Tournaments\TournamentFilterRequest;
 use App\Http\Requests\Tournaments\TransitionTournamentRequest;
 use App\Http\Requests\Tournaments\UpdateTournamentRequest;
 use App\Models\Tournament;
+use App\Services\PublicFormQrService;
 use App\Services\TournamentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
@@ -20,7 +22,10 @@ use Illuminate\View\View;
 
 final class TournamentController extends Controller
 {
-    public function __construct(private readonly TournamentService $tournaments) {}
+    public function __construct(
+        private readonly TournamentService $tournaments,
+        private readonly PublicFormQrService $qrCodes,
+    ) {}
 
     public function index(TournamentFilterRequest $request): View
     {
@@ -51,6 +56,7 @@ final class TournamentController extends Controller
         return view('tournaments.show', [
             'tournament' => $tournament->load('creator'),
             'transitions' => $this->tournaments->allowedTransitions($tournament),
+            'publicForm' => $this->qrCodes->shareData($tournament, PublicFormType::QuickRegistration),
         ]);
     }
 

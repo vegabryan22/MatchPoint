@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\ParticipantType;
 use App\Enums\RegistrationSource;
 use App\Enums\TournamentStatus;
+use App\Models\GameClub;
 use App\Models\Player;
 use App\Models\Team;
 use App\Models\Tournament;
@@ -75,11 +76,33 @@ final class TournamentRegistrationService
                 throw ValidationException::withMessages(['participant_id' => 'El participante no está inscrito.']);
             }
 
+            $quickPlayer = $lockedTournament->participant_type === ParticipantType::Individual
+                ? Player::query()->find($participantId)
+                : null;
             $this->registrations->remove($lockedTournament, $participantId);
+            if ($quickPlayer?->is_quick_entry && ! $quickPlayer->tournaments()->exists()) {
+                $quickPlayer->delete();
+            }
             $this->audit->record('registration.removed', $lockedTournament, [
                 'participant_type' => $lockedTournament->participant_type->value,
                 'participant_id' => $participantId,
             ], [], $actor->id);
+        });
+    }
+
+    public function assignGameClub(Tournament $tournament, int $participantId, ?int $gameClubId, User $actor): void
+    {
+        DB::transaction(function () use ($tournament, $participantId, $gameClubId, $actor): void {
+            $locked = Tournament::query()->whereKey($tournament->id)->lockForUpdate()->firstOrFail();
+            if (! $this->registrations->isRegistered($locked, $participantId)) {
+                throw ValidationException::withMessages(['game_club_id' => 'El participante no está inscrito en este torneo.']);
+            }
+            $club = $gameClubId === null ? null : GameClub::query()->whereKey($gameClubId)->where('is_active', true)->first();
+            if ($gameClubId !== null && ($club === null || ! $club->supportsGame($locked->game))) {
+                throw ValidationException::withMessages(['game_club_id' => 'El equipo debe estar activo y corresponder al juego del torneo.']);
+            }
+            $this->registrations->assignGameClub($locked, $participantId, $gameClubId);
+            $this->audit->record('registration.game_club_assigned', $locked, [], ['participant_id' => $participantId, 'game_club_id' => $gameClubId], $actor->id);
         });
     }
 

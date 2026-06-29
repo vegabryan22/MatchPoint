@@ -1,15 +1,46 @@
 # Changelog
 
+## 2026-06-28 — Llaves en vivo y niveles académicos
+
+- Las llaves proyectadas se actualizan automáticamente cada cinco segundos desde otra sesión autenticada.
+- El refresco conserva pantalla completa, zoom y posición horizontal.
+- La inscripción rápida reemplaza secciones por niveles de Sétimo 7 a Duodécimo 12.
+- La migración normaliza las secciones existentes al nivel académico correspondiente.
+- Exportaciones y administración distinguen nivel académico de nivel de juego.
+
 El formato sigue Keep a Changelog y el proyecto utiliza versionado semántico.
 
 ## [Unreleased]
 
+### Changed
+
+- Los campos de calendario usan un selector visual de fecha y hora en español, independiente del componente nativo defectuoso de Edge.
+- La configuración de secciones usa casillas predefinidas en lugar de un campo de texto con validación dinámica.
+- La llave principal ahora avanza desde los extremos izquierdo y derecho hacia una final central con copa y campeón.
+- Las llaves no simétricas de perdedores y finales mantienen su lectura horizontal.
+- El catálogo consolida cada equipo en una sola fila y muestra sus videojuegos como disponibilidades, eliminando registros repetidos.
+
 ### Fixed
 
+- Se eliminaron filtros gráficos GPU globales que podían bloquear pestañas de Microsoft Edge con `STATUS_ILLEGAL_INSTRUCTION`.
+- La eliminación de clubes con escudo local limpia el archivo sin depender de Flysystem o `fileinfo`.
+- El importador de clubes permite cargar el catálogo para EA Sports FC, FIFA y PES.
+- Los escudos se renderizan sin inicializar Flysystem, evitando errores cuando el servidor local no carga `fileinfo`.
+- Los formularios de torneo muestran y enfocan el primer campo inválido en lugar de aparentar un bloqueo.
 - El formulario de resultados respeta el ancho disponible junto al sidebar y mantiene visibles rival, marcadores y acciones.
 
 ### Added
 
+- Formato estricto Mundial 48 con 12 grupos, ranking de terceros y clasificación automática a una llave de 32.
+- Capacidad 48 para eliminación simple mediante llave de 64 espacios y 16 pases automáticos.
+- Seeder idempotente con llaves de 32, 48 y 64 participantes, además de un Mundial 48 completo.
+- QR automáticos para formularios públicos con copia de enlace, descargas PNG/SVG y afiche imprimible.
+- Selecciones mundialistas con tipo, código de país, bandera, escudo y asignación en inscripciones, llaves y resultados.
+- Importación configurable de clubes populares y selecciones nacionales desde TheSportsDB.
+- Catálogo de clubes del videojuego con escudos y asignación independiente por participante y torneo.
+- Llaves estilo Copa del Mundo con columnas conectadas, marcadores, campeón, zoom y pantalla completa.
+- Inscripción pública rápida sin cuenta, correo ni contraseña para torneos escolares.
+- Secciones configurables, selección PS4/PS5, aceptación de control propio y comprobante público.
 - Seeder idempotente de demostración con jugadores, equipos y tres escenarios competitivos completos.
 - Guía reproducible de cuentas, datos de prueba y recorrido funcional local.
 - Manual operativo con matriz de roles, casos de uso paso a paso, rutas y resolución de errores.

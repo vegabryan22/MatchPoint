@@ -7,6 +7,7 @@ use App\Http\Requests\Draws\GenerateTournamentDrawRequest;
 use App\Http\Requests\Draws\PreviewTournamentDrawRequest;
 use App\Models\Tournament;
 use App\Services\TournamentDrawService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -21,6 +22,15 @@ final class TournamentDrawController extends Controller
         Gate::authorize('viewDraw', $tournament);
 
         return view('tournaments.draws.show', $this->draws->details($tournament));
+    }
+
+    public function live(Tournament $tournament): JsonResponse
+    {
+        Gate::authorize('viewDraw', $tournament);
+        $details = $this->draws->details($tournament);
+        $html = view('tournaments.draws._world-sections', $details)->render();
+
+        return response()->json(['version' => hash('sha256', $html), 'html' => $html]);
     }
 
     public function create(Tournament $tournament): View

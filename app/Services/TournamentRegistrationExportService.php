@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\ParticipantType;
+use App\Models\GameClub;
 use App\Models\Tournament;
 use App\Repositories\Contracts\TournamentRegistrationRepositoryInterface;
 use Illuminate\Filesystem\Filesystem;
@@ -48,8 +49,8 @@ final class TournamentRegistrationExportService
     private function headers(Tournament $tournament): array
     {
         return $tournament->participant_type === ParticipantType::Individual
-            ? ['Apodo', 'Nombre', 'Correo', 'País', 'Nivel', 'Origen', 'Fecha de inscripción']
-            : ['Equipo', 'Integrantes', 'Origen', 'Fecha de inscripción'];
+            ? ['Apodo', 'Nombre', 'Club del juego', 'Correo', 'País', 'Nivel académico', 'Control', 'Nivel de juego', 'Origen', 'Fecha de inscripción']
+            : ['Equipo', 'Club del juego', 'Integrantes', 'Origen', 'Fecha de inscripción'];
     }
 
     private function rows(Tournament $tournament): array
@@ -59,24 +60,29 @@ final class TournamentRegistrationExportService
         if ($tournament->participant_type === ParticipantType::Team) {
             $participants->loadCount('players');
         }
+        $clubs = GameClub::query()->whereIn('id', $participants->pluck('pivot.game_club_id')->filter()->unique())->get()->keyBy('id');
 
-        return $participants->map(function ($participant) use ($tournament): array {
+        return $participants->map(function ($participant) use ($tournament, $clubs): array {
             $source = (string) $participant->pivot->source;
             $registeredAt = (string) $participant->pivot->registered_at;
+            $clubName = $clubs->get($participant->pivot->game_club_id)?->name;
 
             if ($tournament->participant_type === ParticipantType::Individual) {
                 return [
                     $participant->nickname,
                     $participant->name,
+                    $clubName,
                     $participant->email,
                     $participant->country,
+                    $participant->pivot->academic_level,
+                    $participant->pivot->controller_platform,
                     $participant->level->label(),
                     $source,
                     $registeredAt,
                 ];
             }
 
-            return [$participant->name, $participant->players_count, $source, $registeredAt];
+            return [$participant->name, $clubName, $participant->players_count, $source, $registeredAt];
         })->all();
     }
 }
