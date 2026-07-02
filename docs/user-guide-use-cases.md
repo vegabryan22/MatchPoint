@@ -241,6 +241,8 @@ La actividad de auditoría sensible sólo aparece para administradores.
 
 Un jugador inactivo permanece en el historial, pero no puede inscribirse en nuevos torneos.
 
+La columna **Torneos inscritos** identifica las competencias de cada jugador y permite abrirlas directamente. Cada usuario sólo ve torneos autorizados para su rol.
+
 ## 8. Equipos
 
 ### UC-13 — Buscar y consultar equipos
@@ -351,6 +353,38 @@ Un equipo inactivo no puede inscribirse en nuevas competencias.
 **Ruta de acción:** `DELETE /tournaments/{slug}`.
 
 **Restricción:** sólo pueden eliminarse torneos en **Borrador** o **Cancelado**.
+
+La columna **Inscritos** muestra la ocupación actual como `participantes / capacidad`. En el detalle se muestran además los cupos disponibles, una barra de ocupación y el botón **Ver inscritos**.
+
+### UC-21A — Configurar consolas y generar horarios
+
+**Actores:** administrador u organizador asignado. Los árbitros asignados pueden consultar.
+
+**Ruta:** `GET /tournaments/{slug}/schedule`.
+
+**Pasos:**
+
+1. Abrir el torneo y presionar **Consolas y horarios**.
+2. Definir minutos por partido y minutos de preparación.
+3. Agregar cada consola indicando nombre, plataforma y ubicación.
+4. Configurar opcionalmente desde qué hora y hasta qué hora está disponible.
+5. Generar previamente la llave, grupos o liga.
+6. Seleccionar la hora inicial y presionar **Generar horario**.
+7. Revisar la consola, hora inicial y hora final asignadas a cada partido.
+
+### Calcular duración antes de programar
+
+1. Revisar participantes, partidos proyectados, rondas y duración con las consolas actuales.
+2. Escribir la meta en horas y minutos.
+3. Presionar **Calcular mínimo**.
+4. Revisar el mínimo de consolas y la tabla comparativa.
+5. Si aparece **Meta imposible**, ampliar el tiempo disponible o reducir duración y preparación; agregar más consolas no elimina dependencias entre rondas.
+
+Con una llave o calendario ya generado se usa la estructura real. Sin estructura se aplica la fórmula correspondiente al formato del torneo.
+
+**Resultado esperado:** los partidos se distribuyen en paralelo entre consolas activas y cada ronda dependiente inicia cuando termina la anterior.
+
+**Corrección:** ajustar tiempos o estaciones y volver a generar. La opción **Limpiar horario pendiente** conserva resultados finalizados.
 
 ## 10. Inscripciones
 

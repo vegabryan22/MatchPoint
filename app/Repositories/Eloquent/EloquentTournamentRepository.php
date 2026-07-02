@@ -16,6 +16,7 @@ final class EloquentTournamentRepository implements TournamentRepositoryInterfac
     {
         return $this->access->visibleQuery($user)
             ->with('creator')
+            ->withCount(['players', 'teams'])
             ->when($filters['search'] ?? null, fn ($query, $search) => $query->where('name', 'like', "%{$search}%"))
             ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
             ->when($filters['game'] ?? null, fn ($query, $game) => $query->where('game', $game))

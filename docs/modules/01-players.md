@@ -95,6 +95,12 @@ El listado acepta búsqueda parcial por nombre, apodo o correo, además de país
 
 La creación, actualización, cambio de estado y eliminación generan eventos en `audit_logs`, incluyendo actor, IP, modelo y diferencias de valores.
 
+## Torneos asociados
+
+El listado general carga la relación `Player::tournaments` y presenta cada torneo como un enlace directo. Para administradores se muestran todas las inscripciones; para otros roles la consulta se limita a los torneos permitidos por `TournamentAccessService`, evitando revelar competencias ajenas.
+
+Los jugadores sin inscripciones visibles muestran el estado **Sin torneo**.
+
 ## Pruebas
 
 La suite valida:

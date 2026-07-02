@@ -32,6 +32,7 @@ use App\Repositories\Contracts\TournamentChampionRepositoryInterface;
 use App\Repositories\Contracts\TournamentDrawRepositoryInterface;
 use App\Repositories\Contracts\TournamentRegistrationRepositoryInterface;
 use App\Repositories\Contracts\TournamentRepositoryInterface;
+use App\Repositories\Contracts\TournamentScheduleRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Repositories\Eloquent\EloquentAuditLogRepository;
 use App\Repositories\Eloquent\EloquentDashboardRepository;
@@ -48,6 +49,7 @@ use App\Repositories\Eloquent\EloquentTournamentChampionRepository;
 use App\Repositories\Eloquent\EloquentTournamentDrawRepository;
 use App\Repositories\Eloquent\EloquentTournamentRegistrationRepository;
 use App\Repositories\Eloquent\EloquentTournamentRepository;
+use App\Repositories\Eloquent\EloquentTournamentScheduleRepository;
 use App\Repositories\Eloquent\EloquentUserRepository;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
@@ -81,6 +83,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(TournamentRegistrationRepositoryInterface::class, EloquentTournamentRegistrationRepository::class);
         $this->app->bind(TournamentDrawRepositoryInterface::class, EloquentTournamentDrawRepository::class);
         $this->app->bind(TournamentChampionRepositoryInterface::class, EloquentTournamentChampionRepository::class);
+        $this->app->bind(TournamentScheduleRepositoryInterface::class, EloquentTournamentScheduleRepository::class);
     }
 
     /**

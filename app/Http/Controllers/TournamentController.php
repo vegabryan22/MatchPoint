@@ -15,6 +15,7 @@ use App\Http\Requests\Tournaments\TransitionTournamentRequest;
 use App\Http\Requests\Tournaments\UpdateTournamentRequest;
 use App\Models\Tournament;
 use App\Services\PublicFormQrService;
+use App\Services\TournamentRegistrationService;
 use App\Services\TournamentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
@@ -24,6 +25,7 @@ final class TournamentController extends Controller
 {
     public function __construct(
         private readonly TournamentService $tournaments,
+        private readonly TournamentRegistrationService $registrations,
         private readonly PublicFormQrService $qrCodes,
     ) {}
 
@@ -52,9 +54,12 @@ final class TournamentController extends Controller
     public function show(Tournament $tournament): View
     {
         Gate::authorize('view', $tournament);
+        $registeredCount = $this->registrations->count($tournament);
 
         return view('tournaments.show', [
             'tournament' => $tournament->load('creator'),
+            'registeredCount' => $registeredCount,
+            'remainingSlots' => max(0, $tournament->max_participants - $registeredCount),
             'transitions' => $this->tournaments->allowedTransitions($tournament),
             'publicForm' => $this->qrCodes->shareData($tournament, PublicFormType::QuickRegistration),
         ]);

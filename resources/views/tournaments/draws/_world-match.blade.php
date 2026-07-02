@@ -8,6 +8,9 @@
         <span>Partido {{ $match->sequence }}</span>
         <span data-inline-status>{{ $match->status->label() }}</span>
     </div>
+    @if ($match->scheduled_at)
+        <div class="mp-world-match-note">{{ $match->scheduled_at->format('d/m H:i') }} · {{ $match->station?->name ?? 'Sin consola' }}</div>
+    @endif
     <div class="mp-world-team {{ $match->winner_id === $match->participant_a_id ? 'is-winner' : '' }}">
         <span class="mp-world-team-mark">@if(!empty($matchData['club_a']['crest']))<img src="{{ $matchData['club_a']['crest'] }}" alt="" loading="lazy" referrerpolicy="no-referrer">@elseif(!empty($matchData['club_a']['flag'])){{ $matchData['club_a']['flag'] }}@else{{ mb_strtoupper(mb_substr($matchData['participant_a'], 0, 1)) }}@endif</span>
         <span class="mp-world-team-name">{{ $matchData['participant_a'] }}@if($matchData['club_a'])<small>{{ $matchData['club_a']['name'] }}</small>@endif</span>

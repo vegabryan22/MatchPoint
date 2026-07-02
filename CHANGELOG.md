@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-06-30 — Consolas y programación automática
+
+- Registro de consolas por torneo con plataforma, ubicación, estado y disponibilidad.
+- Duración estimada y tiempo de preparación configurables.
+- Distribución automática de partidos en paralelo respetando rondas y ventanas horarias.
+- Consola y hora visibles en programación, llaves y jornadas.
+- Policies, auditoría, migración MySQL y pruebas de aislamiento incluidas.
+- Calculador de duración según inscritos, formato, rondas, duración y consolas activas.
+- Comparador de escenarios y mínimo de consolas requerido para una meta de tiempo.
+- Detección de metas imposibles por la ruta crítica entre rondas dependientes.
+
+## 2026-06-29 — Visibilidad de inscripciones
+
+- El listado y el detalle de torneos muestran inscritos, capacidad y cupos disponibles.
+- El total de inscritos enlaza directamente con la administración de inscripciones.
+- El listado general de jugadores identifica los torneos en los que participa cada persona.
+- Los organizadores sólo ven asociaciones con torneos bajo su administración.
+
 ## 2026-06-29 — Aislamiento y personal por torneo
 
 - Organizadores limitados a torneos asignados y registros propios.

@@ -22,7 +22,9 @@ use App\Http\Controllers\TournamentController;
 use App\Http\Controllers\TournamentDrawController;
 use App\Http\Controllers\TournamentGroupController;
 use App\Http\Controllers\TournamentRegistrationController;
+use App\Http\Controllers\TournamentScheduleController;
 use App\Http\Controllers\TournamentStaffController;
+use App\Http\Controllers\TournamentStationController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
@@ -72,6 +74,13 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     Route::post('/tournaments/{tournament}/registrations/import', [TournamentRegistrationController::class, 'import'])->name('tournaments.registrations.import');
     Route::get('/tournaments/{tournament}/registrations/export/csv', [TournamentRegistrationController::class, 'exportCsv'])->name('tournaments.registrations.export.csv');
     Route::get('/tournaments/{tournament}/registrations/export/xlsx', [TournamentRegistrationController::class, 'exportXlsx'])->name('tournaments.registrations.export.xlsx');
+    Route::get('/tournaments/{tournament}/schedule', [TournamentScheduleController::class, 'index'])->name('tournaments.schedule.index');
+    Route::put('/tournaments/{tournament}/schedule/configuration', [TournamentScheduleController::class, 'configure'])->name('tournaments.schedule.configure');
+    Route::post('/tournaments/{tournament}/schedule/generate', [TournamentScheduleController::class, 'generate'])->name('tournaments.schedule.generate');
+    Route::delete('/tournaments/{tournament}/schedule', [TournamentScheduleController::class, 'clear'])->name('tournaments.schedule.clear');
+    Route::post('/tournaments/{tournament}/stations', [TournamentStationController::class, 'store'])->name('tournaments.stations.store');
+    Route::put('/tournaments/{tournament}/stations/{station}', [TournamentStationController::class, 'update'])->name('tournaments.stations.update');
+    Route::delete('/tournaments/{tournament}/stations/{station}', [TournamentStationController::class, 'destroy'])->name('tournaments.stations.destroy');
     Route::get('/tournaments/{tournament}/draw', [TournamentDrawController::class, 'show'])->name('tournaments.draws.show');
     Route::get('/tournaments/{tournament}/staff', [TournamentStaffController::class, 'index'])->name('tournaments.staff.index');
     Route::post('/tournaments/{tournament}/staff/organizers', [TournamentStaffController::class, 'storeOrganizer'])->name('tournaments.staff.organizers.store');

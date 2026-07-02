@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\PlayerLevel;
 use App\Models\Player;
+use App\Models\Tournament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -33,5 +34,22 @@ class PlayerFilterTest extends TestCase
             'level' => PlayerLevel::Professional->value,
             'is_active' => '1',
         ]))->assertOk()->assertSee($expected->nickname)->assertDontSee('OtherPlayer');
+    }
+
+    public function test_player_index_shows_registered_tournaments(): void
+    {
+        $admin = $this->administrator();
+        $player = Player::factory()->create();
+        $tournament = Tournament::factory()->create(['name' => 'Copa Estudiantil']);
+        $tournament->players()->attach($player, [
+            'source' => 'manual',
+            'registered_at' => now(),
+        ]);
+
+        $this->actingAs($admin)->get(route('players.index'))
+            ->assertOk()
+            ->assertSee('Torneos inscritos')
+            ->assertSee('Copa Estudiantil')
+            ->assertSee(route('tournaments.show', $tournament));
     }
 }

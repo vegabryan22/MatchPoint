@@ -131,7 +131,7 @@ final class TournamentDrawService
 
     public function details(Tournament $tournament): array
     {
-        $tournament->load(['draw.generator', 'rounds.matches.scores', 'champion']);
+        $tournament->load(['draw.generator', 'rounds.matches.scores', 'rounds.matches.station', 'champion']);
         $participants = $this->participants($tournament)->keyBy('id');
         $clubs = GameClub::query()->whereIn('id', $participants->pluck('pivot.game_club_id')->filter()->unique())->get()->keyBy('id');
 

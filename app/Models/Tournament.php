@@ -32,6 +32,8 @@ class Tournament extends Model
         'max_participants',
         'format',
         'best_of',
+        'match_duration_minutes',
+        'turnaround_minutes',
         'status',
         'registration_starts_at',
         'registration_ends_at',
@@ -49,6 +51,8 @@ class Tournament extends Model
             'participant_type' => ParticipantType::class,
             'format' => TournamentFormat::class,
             'best_of' => BestOf::class,
+            'match_duration_minutes' => 'integer',
+            'turnaround_minutes' => 'integer',
             'status' => TournamentStatus::class,
             'registration_starts_at' => 'datetime',
             'registration_ends_at' => 'datetime',
@@ -77,6 +81,11 @@ class Tournament extends Model
         return $this->belongsToMany(User::class, 'tournament_officials')
             ->withPivot(['id', 'assigned_by', 'role', 'is_active', 'assigned_at'])
             ->withTimestamps();
+    }
+
+    public function stations(): HasMany
+    {
+        return $this->hasMany(TournamentStation::class)->orderBy('name');
     }
 
     /** @return BelongsToMany<Player, $this> */

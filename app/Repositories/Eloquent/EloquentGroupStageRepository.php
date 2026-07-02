@@ -55,7 +55,7 @@ final class EloquentGroupStageRepository implements GroupStageRepositoryInterfac
     public function groups(Tournament $tournament): Collection
     {
         return $tournament->groups()
-            ->with(['participants', 'matches.scores', 'matches.round', 'matches.group'])
+            ->with(['participants', 'matches.scores', 'matches.round', 'matches.group', 'matches.station'])
             ->get();
     }
 }

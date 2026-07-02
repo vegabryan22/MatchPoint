@@ -44,7 +44,9 @@
 
         <div class="table-responsive">
             <table class="table align-middle">
-                <thead><tr><th>Jugador</th><th>País</th><th>Control</th><th>Nivel</th><th>Estado</th><th class="text-end">Acciones</th></tr></thead>
+                <thead>
+                    <tr><th>Jugador</th><th>Torneos inscritos</th><th>País</th><th>Control</th><th>Nivel</th><th>Estado</th><th class="text-end">Acciones</th></tr>
+                </thead>
                 <tbody>
                 @forelse ($players as $player)
                     <tr>
@@ -56,6 +58,17 @@
                                     <span class="mp-player-photo mp-player-placeholder">{{ mb_strtoupper(mb_substr($player->nickname, 0, 1)) }}</span>
                                 @endif
                                 <div><a class="fw-semibold" href="{{ route('players.show', $player) }}">{{ $player->nickname }}</a><div class="mp-muted small">{{ $player->name }}</div></div>
+                            </div>
+                        </td>
+                        <td style="min-width: 220px">
+                            <div class="d-flex flex-wrap gap-1">
+                                @forelse ($player->tournaments as $tournament)
+                                    <a class="badge text-bg-primary text-decoration-none" href="{{ route('tournaments.show', $tournament) }}">
+                                        {{ $tournament->name }}
+                                    </a>
+                                @empty
+                                    <span class="mp-muted small">Sin torneo</span>
+                                @endforelse
                             </div>
                         </td>
                         <td>{{ $player->country }}</td>
@@ -72,7 +85,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="6" class="mp-empty mp-muted">No encontramos jugadores con esos criterios.</td></tr>
+                    <tr><td colspan="7" class="mp-empty mp-muted">No encontramos jugadores con esos criterios.</td></tr>
                 @endforelse
                 </tbody>
             </table>

@@ -139,6 +139,7 @@
                                     @endphp
                                     <div class="col-md-6 col-xl-4"><div class="mp-dashboard-match h-100">
                                         <div class="d-flex justify-content-between mb-2"><span class="badge text-bg-secondary">{{ $match->group->name }}</span><span class="small mp-muted" data-inline-status>{{ $match->status->label() }}</span></div>
+                                        @if($match->scheduled_at)<div class="small mp-muted mb-2">{{ $match->scheduled_at->format('d/m H:i') }} · {{ $match->station?->name ?? 'Sin consola' }}</div>@endif
                                         <div class="d-flex justify-content-between fw-bold"><span>{{ $nameA }}</span><span data-inline-score-a>{{ $match->status === App\Enums\MatchStatus::Completed ? $goalsA : '—' }}</span></div>
                                         <div class="d-flex justify-content-between fw-bold mt-2"><span>{{ $nameB }}</span><span data-inline-score-b>{{ $match->status === App\Enums\MatchStatus::Completed ? $goalsB : '—' }}</span></div>
                                         @can('recordResult', $match)
@@ -171,7 +172,7 @@
                                     $a = $participants->get($match->participant_a_id);
                                     $b = $participants->get($match->participant_b_id);
                                 @endphp
-                                <div class="mp-match-card"><div class="mp-match-header">Partido {{ $match->sequence }}</div><div class="mp-match-participant">{{ $a?->nickname ?? $a?->name ?? 'Por definir' }}</div><div class="mp-match-participant">{{ $b?->nickname ?? $b?->name ?? 'Por definir' }}</div></div>
+                                <div class="mp-match-card"><div class="mp-match-header">Partido {{ $match->sequence }}</div>@if($match->scheduled_at)<div class="small mp-muted px-2">{{ $match->scheduled_at->format('d/m H:i') }} · {{ $match->station?->name ?? 'Sin consola' }}</div>@endif<div class="mp-match-participant">{{ $a?->nickname ?? $a?->name ?? 'Por definir' }}</div><div class="mp-match-participant">{{ $b?->nickname ?? $b?->name ?? 'Por definir' }}</div></div>
                             @endforeach
                         </div></div>
                     @endforeach

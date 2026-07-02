@@ -123,7 +123,7 @@ final class GroupStageService
         $bestThirds = $tournament->format === TournamentFormat::WorldCup48
             ? $this->rankThirdPlaces($groups, $standings)
             : collect();
-        $knockoutRounds = $tournament->rounds()->where('bracket', BracketType::Main)->with('matches')->get();
+        $knockoutRounds = $tournament->rounds()->where('bracket', BracketType::Main)->with('matches.station')->get();
 
         return compact('tournament', 'participants', 'groups', 'standings', 'bestThirds', 'knockoutRounds');
     }

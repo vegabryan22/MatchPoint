@@ -8,6 +8,7 @@ use App\Enums\ParticipantType;
 use App\Enums\TournamentFormat;
 use App\Enums\TournamentStatus;
 use App\Models\AuditLog;
+use App\Models\Player;
 use App\Models\Tournament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -49,6 +50,31 @@ class TournamentManagementTest extends TestCase
 
         $this->actingAs($admin)->delete(route('tournaments.destroy', $copy))->assertRedirect(route('tournaments.index'));
         $this->assertSoftDeleted('tournaments', ['id' => $copy->id]);
+    }
+
+    public function test_tournament_pages_show_registered_participant_occupancy(): void
+    {
+        $admin = $this->administrator();
+        $tournament = Tournament::factory()->create([
+            'created_by' => $admin,
+            'participant_type' => ParticipantType::Individual,
+            'max_participants' => 16,
+        ]);
+        $players = Player::factory()->count(3)->create();
+        $tournament->players()->attach($players->pluck('id'), [
+            'source' => 'manual',
+            'registered_at' => now(),
+        ]);
+
+        $this->actingAs($admin)->get(route('tournaments.show', $tournament))
+            ->assertOk()
+            ->assertSee('Inscripciones (3/16)')
+            ->assertSee('3 de 16')
+            ->assertSee(route('tournaments.registrations.index', $tournament));
+
+        $this->actingAs($admin)->get(route('tournaments.index'))
+            ->assertOk()
+            ->assertSee('3 / 16');
     }
 
     public function test_tournament_follows_only_allowed_status_transitions(): void

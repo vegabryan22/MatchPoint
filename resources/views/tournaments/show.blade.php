@@ -5,10 +5,13 @@
 @section('content')
     <x-page-header :title="$tournament->name" :subtitle="$tournament->gameLabel()">
     <div class="d-flex flex-wrap gap-2">
-        @if(auth()->user()->can('manageOrganizers', $tournament) || auth()->user()->can('manageOfficials', $tournament))<a class="btn btn-outline-primary" href="{{ route('tournaments.staff.index', $tournament) }}">Personal</a>@endif
+            @can('viewSchedule', $tournament)
+                <a class="btn btn-outline-primary" href="{{ route('tournaments.schedule.index', $tournament) }}">Consolas y horarios</a>
+            @endcan
+            @if(auth()->user()->can('manageOrganizers', $tournament) || auth()->user()->can('manageOfficials', $tournament))<a class="btn btn-outline-primary" href="{{ route('tournaments.staff.index', $tournament) }}">Personal</a>@endif
             @can('viewRegistrations', $tournament)
                 <a class="btn btn-outline-primary" href="{{ route('tournaments.registrations.index', $tournament) }}">
-                    Inscripciones
+                    Inscripciones ({{ $registeredCount }}/{{ $tournament->max_participants }})
                 </a>
             @endcan
 
@@ -76,10 +79,11 @@
         @foreach ([
             ['Modalidad', $tournament->participant_type->label()],
             ['Formato', $tournament->format->label()],
-            ['Cupos', $tournament->max_participants],
+            ['Inscritos', $registeredCount.' / '.$tournament->max_participants],
+            ['Disponibles', $remainingSlots],
             ['Serie', $tournament->best_of->label()],
         ] as [$label, $value])
-            <div class="col-sm-6 col-xl-3">
+            <div class="col-sm-6 col-xl">
                 <div class="mp-card p-4 h-100">
                     <div class="mp-muted small mb-2">{{ $label }}</div>
                     <div class="h5 fw-bold mb-0">{{ $value }}</div>
@@ -87,6 +91,25 @@
             </div>
         @endforeach
     </div>
+
+    @can('viewRegistrations', $tournament)
+        <div class="mp-card p-4 mb-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between gap-3 mb-2">
+                        <strong>Ocupación del torneo</strong>
+                        <span>{{ $registeredCount }} de {{ $tournament->max_participants }}</span>
+                    </div>
+                    <div class="progress" role="progressbar" aria-label="Ocupación del torneo" aria-valuenow="{{ $registeredCount }}" aria-valuemin="0" aria-valuemax="{{ $tournament->max_participants }}">
+                        <div class="progress-bar" style="width: {{ min(100, ($registeredCount / $tournament->max_participants) * 100) }}%"></div>
+                    </div>
+                </div>
+                <a class="btn btn-primary" href="{{ route('tournaments.registrations.index', $tournament) }}">
+                    Ver inscritos
+                </a>
+            </div>
+        </div>
+    @endcan
 
     <div class="row g-4">
         <div class="col-lg-7">

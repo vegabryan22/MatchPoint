@@ -32,6 +32,8 @@ class GameMatchFactory extends Factory
             'status' => MatchStatus::Pending,
             'best_of' => BestOf::One,
             'scheduled_at' => null,
+            'tournament_station_id' => null,
+            'scheduled_end_at' => null,
             'duration_seconds' => null,
             'observations' => null,
             'completed_by' => null,

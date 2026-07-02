@@ -78,6 +78,10 @@ El importador acepta hasta 5.000 filas, ignora filas vacías, conserva filas vá
 | GET | `/tournaments/{slug}/registrations/export/csv` | exportar CSV |
 | GET | `/tournaments/{slug}/registrations/export/xlsx` | exportar Excel |
 
+## Indicadores de ocupación
+
+El listado de torneos muestra `inscritos / capacidad`. El detalle repite el total, calcula los cupos disponibles y presenta una barra de ocupación con acceso directo a la tabla de inscritos. El cálculo usa `TournamentRegistrationService`, que selecciona jugadores o equipos según la modalidad.
+
 ## Permisos
 
 Todos los usuarios activos pueden consultar y exportar. Administradores y organizadores pueden agregar, retirar e importar.

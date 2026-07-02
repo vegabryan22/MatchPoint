@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\RoleName;
+use App\Models\Player;
 use App\Models\Role;
 use App\Models\Tournament;
 use App\Models\User;
@@ -77,5 +78,24 @@ class TournamentStaffAccessTest extends TestCase
         $this->actingAs($organizer)->getJson(route('dashboard.data'))->assertOk()->assertJsonPath('metrics.tournaments', 1);
         $this->actingAs($organizer)->get(route('reports.index'))
             ->assertOk()->assertSee('Torneo Propio')->assertDontSee('Torneo Ajeno');
+    }
+
+    public function test_player_index_only_shows_tournaments_visible_to_organizer(): void
+    {
+        $admin = $this->administrator();
+        $role = Role::query()->firstOrCreate(['slug' => RoleName::Organizer->value], ['name' => RoleName::Organizer->label()]);
+        $organizer = User::factory()->create();
+        $organizer->roles()->attach($role);
+        $player = Player::factory()->create(['managed_by' => $organizer->id]);
+        $owned = Tournament::factory()->create(['name' => 'Torneo Visible', 'created_by' => $admin]);
+        $foreign = Tournament::factory()->create(['name' => 'Torneo Privado', 'created_by' => $admin]);
+        $owned->organizers()->attach($organizer, ['assigned_by' => $admin->id, 'is_primary' => true, 'assigned_at' => now()]);
+        $owned->players()->attach($player, ['source' => 'manual', 'registered_at' => now()]);
+        $foreign->players()->attach($player, ['source' => 'manual', 'registered_at' => now()]);
+
+        $this->actingAs($organizer)->get(route('players.index'))
+            ->assertOk()
+            ->assertSee('Torneo Visible')
+            ->assertDontSee('Torneo Privado');
     }
 }

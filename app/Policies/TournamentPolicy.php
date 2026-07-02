@@ -71,6 +71,16 @@ final class TournamentPolicy
         return $this->access->canRecordMatches($user, $tournament);
     }
 
+    public function viewSchedule(User $user, Tournament $tournament): bool
+    {
+        return $this->access->canView($user, $tournament);
+    }
+
+    public function manageSchedule(User $user, Tournament $tournament): bool
+    {
+        return $this->access->canManage($user, $tournament);
+    }
+
     public function viewGroups(User $user, Tournament $tournament): bool
     {
         return $this->access->canView($user, $tournament);

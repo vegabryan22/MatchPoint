@@ -36,6 +36,8 @@ class GameMatch extends Model
         'status',
         'best_of',
         'scheduled_at',
+        'tournament_station_id',
+        'scheduled_end_at',
         'duration_seconds',
         'observations',
         'completed_by',
@@ -52,6 +54,7 @@ class GameMatch extends Model
             'is_conditional' => 'boolean',
             'best_of' => BestOf::class,
             'scheduled_at' => 'datetime',
+            'scheduled_end_at' => 'datetime',
             'completed_at' => 'datetime',
         ];
     }
@@ -90,6 +93,11 @@ class GameMatch extends Model
     public function completedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'completed_by');
+    }
+
+    public function station(): BelongsTo
+    {
+        return $this->belongsTo(TournamentStation::class, 'tournament_station_id');
     }
 
     /** @return HasMany<Score, $this> */

@@ -18,4 +18,14 @@ enum MatchStatus: string
             self::Cancelled => 'Cancelado',
         };
     }
+
+    public function badgeClass(): string
+    {
+        return match ($this) {
+            self::Pending => 'text-bg-warning',
+            self::Bye => 'text-bg-info',
+            self::Completed => 'text-bg-success',
+            self::Cancelled => 'text-bg-secondary',
+        };
+    }
 }
