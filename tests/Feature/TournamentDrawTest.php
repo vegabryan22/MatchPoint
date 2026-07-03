@@ -92,6 +92,66 @@ class TournamentDrawTest extends TestCase
         $this->assertDatabaseMissing('tournament_draws', ['tournament_id' => $tournament->id]);
     }
 
+    public function test_manual_arrival_table_builds_pairs_with_present_players_and_accepts_more_before_results(): void
+    {
+        $admin = $this->administrator();
+        $tournament = $this->registrationTournament(attributes: ['max_participants' => 8]);
+        $players = Player::factory()->count(8)->create();
+        $this->attachPlayers($tournament, $players, $admin->id);
+        $firstPresent = $players->take(4)->values();
+        $firstOrder = $firstPresent->pluck('id')->map(fn ($id): int => (int) $id)->all();
+
+        $this->actingAs($admin)->post(route('tournaments.draws.store', $tournament), [
+            'method' => DrawMethod::Manual->value,
+            'avoid_rematches' => '0',
+            'manual_pairing' => '1',
+            'selected_participants' => $firstOrder,
+            'resolved_order' => $firstOrder,
+        ])->assertRedirect(route('tournaments.draws.show', $tournament));
+
+        $firstMatches = $tournament->rounds()->where('number', 1)->firstOrFail()->matches()->orderBy('sequence')->get();
+        $this->assertSame([$firstOrder[0], $firstOrder[1]], [$firstMatches[0]->participant_a_id, $firstMatches[0]->participant_b_id]);
+        $this->assertSame([$firstOrder[2], $firstOrder[3]], [$firstMatches[1]->participant_a_id, $firstMatches[1]->participant_b_id]);
+        $this->assertSame($firstOrder, $tournament->draw()->firstOrFail()->metadata['active_participant_ids']);
+
+        $laterOrder = $players->take(6)->pluck('id')->map(fn ($id): int => (int) $id)->all();
+        $this->actingAs($admin)->post(route('tournaments.draws.store', $tournament), [
+            'method' => DrawMethod::Manual->value,
+            'avoid_rematches' => '0',
+            'manual_pairing' => '1',
+            'selected_participants' => $laterOrder,
+            'resolved_order' => $laterOrder,
+        ])->assertRedirect(route('tournaments.draws.show', $tournament))->assertSessionHasNoErrors();
+
+        $this->assertSame(3, $tournament->rounds()->where('number', 1)->firstOrFail()->matches()->count());
+        $this->assertSame($laterOrder, $tournament->draw()->firstOrFail()->metadata['active_participant_ids']);
+    }
+
+    public function test_arrival_table_rejects_non_registered_and_odd_participant_sets(): void
+    {
+        $admin = $this->administrator();
+        $tournament = $this->registrationTournament();
+        $players = Player::factory()->count(4)->create();
+        $outsider = Player::factory()->create();
+        $this->attachPlayers($tournament, $players, $admin->id);
+
+        $this->actingAs($admin)->post(route('tournaments.draws.preview', $tournament), [
+            'method' => DrawMethod::Manual->value,
+            'avoid_rematches' => '0',
+            'manual_pairing' => '1',
+            'selected_participants' => [$players[0]->id, $outsider->id],
+            'seeds' => [$players[0]->id => 1, $outsider->id => 2],
+        ])->assertSessionHasErrors('selected_participants');
+
+        $this->actingAs($admin)->post(route('tournaments.draws.preview', $tournament), [
+            'method' => DrawMethod::Manual->value,
+            'avoid_rematches' => '0',
+            'manual_pairing' => '1',
+            'selected_participants' => $players->take(3)->pluck('id')->all(),
+            'seeds' => $players->take(3)->mapWithKeys(fn ($player, $index): array => [$player->id => $index + 1])->all(),
+        ])->assertSessionHasErrors('draw');
+    }
+
     public function test_automatic_seeding_prioritizes_competitive_level(): void
     {
         $admin = $this->administrator();

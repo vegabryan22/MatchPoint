@@ -56,6 +56,37 @@ document.querySelectorAll('[data-copy-url]').forEach((button) => {
     });
 });
 
+document.querySelectorAll('[data-arrival-draw-form]').forEach((form) => {
+    const checkboxes = Array.from(form.querySelectorAll('[data-arrival-participant]'));
+    const countLabel = form.querySelector('[data-present-count]');
+    const warning = form.querySelector('[data-arrival-warning]');
+    const submit = form.querySelector('[data-arrival-submit]');
+    const synchronize = () => {
+        const selected = checkboxes.filter((checkbox) => checkbox.checked);
+        selected.forEach((checkbox, index) => {
+            const position = checkbox.closest('tr')?.querySelector('[data-arrival-position]');
+            if (position) {
+                position.disabled = false;
+                position.value = String(index + 1);
+            }
+        });
+        checkboxes.filter((checkbox) => ! checkbox.checked).forEach((checkbox) => {
+            const position = checkbox.closest('tr')?.querySelector('[data-arrival-position]');
+            if (position) position.disabled = true;
+        });
+        if (countLabel) countLabel.textContent = `${selected.length} presentes`;
+        const invalid = selected.length < 2 || selected.length % 2 !== 0;
+        warning?.classList.toggle('d-none', ! invalid);
+        if (submit) submit.disabled = invalid;
+    };
+    checkboxes.forEach((checkbox) => checkbox.addEventListener('change', synchronize));
+    form.querySelectorAll('[data-select-arrivals]').forEach((button) => button.addEventListener('click', () => {
+        checkboxes.forEach((checkbox) => { checkbox.checked = button.dataset.selectArrivals === 'all'; });
+        synchronize();
+    }));
+    synchronize();
+});
+
 document.querySelectorAll('.js-datetime-picker').forEach((input) => {
     flatpickr(input, {
         allowInput: true,

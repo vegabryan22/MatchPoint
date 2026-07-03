@@ -1051,7 +1051,20 @@ El documento incluye la regla de diferencia máxima de tres goles, criterios de 
 
 La fase principal no se completa parcialmente: debe esperar el último marcador para comparar de forma justa a todos los perdedores.
 
-## 23. Lista de aceptación de una competencia
+## 23. Armar la llave conforme llegan participantes
+
+**Rol:** administrador u organizador asignado.
+
+1. Entrar al torneo y abrir **Sorteo y llave**.
+2. Elegir **Armar llave con presentes**.
+3. Marcar los jugadores que ya se encuentran físicamente en el evento.
+4. Elegir **Semillas manuales** y revisar las posiciones: `1 vs 2`, `3 vs 4`, etc.
+5. Generar la vista previa y confirmar la llave.
+6. Si llegan más jugadores antes del primer marcador, usar **Agregar llegadas / regenerar**, marcarlos y confirmar otra vez.
+
+La cantidad debe ser par para que todos jueguen. Una vez registrado el primer resultado, la llave queda protegida y ya no admite regeneración.
+
+## 24. Lista de aceptación de una competencia
 
 - [ ] Usuarios y roles creados.
 - [ ] Jugadores o equipos activos y completos.

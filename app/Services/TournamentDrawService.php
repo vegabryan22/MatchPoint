@@ -38,7 +38,11 @@ final class TournamentDrawService
     public function preview(Tournament $tournament, array $data): array
     {
         $this->ensureDrawable($tournament);
-        $participants = $this->participants($tournament);
+        $registeredParticipants = $this->participants($tournament);
+        $selectedIds = array_map('intval', $data['selected_participants'] ?? $data['resolved_order'] ?? $registeredParticipants->pluck('id')->all());
+        $this->validateSelectedParticipants($registeredParticipants, $selectedIds);
+        $participants = $registeredParticipants->whereIn('id', $selectedIds)->values();
+        $data['seeds'] = collect($data['seeds'] ?? [])->only($selectedIds)->all();
 
         if ($participants->count() < 2) {
             throw ValidationException::withMessages(['draw' => 'Se necesitan al menos dos participantes inscritos.']);
@@ -59,7 +63,8 @@ final class TournamentDrawService
             ? array_map('intval', $data['resolved_order'])
             : $this->strategies->resolve($method)->order($tournament, $participants, $data);
         $this->validateResolvedOrder($participants, $order);
-        $pairing = $this->pairings->pair($tournament, $order, (bool) ($data['avoid_rematches'] ?? false));
+        $manualPairing = $method === DrawMethod::Manual && (bool) ($data['manual_pairing'] ?? false);
+        $pairing = $this->pairings->pair($tournament, $order, (bool) ($data['avoid_rematches'] ?? false), $manualPairing);
         $participantMap = $participants->keyBy('id');
         $hydratePairs = fn (array $pairs): array => collect($pairs)->map(fn (array $pair): array => [
             'participant_a_id' => $pair[0],
@@ -71,6 +76,7 @@ final class TournamentDrawService
         return [
             'method' => $method,
             'avoid_rematches' => (bool) ($data['avoid_rematches'] ?? false),
+            'manual_pairing' => $manualPairing,
             'order' => $order,
             'seeded_participants' => collect($order)->map(fn (int $id, int $index): array => [
                 'seed' => $index + 1,
@@ -118,6 +124,8 @@ final class TournamentDrawService
                     'best_loser_count' => $plan['best_loser_count'],
                     'repechage' => $plan['repechage'],
                     'main_matches' => $plan['main_matches'],
+                    'manual_pairing' => $plan['manual_pairing'],
+                    'active_participant_ids' => $plan['order'],
                 ],
                 'generated_at' => now(),
             ]);
@@ -127,6 +135,7 @@ final class TournamentDrawService
                 'method' => $plan['method']->value,
                 'version' => $version,
                 'avoid_rematches' => $plan['avoid_rematches'],
+                'manual_pairing' => $plan['manual_pairing'],
                 'participant_order' => $plan['order'],
             ], $actor->id);
         });
@@ -166,6 +175,7 @@ final class TournamentDrawService
         return [
             'tournament' => $tournament,
             'participantsById' => $participants,
+            'activeParticipantCount' => count($tournament->draw?->metadata['active_participant_ids'] ?? $participants->keys()->all()),
             'qualificationProgress' => $qualificationProgress,
             ...$this->presentation->present($tournament, $participants, $clubs),
         ];
@@ -191,6 +201,18 @@ final class TournamentDrawService
 
         if ($expected !== $actual || count($order) !== count(array_unique($order))) {
             throw ValidationException::withMessages(['resolved_order' => 'El orden no coincide con los participantes inscritos.']);
+        }
+    }
+
+    private function validateSelectedParticipants(Collection $registeredParticipants, array $selectedIds): void
+    {
+        $registeredIds = $registeredParticipants->pluck('id')->map(fn ($id): int => (int) $id);
+        $selected = collect($selectedIds);
+
+        if ($selected->count() < 2 || $selected->duplicates()->isNotEmpty() || $selected->diff($registeredIds)->isNotEmpty()) {
+            throw ValidationException::withMessages([
+                'selected_participants' => 'Selecciona al menos dos participantes inscritos sin repetirlos.',
+            ]);
         }
     }
 }

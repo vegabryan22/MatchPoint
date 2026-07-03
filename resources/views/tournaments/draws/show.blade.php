@@ -7,7 +7,7 @@
     <div class="d-flex flex-wrap gap-2">
         <a class="btn btn-outline-secondary" href="{{ route('tournaments.show', $tournament) }}">Volver</a>
         @if(in_array($tournament->format, [\App\Enums\TournamentFormat::SingleElimination, \App\Enums\TournamentFormat::DoubleElimination], true))
-            @can('manageDraw', $tournament)<a class="btn btn-primary" href="{{ route('tournaments.draws.create', $tournament) }}">{{ $tournament->draw ? 'Regenerar' : 'Generar sorteo' }}</a>@endcan
+            @can('manageDraw', $tournament)<a class="btn btn-primary" href="{{ route('tournaments.draws.create', $tournament) }}">{{ $tournament->draw ? 'Agregar llegadas / regenerar' : 'Armar llave con presentes' }}</a>@endcan
         @endif
     </div>
 </x-page-header>
@@ -20,7 +20,7 @@
     <div class="mp-world-summary mb-4">
         <div><span>Formato</span><strong>{{ $tournament->format->label() }}</strong></div>
         <div><span>Método</span><strong>{{ $tournament->draw?->method->label() ?? 'Clasificación de grupos' }}</strong></div>
-        <div><span>Participantes</span><strong>{{ $participantsById->count() }}</strong></div>
+        <div><span>Participantes activos</span><strong>{{ $activeParticipantCount }}</strong></div>
         <div><span>Estado</span><strong>{{ $tournament->status->label() }}</strong></div>
     </div>
 

@@ -10,10 +10,10 @@ final class RematchAwarePairingService
 {
     public function __construct(private readonly TournamentDrawRepositoryInterface $draws) {}
 
-    public function pair(Tournament $tournament, array $orderedIds, bool $avoidRematches): array
+    public function pair(Tournament $tournament, array $orderedIds, bool $avoidRematches, bool $manualPairing = false): array
     {
         if ($tournament->format === TournamentFormat::SingleElimination) {
-            return $this->qualifyingSingleElimination($tournament, $orderedIds, $avoidRematches);
+            return $this->qualifyingSingleElimination($tournament, $orderedIds, $avoidRematches, $manualPairing);
         }
 
         $bracketSize = $this->nextPowerOfTwo(count($orderedIds));
@@ -36,7 +36,7 @@ final class RematchAwarePairingService
         return ['bracket_size' => $bracketSize, 'bye_count' => $byeCount, 'pairs' => $pairs];
     }
 
-    private function qualifyingSingleElimination(Tournament $tournament, array $orderedIds, bool $avoidRematches): array
+    private function qualifyingSingleElimination(Tournament $tournament, array $orderedIds, bool $avoidRematches, bool $manualPairing): array
     {
         $participantCount = count($orderedIds);
         $qualifyingMatchCount = intdiv($participantCount, 2);
@@ -45,7 +45,9 @@ final class RematchAwarePairingService
         $history = $avoidRematches
             ? $this->draws->encounterCounts($tournament, $tournament->participant_type, $orderedIds)
             : [];
-        $qualifyingPairs = $this->pairIds($orderedIds, $history, $avoidRematches);
+        $qualifyingPairs = $manualPairing
+            ? array_map(fn (array $pair): array => array_values($pair), array_chunk($orderedIds, 2))
+            : $this->pairIds($orderedIds, $history, $avoidRematches);
         $mainMatches = array_fill(0, intdiv($bracketSize, 2), ['a' => [], 'b' => []]);
 
         return [

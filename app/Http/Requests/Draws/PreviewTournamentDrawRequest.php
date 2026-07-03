@@ -18,6 +18,9 @@ class PreviewTournamentDrawRequest extends FormRequest
         return [
             'method' => ['required', Rule::enum(DrawMethod::class)],
             'avoid_rematches' => ['required', 'boolean'],
+            'manual_pairing' => ['nullable', 'boolean'],
+            'selected_participants' => ['nullable', 'array', 'min:2'],
+            'selected_participants.*' => ['required', 'integer', 'distinct'],
             'seeds' => ['nullable', 'array'],
             'seeds.*' => ['nullable', 'integer', 'min:1', 'max:128'],
         ];

@@ -37,10 +37,13 @@ final class TournamentDrawController extends Controller
     {
         Gate::authorize('manageDraw', $tournament);
 
+        $tournament->loadMissing('draw');
+
         return view('tournaments.draws.create', [
             'tournament' => $tournament,
             'participants' => $this->draws->participants($tournament),
             'methods' => DrawMethod::cases(),
+            'activeParticipantIds' => collect($tournament->draw?->metadata['active_participant_ids'] ?? [])->map(fn ($id): int => (int) $id),
         ]);
     }
 

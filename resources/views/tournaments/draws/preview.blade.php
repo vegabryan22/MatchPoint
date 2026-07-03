@@ -52,6 +52,8 @@
         @csrf
         <input type="hidden" name="method" value="{{ $plan['method']->value }}">
         <input type="hidden" name="avoid_rematches" value="{{ $plan['avoid_rematches'] ? 1 : 0 }}">
+        <input type="hidden" name="manual_pairing" value="{{ $plan['manual_pairing'] ? 1 : 0 }}">
+        @foreach ($plan['order'] as $participantId)<input type="hidden" name="selected_participants[]" value="{{ $participantId }}">@endforeach
         @foreach ($plan['order'] as $participantId)<input type="hidden" name="resolved_order[]" value="{{ $participantId }}">@endforeach
         <button class="btn btn-primary">Confirmar y generar llave</button>
     </form>
