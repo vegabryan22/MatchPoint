@@ -200,7 +200,7 @@ document.addEventListener('click', (event) => {
 });
 
 document.addEventListener('input', (event) => {
-    const form = event.target.closest('[data-inline-result-form]');
+    const form = event.target.closest('[data-inline-result-form], [data-native-result-form]');
     if (form) form.dataset.dirty = 'true';
 });
 
@@ -323,7 +323,7 @@ document.querySelectorAll('[data-bracket-stage]').forEach((stage) => {
 
     if (stage.dataset.bracketLiveUrl) {
         const refreshBracket = async () => {
-            if (stage.querySelector('[data-inline-result-form][data-dirty="true"]')) {
+            if (stage.querySelector('[data-inline-result-form][data-dirty="true"], [data-native-result-form][data-dirty="true"]')) {
                 if (liveStatus) liveStatus.textContent = 'Marcador pendiente de guardar';
                 return;
             }

@@ -89,10 +89,10 @@ class TournamentBracketTest extends TestCase
 
         $this->actingAs($admin)->post(route('matches.results.store', $match), [
             'games' => [['participant_a_score' => 3, 'participant_b_score' => 1]],
-        ])->assertRedirect(route('tournaments.draws.show', $tournament));
+        ])->assertRedirect(route('tournaments.draws.show', [$tournament, 'batch' => $match->tournament_draw_id]));
         $this->actingAs($admin)->post(route('matches.results.store', $secondMatch), [
             'games' => [['participant_a_score' => 2, 'participant_b_score' => 0]],
-        ])->assertRedirect(route('tournaments.draws.show', $tournament));
+        ])->assertRedirect(route('tournaments.draws.show', [$tournament, 'batch' => $secondMatch->tournament_draw_id]));
 
         $after = $this->actingAs($viewer)->getJson(route('tournaments.draws.live', $tournament))
             ->assertOk()
@@ -114,7 +114,7 @@ class TournamentBracketTest extends TestCase
             ->assertOk()
             ->assertSee('Modo árbitro')
             ->assertSee('Ingreso rápido de marcadores')
-            ->assertSee('data-inline-result-form', false)
+            ->assertSee('name="batch"', false)
             ->assertSee('data-score-step="1"', false)
             ->assertSee('data-score-step="-1"', false);
 

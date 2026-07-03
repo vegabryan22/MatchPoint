@@ -76,6 +76,27 @@ class MatchResultTest extends TestCase
         $this->assertFalse(session()->has('success'));
     }
 
+    public function test_native_quick_result_redirects_to_same_batch_with_saved_score(): void
+    {
+        $admin = $this->administrator();
+        [$match] = $this->pendingMatch(BestOf::One, $admin);
+
+        $this->actingAs($admin)->post(route('matches.results.store', $match), [
+            'batch' => $match->tournament_draw_id,
+            'games' => [['participant_a_score' => 1, 'participant_b_score' => 0]],
+        ])->assertRedirect(route('tournaments.draws.show', [
+            $match->tournament,
+            'batch' => $match->tournament_draw_id,
+        ]));
+
+        $this->assertDatabaseHas('scores', [
+            'match_id' => $match->id,
+            'participant_a_score' => 1,
+            'participant_b_score' => 0,
+        ]);
+        $this->assertSame(MatchStatus::Completed, $match->refresh()->status);
+    }
+
     public function test_single_elimination_applies_three_goal_mercy_rule(): void
     {
         $admin = $this->administrator();

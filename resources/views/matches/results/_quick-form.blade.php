@@ -8,13 +8,14 @@
     class="mp-quick-result-form"
     method="post"
     action="{{ $isCorrection ? route('matches.results.update', $match) : route('matches.results.store', $match) }}"
-    data-inline-result-form
+    data-native-result-form
     data-dirty="false"
+    @if($isCorrection) data-confirm="¿Guardar esta corrección y recalcular la siguiente ronda?" @endif
     novalidate
 >
     @csrf
     @if($isCorrection) @method('PUT') @endif
-    <input name="inline" type="hidden" value="1">
+    <input name="batch" type="hidden" value="{{ $match->tournament_draw_id }}">
 
     <details class="mp-quick-result" @if($match->best_of->value === 1 && ! $isCorrection) open @endif>
         <summary>{{ $isCorrection ? 'Corregir marcador' : ($match->best_of->value === 1 ? 'Marcador rápido' : 'Ingresar '.$match->best_of->label()) }}</summary>

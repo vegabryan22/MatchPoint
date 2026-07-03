@@ -38,7 +38,10 @@ final class MatchResultController extends Controller
 
     private function successResponse(StoreMatchResultRequest $request, GameMatch $match, string $message): RedirectResponse|JsonResponse
     {
-        $url = route('tournaments.draws.show', $match->tournament);
+        $url = route('tournaments.draws.show', [
+            $match->tournament,
+            'batch' => $match->tournament_draw_id,
+        ]);
 
         if ($request->expectsJson()) {
             $freshMatch = $match->fresh('scores');
