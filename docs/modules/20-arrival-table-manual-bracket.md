@@ -22,7 +22,8 @@ Permitir que la organización arme la competencia con quienes realmente llegan a
 - En eliminación simple se requiere una cantidad par para garantizar que todos jueguen.
 - Sólo pueden seleccionarse participantes inscritos en el torneo.
 - Los ausentes permanecen inscritos y pueden incorporarse en una tanda posterior.
-- Un participante no puede competir en dos tandas de llegada.
+- Un participante puede competir nuevamente en otra tanda. La mesa lo identifica con **Ya jugó en Tanda X**, pero permite seleccionarlo.
+- Las repeticiones quedan registradas en metadatos y auditoría de la tanda nueva.
 - Cada tanda conserva rondas, partidos, resultados, programación y ganador propios.
 - Crear una tanda nunca elimina, regenera ni modifica llaves anteriores, aunque ya tengan resultados.
 - Sólo puede eliminarse una tanda individual sin resultados.

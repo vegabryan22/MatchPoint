@@ -1064,7 +1064,7 @@ La fase principal no se completa parcialmente: debe esperar el último marcador 
 7. Usar las pestañas **Tanda 1**, **Tanda 2**, etc. para operar cada llave.
 8. Cuando finalicen al menos dos tandas, seleccionar **Crear final entre ganadores**.
 
-La cantidad de cada tanda debe ser par para que todos jueguen. Las tandas nuevas no modifican partidos ni resultados existentes. Un jugador ya asignado queda bloqueado en la mesa de nuevas llegadas.
+La cantidad de cada tanda debe ser par para que todos jueguen. Las tandas nuevas no modifican partidos ni resultados existentes. Un jugador anterior aparece marcado como **Ya jugó**, pero puede seleccionarse nuevamente.
 
 ## 24. Lista de aceptación de una competencia
 

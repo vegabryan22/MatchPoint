@@ -109,7 +109,7 @@ final class TournamentDrawService
             }
 
             if ($mode === 'append') {
-                $this->ensureParticipantsAvailableForNewBatch($lockedTournament, $plan['order']);
+                $this->ensureNewBatchIsAllowed($lockedTournament);
                 $lockedTournament->champion()->delete();
             } elseif ($mode === 'final') {
                 $this->ensureFinalistsAreBatchWinners($lockedTournament, $plan['order']);
@@ -120,6 +120,9 @@ final class TournamentDrawService
 
             $batchNumber = ((int) $lockedTournament->draws()->max('batch_number')) + 1;
             $version = ((int) $lockedTournament->draws()->max('version')) + 1;
+            $repeatedParticipantIds = $mode === 'append'
+                ? collect($plan['order'])->intersect($this->usedParticipantIds($lockedTournament))->values()->all()
+                : [];
             if ($mode === 'replace') {
                 $this->draws->updateSeeds($lockedTournament, $plan['order']);
             }
@@ -143,6 +146,7 @@ final class TournamentDrawService
                     'main_matches' => $plan['main_matches'],
                     'manual_pairing' => $plan['manual_pairing'],
                     'active_participant_ids' => $plan['order'],
+                    'repeated_participant_ids' => $repeatedParticipantIds,
                 ],
                 'generated_at' => now(),
             ]);
@@ -156,6 +160,7 @@ final class TournamentDrawService
                 'participant_order' => $plan['order'],
                 'batch_number' => $batchNumber,
                 'generation_mode' => $mode,
+                'repeated_participant_ids' => $repeatedParticipantIds,
             ], $actor->id);
         });
     }
@@ -256,7 +261,7 @@ final class TournamentDrawService
         }
     }
 
-    private function ensureParticipantsAvailableForNewBatch(Tournament $tournament, array $participantIds): void
+    private function ensureNewBatchIsAllowed(Tournament $tournament): void
     {
         if ($tournament->draws()->where('is_final_stage', true)->exists()) {
             throw ValidationException::withMessages([
@@ -264,15 +269,13 @@ final class TournamentDrawService
             ]);
         }
 
-        $usedIds = $tournament->draws()->get()->flatMap(
-            fn ($draw) => $draw->metadata['active_participant_ids'] ?? [],
-        );
+    }
 
-        if (collect($participantIds)->intersect($usedIds)->isNotEmpty()) {
-            throw ValidationException::withMessages([
-                'selected_participants' => 'Uno o más participantes ya pertenecen a otra tanda. Selecciona únicamente nuevas llegadas.',
-            ]);
-        }
+    private function usedParticipantIds(Tournament $tournament): \Illuminate\Support\Collection
+    {
+        return $tournament->draws()->get()->flatMap(
+            fn ($draw) => $draw->metadata['active_participant_ids'] ?? [],
+        )->map(fn ($id): int => (int) $id)->unique();
     }
 
     private function ensureFinalistsAreBatchWinners(Tournament $tournament, array $participantIds): void

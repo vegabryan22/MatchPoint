@@ -64,11 +64,11 @@
                             $notFinalist = $generationMode === 'final' && ! $activeParticipantIds->contains((int) $participant->id);
                         @endphp
                         <tr>
-                            <td><div class="form-check form-switch"><input class="form-check-input" id="present-{{ $participant->id }}" name="selected_participants[]" type="checkbox" value="{{ $participant->id }}" data-arrival-participant @checked($isSelected) @disabled($alreadyAssigned || $notFinalist)></div></td>
+                            <td><div class="form-check form-switch"><input class="form-check-input" id="present-{{ $participant->id }}" name="selected_participants[]" type="checkbox" value="{{ $participant->id }}" data-arrival-participant @checked($isSelected) @disabled($notFinalist)></div></td>
                             <td>
                                 <label for="present-{{ $participant->id }}"><strong>{{ $tournament->participant_type === App\Enums\ParticipantType::Individual ? $participant->nickname : $participant->name }}</strong>
                                 @if ($tournament->participant_type === App\Enums\ParticipantType::Individual)<div class="mp-muted small">{{ $participant->name }} · {{ $participant->level->label() }}</div>@endif
-                                @if($alreadyAssigned)<div class="text-success small">Ya compite en otra tanda</div>@endif
+                                @if($alreadyAssigned)<div class="text-warning small">Ya jugó en {{ $participantBatchNames->get((int) $participant->id) }}</div>@endif
                                 @if($generationMode === 'final' && $activeParticipantIds->contains((int) $participant->id))<div class="text-warning small">Ganador de tanda</div>@endif
                                 </label>
                             </td>

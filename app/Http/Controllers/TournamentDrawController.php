@@ -40,6 +40,9 @@ final class TournamentDrawController extends Controller
         $tournament->loadMissing('draws');
         $mode = in_array($request->query('mode'), ['append', 'final'], true) ? $request->query('mode') : 'replace';
         $usedParticipantIds = $tournament->draws->flatMap(fn ($draw) => $draw->metadata['active_participant_ids'] ?? [])->map(fn ($id): int => (int) $id)->unique();
+        $participantBatchNames = $tournament->draws->flatMap(fn ($draw) => collect($draw->metadata['active_participant_ids'] ?? [])->mapWithKeys(
+            fn ($participantId): array => [(int) $participantId => $draw->name],
+        ));
         $winnerIds = $tournament->draws->where('is_final_stage', false)->pluck('winner_id')->filter()->map(fn ($id): int => (int) $id);
 
         return view('tournaments.draws.create', [
@@ -49,6 +52,7 @@ final class TournamentDrawController extends Controller
             'generationMode' => $mode,
             'activeParticipantIds' => $mode === 'final' ? $winnerIds : collect(),
             'usedParticipantIds' => $usedParticipantIds,
+            'participantBatchNames' => $participantBatchNames,
         ]);
     }
 

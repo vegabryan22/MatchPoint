@@ -219,6 +219,28 @@ class TournamentDrawTest extends TestCase
             ->assertOk()->assertSee('Tanda 2')->assertSee($players[4]->nickname);
     }
 
+    public function test_new_batch_allows_previous_participants_and_marks_them_as_repeated(): void
+    {
+        $admin = $this->administrator();
+        $tournament = $this->registrationTournament(attributes: ['max_participants' => 8]);
+        $players = Player::factory()->count(8)->create();
+        $this->attachPlayers($tournament, $players, $admin->id);
+        $firstIds = $players->take(4)->pluck('id')->map(fn ($id): int => (int) $id)->all();
+        $secondIds = [$firstIds[0], ...$players->skip(4)->take(3)->pluck('id')->map(fn ($id): int => (int) $id)->all()];
+        $this->generateManualBatch($tournament, $admin, $firstIds, 'replace', 'Tanda 1');
+
+        $this->actingAs($admin)->get(route('tournaments.draws.create', [$tournament, 'mode' => 'append']))
+            ->assertOk()
+            ->assertSee('Ya jugó en Tanda 1');
+
+        $this->generateManualBatch($tournament, $admin, $secondIds, 'append', 'Tanda 2');
+
+        $secondDraw = $tournament->draws()->reorder()->orderByDesc('batch_number')->firstOrFail();
+        $this->assertSame([$firstIds[0]], $secondDraw->metadata['repeated_participant_ids']);
+        $this->assertSame($secondIds, $secondDraw->metadata['active_participant_ids']);
+        $this->assertSame(2, $tournament->draws()->count());
+    }
+
     public function test_final_batch_can_be_generated_from_completed_batch_winners(): void
     {
         $admin = $this->administrator();
