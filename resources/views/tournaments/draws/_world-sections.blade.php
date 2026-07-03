@@ -1,3 +1,14 @@
+@if($qualificationProgress)
+    <div class="alert {{ $qualificationProgress['completed'] === $qualificationProgress['total'] ? 'alert-success' : 'alert-info' }} mb-3">
+        <strong>Clasificatoria: {{ $qualificationProgress['completed'] }}/{{ $qualificationProgress['total'] }} resultados.</strong>
+        @if($qualificationProgress['completed'] < $qualificationProgress['total'])
+            La llave principal se completará automáticamente al finalizar todos los partidos y seleccionar {{ $qualificationProgress['best_loser_count'] }} mejores perdedores.
+        @else
+            Ganadores y mejores perdedores ya fueron colocados en la llave principal.
+        @endif
+    </div>
+@endif
+
 <div class="mp-desktop-bracket">
 @foreach($bracketSections as $section)
     <section class="mp-world-section">

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\DrawMethod;
+use App\Enums\MatchStatus;
 use App\Enums\ParticipantType;
 use App\Enums\TournamentFormat;
 use App\Enums\TournamentStatus;
@@ -151,10 +152,21 @@ final class TournamentDrawService
         $tournament->load(['draw.generator', 'rounds.matches.scores', 'rounds.matches.station', 'champion']);
         $participants = $this->participants($tournament)->keyBy('id');
         $clubs = GameClub::query()->whereIn('id', $participants->pluck('pivot.game_club_id')->filter()->unique())->get()->keyBy('id');
+        $qualificationProgress = null;
+        if ($tournament->draw?->metadata['repechage'] ?? false) {
+            $qualificationRound = $tournament->rounds
+                ->first(fn ($round): bool => $round->bracket->value === 'main' && $round->number === 1);
+            $qualificationProgress = [
+                'completed' => $qualificationRound?->matches->where('status', MatchStatus::Completed)->count() ?? 0,
+                'total' => $qualificationRound?->matches->count() ?? 0,
+                'best_loser_count' => (int) ($tournament->draw->metadata['best_loser_count'] ?? 0),
+            ];
+        }
 
         return [
             'tournament' => $tournament,
             'participantsById' => $participants,
+            'qualificationProgress' => $qualificationProgress,
             ...$this->presentation->present($tournament, $participants, $clubs),
         ];
     }

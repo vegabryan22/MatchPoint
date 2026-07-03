@@ -5,6 +5,9 @@
 @section('content')
     <x-page-header :title="$tournament->name" :subtitle="$tournament->gameLabel()">
     <div class="d-flex flex-wrap gap-2">
+            @if($tournament->format === App\Enums\TournamentFormat::SingleElimination)
+                <a class="btn btn-outline-primary" href="{{ route('tournaments.rules.print', $tournament) }}" target="_blank">Reglamento imprimible</a>
+            @endif
             @can('viewSchedule', $tournament)
                 <a class="btn btn-outline-primary" href="{{ route('tournaments.schedule.index', $tournament) }}">Consolas y horarios</a>
             @endcan

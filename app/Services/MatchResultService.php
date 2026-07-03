@@ -147,6 +147,9 @@ final class MatchResultService
             && $bestOf === 1;
 
         foreach ($games as $index => $game) {
+            if ($match->tournament->format === TournamentFormat::SingleElimination) {
+                $game = $this->applyMercyRule($game);
+            }
             if ($game['participant_a_score'] === $game['participant_b_score']) {
                 if (! $drawAllowed) {
                     throw ValidationException::withMessages(['games' => 'Los juegos eliminatorios no pueden terminar empatados.']);
@@ -184,6 +187,22 @@ final class MatchResultService
             'participant_a_wins' => $participantAWins,
             'participant_b_wins' => $participantBWins,
         ];
+    }
+
+    private function applyMercyRule(array $game): array
+    {
+        $difference = $game['participant_a_score'] - $game['participant_b_score'];
+        if (abs($difference) <= 3) {
+            return $game;
+        }
+
+        if ($difference > 0) {
+            $game['participant_a_score'] = $game['participant_b_score'] + 3;
+        } else {
+            $game['participant_b_score'] = $game['participant_a_score'] + 3;
+        }
+
+        return $game;
     }
 
     private function ensureDestinationsAreSafe(GameMatch $match): void

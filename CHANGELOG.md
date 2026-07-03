@@ -6,6 +6,9 @@
 - La regeneración continúa bloqueada cuando existen resultados para proteger la integridad competitiva.
 - Eliminación simple inicia con una ronda clasificatoria donde todos los inscritos juegan.
 - Con 38 inscritos avanzan 19 ganadores y 13 mejores perdedores a una llave de 32, sin pases directos iniciales.
+- Cada torneo de eliminación simple incluye un reglamento A4 imprimible con sus cantidades reales.
+- La diferencia máxima oficial es de tres goles y los marcadores superiores se normalizan automáticamente.
+- La llave muestra el progreso clasificatorio y completa la fase principal al registrarse el último resultado.
 
 ## 2026-06-30 — Consolas y programación automática
 

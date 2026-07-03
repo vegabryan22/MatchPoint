@@ -76,6 +76,27 @@ class MatchResultTest extends TestCase
         $this->assertFalse(session()->has('success'));
     }
 
+    public function test_single_elimination_applies_three_goal_mercy_rule(): void
+    {
+        $admin = $this->administrator();
+        [$match] = $this->pendingMatch(BestOf::One, $admin);
+
+        $this->actingAs($admin)->postJson(route('matches.results.store', $match), [
+            'inline' => true,
+            'games' => [['participant_a_score' => 15, 'participant_b_score' => 0]],
+        ])->assertOk()->assertJson([
+            'status' => MatchStatus::Completed->label(),
+            'score_a' => 3,
+            'score_b' => 0,
+        ]);
+
+        $this->assertDatabaseHas('scores', [
+            'match_id' => $match->id,
+            'participant_a_score' => 3,
+            'participant_b_score' => 0,
+        ]);
+    }
+
     public function test_bo3_finishes_when_participant_reaches_two_wins(): void
     {
         $admin = $this->administrator();

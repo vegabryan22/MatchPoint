@@ -1027,7 +1027,31 @@ La ruta técnica `GET` `/up` se utiliza para verificar la salud del servicio. La
 | Exportación XLSX falla | Extensión PHP ZIP ausente | Habilitar `zip` y reiniciar PHP |
 | Notificación no enviada | Cola o scheduler detenidos | Ejecutar `php artisan queue:work` y `php artisan schedule:work` |
 
-## 21. Lista de aceptación de una competencia
+## 21. Imprimir el reglamento del torneo
+
+**Rol:** administrador u organizador con acceso al torneo.
+
+1. Abrir **Torneos** y seleccionar el torneo.
+2. Presionar **Reglamento imprimible** en las acciones superiores.
+3. Revisar inscritos, clasificatorios, mejores perdedores y tamaño de la llave.
+4. Presionar **Imprimir reglamento**.
+5. Elegir una impresora o **Guardar como PDF** en el diálogo del navegador.
+
+El documento incluye la regla de diferencia máxima de tres goles, criterios de mejores perdedores, desempates, controles, puntualidad y conducta. Sus cantidades se recalculan con las inscripciones actuales.
+
+## 22. Verificar el avance automático de la llave
+
+**Roles:** árbitro registra; administrador, organizador o usuario autorizado proyecta.
+
+1. Abrir la llave en la pantalla de proyección.
+2. Desde otra sesión, ingresar un marcador y presionar **Guardar resultado**.
+3. Confirmar que el partido cambia a **Finalizado** y aumenta el contador de la clasificatoria.
+4. Completar todos los partidos clasificatorios.
+5. Confirmar que la llave principal reemplaza **Por definir** por ganadores y mejores perdedores.
+
+La fase principal no se completa parcialmente: debe esperar el último marcador para comparar de forma justa a todos los perdedores.
+
+## 23. Lista de aceptación de una competencia
 
 - [ ] Usuarios y roles creados.
 - [ ] Jugadores o equipos activos y completos.

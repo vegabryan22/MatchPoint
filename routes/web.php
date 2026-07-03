@@ -22,6 +22,7 @@ use App\Http\Controllers\TournamentController;
 use App\Http\Controllers\TournamentDrawController;
 use App\Http\Controllers\TournamentGroupController;
 use App\Http\Controllers\TournamentRegistrationController;
+use App\Http\Controllers\TournamentRulesController;
 use App\Http\Controllers\TournamentScheduleController;
 use App\Http\Controllers\TournamentStaffController;
 use App\Http\Controllers\TournamentStationController;
@@ -74,6 +75,7 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     Route::post('/tournaments/{tournament}/registrations/import', [TournamentRegistrationController::class, 'import'])->name('tournaments.registrations.import');
     Route::get('/tournaments/{tournament}/registrations/export/csv', [TournamentRegistrationController::class, 'exportCsv'])->name('tournaments.registrations.export.csv');
     Route::get('/tournaments/{tournament}/registrations/export/xlsx', [TournamentRegistrationController::class, 'exportXlsx'])->name('tournaments.registrations.export.xlsx');
+    Route::get('/tournaments/{tournament}/rules/print', TournamentRulesController::class)->name('tournaments.rules.print');
     Route::get('/tournaments/{tournament}/schedule', [TournamentScheduleController::class, 'index'])->name('tournaments.schedule.index');
     Route::put('/tournaments/{tournament}/schedule/configuration', [TournamentScheduleController::class, 'configure'])->name('tournaments.schedule.configure');
     Route::post('/tournaments/{tournament}/schedule/generate', [TournamentScheduleController::class, 'generate'])->name('tournaments.schedule.generate');
