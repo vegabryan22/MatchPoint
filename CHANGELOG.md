@@ -23,6 +23,7 @@
 - El desplazamiento horizontal de la llave ignora controles interactivos y ya no captura el clic de botones, inputs o enlaces.
 - Las tandas nuevas permiten seleccionar participantes anteriores, los identifican como **Ya jugó** y registran la repetición sin bloquearla.
 - Administradores y organizadores pueden abrir o cerrar un periodo extraordinario de inscripciones sin cambiar el estado del torneo ni alterar llaves existentes.
+- La final reserva un bloque independiente para la copa y los conectores simétricos usan líneas continuas, más visibles y con uniones redondeadas.
 
 ## 2026-06-30 — Consolas y programación automática
 

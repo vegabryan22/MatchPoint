@@ -419,25 +419,25 @@ a { text-decoration: none; }
 .mp-world-match, .mp-mobile-match { position: relative; z-index: 1; overflow: visible; background: #171c2b; border: 1px solid rgba(255, 255, 255, .11); border-radius: 12px; box-shadow: 0 10px 24px rgba(0, 0, 0, .2); }
 .mp-world-bracket.is-linear .mp-world-round:not(.is-final-round) .mp-world-match::after { position: absolute; top: 50%; right: -2rem; width: 2rem; height: 1px; content: ''; background: rgba(124, 92, 255, .55); }
 .mp-world-bracket.is-linear .mp-world-round + .mp-world-round .mp-world-match::before { position: absolute; top: 50%; left: -2rem; width: 2rem; height: 1px; content: ''; background: rgba(124, 92, 255, .55); }
-.mp-world-bracket.is-symmetric { gap: 4rem; }
+.mp-world-bracket.is-symmetric { --connector-color: rgba(255, 209, 102, .78); --connector-half: 2rem; gap: calc(var(--connector-half) * 2); }
 .mp-world-bracket.is-symmetric .mp-world-round.is-left .mp-world-round-matches::after,
-.mp-world-bracket.is-symmetric .mp-world-round.is-right .mp-world-round-matches::before { position: absolute; top: calc(50% / var(--match-count)); bottom: calc(50% / var(--match-count)); width: 1px; content: ''; background: rgba(255, 209, 102, .62); }
-.mp-world-bracket.is-symmetric .mp-world-round.is-left .mp-world-round-matches::after { right: -2rem; }
-.mp-world-bracket.is-symmetric .mp-world-round.is-right .mp-world-round-matches::before { left: -2rem; }
+.mp-world-bracket.is-symmetric .mp-world-round.is-right .mp-world-round-matches::before { position: absolute; top: calc(50% / var(--match-count)); bottom: calc(50% / var(--match-count)); width: 2px; content: ''; background: var(--connector-color); border-radius: 999px; box-shadow: 0 0 8px rgba(255, 209, 102, .2); }
+.mp-world-bracket.is-symmetric .mp-world-round.is-left .mp-world-round-matches::after { right: calc(var(--connector-half) * -1); }
+.mp-world-bracket.is-symmetric .mp-world-round.is-right .mp-world-round-matches::before { left: calc(var(--connector-half) * -1); }
 .mp-world-bracket.is-symmetric .mp-world-round.is-left .mp-world-match::after,
 .mp-world-bracket.is-symmetric .mp-world-round.is-right.has-outer-round .mp-world-match::after,
-.mp-world-bracket.is-symmetric.has-side-rounds .mp-world-final-match .mp-world-match::after { position: absolute; top: 50%; right: -2rem; width: 2rem; height: 1px; content: ''; background: rgba(255, 209, 102, .62); }
+.mp-world-bracket.is-symmetric.has-side-rounds .mp-world-final-match .mp-world-match::after { position: absolute; top: 50%; right: calc(var(--connector-half) * -1); width: var(--connector-half); height: 2px; content: ''; background: var(--connector-color); border-radius: 999px; box-shadow: 0 0 8px rgba(255, 209, 102, .2); }
 .mp-world-bracket.is-symmetric .mp-world-round.is-right .mp-world-match::before,
 .mp-world-bracket.is-symmetric .mp-world-round.is-left.has-outer-round .mp-world-match::before,
-.mp-world-bracket.is-symmetric.has-side-rounds .mp-world-final-match .mp-world-match::before { position: absolute; top: 50%; left: -2rem; width: 2rem; height: 1px; content: ''; background: rgba(255, 209, 102, .62); }
+.mp-world-bracket.is-symmetric.has-side-rounds .mp-world-final-match .mp-world-match::before { position: absolute; top: 50%; left: calc(var(--connector-half) * -1); width: var(--connector-half); height: 2px; content: ''; background: var(--connector-color); border-radius: 999px; box-shadow: 0 0 8px rgba(255, 209, 102, .2); }
 .mp-world-center { display: flex; width: 300px; flex: 0 0 300px; flex-direction: column; }
 .mp-world-center-title { justify-content: center; gap: .75rem; color: #ffd166; border-color: rgba(255, 209, 102, .7); }
-.mp-world-center-body { position: relative; display: grid; flex: 1; min-height: 320px; place-items: center; }
+.mp-world-center-body { position: relative; display: flex; flex: 1; min-height: 420px; flex-direction: column; align-items: stretch; justify-content: center; gap: 1.25rem; }
 .mp-world-final-match { position: relative; z-index: 2; width: 100%; }
 .mp-world-final-match .mp-world-match { border-color: rgba(255, 209, 102, .65); box-shadow: 0 0 34px rgba(255, 209, 102, .12), 0 16px 32px rgba(0, 0, 0, .32); }
-.mp-world-cup { position: absolute; top: calc(50% - 174px); left: 50%; z-index: 3; display: grid; width: 150px; justify-items: center; color: #fff; text-align: center; transform: translateX(-50%); }
+.mp-world-cup { position: relative; z-index: 3; display: grid; width: 180px; margin: 0 auto; justify-items: center; color: #fff; text-align: center; }
 .mp-world-cup::before { position: absolute; inset: 18px 8px 0; z-index: -1; content: ''; background: radial-gradient(circle, rgba(255, 209, 102, .2), transparent 68%); }
-.mp-world-cup svg { width: 72px; height: 84px; margin-bottom: .2rem; }
+.mp-world-cup svg { width: 76px; height: 88px; margin-bottom: .2rem; filter: drop-shadow(0 8px 12px rgba(201, 137, 25, .24)); }
 .mp-world-cup .mp-eyebrow { color: #d7ad52; font-size: .58rem; }
 .mp-world-cup strong { overflow: hidden; max-width: 150px; color: #ffd166; font-size: .78rem; text-overflow: ellipsis; white-space: nowrap; }
 .mp-world-match.is-completed, .mp-mobile-match.is-completed { border-color: rgba(32, 227, 178, .35); }
