@@ -185,8 +185,8 @@ final class GroupStageService
 
     private function ensureConfigurable(Tournament $tournament): void
     {
-        if ($tournament->status !== TournamentStatus::Registration) {
-            throw ValidationException::withMessages(['groups' => 'El calendario sólo se genera durante inscripciones.']);
+        if (! in_array($tournament->status, [TournamentStatus::Registration, TournamentStatus::InProgress], true)) {
+            throw ValidationException::withMessages(['groups' => 'El calendario sólo se genera en Inscripciones o En curso.']);
         }
         if (! in_array($tournament->format, [TournamentFormat::RoundRobin, TournamentFormat::League, TournamentFormat::GroupsKnockout, TournamentFormat::WorldCup48], true)) {
             throw ValidationException::withMessages(['groups' => 'El formato no utiliza fase de grupos o liga.']);

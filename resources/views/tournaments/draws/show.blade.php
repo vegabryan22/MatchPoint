@@ -15,7 +15,7 @@
 <x-field-error name="draw" />
 
 @if ($bracketSections === [])
-    <div class="mp-card mp-empty"><h2 class="h5 fw-bold">Todavía no hay llave</h2><p class="mp-muted mb-0">Genera el sorteo cuando las inscripciones estén listas.</p></div>
+    <div class="mp-card mp-empty"><h2 class="h5 fw-bold">Todavía no hay llave</h2><p class="mp-muted mb-0">Las inscripciones ya pueden estar cerradas: genera ahora el sorteo para iniciar los partidos.</p></div>
 @else
     <div class="mp-world-summary mb-4">
         <div><span>Formato</span><strong>{{ $tournament->format->label() }}</strong></div>

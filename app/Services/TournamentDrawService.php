@@ -144,8 +144,8 @@ final class TournamentDrawService
 
     private function ensureDrawable(Tournament $tournament): void
     {
-        if ($tournament->status !== TournamentStatus::Registration) {
-            throw ValidationException::withMessages(['draw' => 'El torneo debe estar en estado Inscripciones.']);
+        if (! in_array($tournament->status, [TournamentStatus::Registration, TournamentStatus::InProgress], true)) {
+            throw ValidationException::withMessages(['draw' => 'El torneo debe estar en Inscripciones o En curso.']);
         }
 
         if (! in_array($tournament->format, [TournamentFormat::SingleElimination, TournamentFormat::DoubleElimination], true)) {

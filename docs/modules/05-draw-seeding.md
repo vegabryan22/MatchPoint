@@ -55,7 +55,7 @@ La llave usa la siguiente potencia de dos. Los espacios faltantes se asignan com
 
 ## Flujo
 
-1. Torneo en estado Inscripciones y formato de eliminación.
+1. Torneo en estado Inscripciones o En curso y formato de eliminación.
 2. Al menos dos participantes.
 3. Selección de método y opción de evitar repeticiones.
 4. Vista previa de semillas y primera ronda.

@@ -7,6 +7,7 @@ use App\Enums\MatchStatus;
 use App\Enums\ParticipantType;
 use App\Enums\PlayerLevel;
 use App\Enums\TournamentFormat;
+use App\Enums\TournamentStatus;
 use App\Models\AuditLog;
 use App\Models\GameMatch;
 use App\Models\Player;
@@ -43,6 +44,24 @@ class TournamentDrawTest extends TestCase
         $newPlayer = Player::factory()->create();
         $this->actingAs($admin)->post(route('tournaments.registrations.store', $tournament), ['participant_id' => $newPlayer->id])
             ->assertSessionHasErrors('registration');
+    }
+
+    public function test_draw_can_be_generated_after_tournament_enters_in_progress(): void
+    {
+        $admin = $this->administrator();
+        $tournament = $this->registrationTournament(attributes: ['max_participants' => 48]);
+        $players = Player::factory()->count(38)->create();
+        $this->attachPlayers($tournament, $players, $admin->id);
+        $tournament->update(['status' => TournamentStatus::InProgress]);
+
+        $this->actingAs($admin)->post(route('tournaments.draws.store', $tournament), [
+            'method' => DrawMethod::Random->value,
+            'avoid_rematches' => '0',
+            'resolved_order' => $players->pluck('id')->map(fn ($id): int => (int) $id)->all(),
+        ])->assertRedirect(route('tournaments.draws.show', $tournament))->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('tournament_draws', ['tournament_id' => $tournament->id]);
+        $this->assertSame(63, $tournament->matches()->count());
     }
 
     public function test_manual_seeding_respects_exact_order_and_rejects_invalid_set(): void

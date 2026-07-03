@@ -51,6 +51,20 @@ class GroupStageTest extends TestCase
         $this->assertSame(3, $tournament->rounds()->where('bracket', BracketType::Group)->count());
     }
 
+    public function test_groups_can_be_generated_after_tournament_enters_in_progress(): void
+    {
+        [$admin, $tournament] = $this->competition(TournamentFormat::GroupsKnockout, 8);
+        $tournament->update(['status' => TournamentStatus::InProgress]);
+
+        $this->actingAs($admin)->post(route('tournaments.groups.store', $tournament), [
+            'group_count' => 2,
+            'qualifiers_per_group' => 2,
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->assertSame(2, $tournament->groups()->count());
+        $this->assertSame(12, $tournament->matches()->whereNotNull('group_id')->count());
+    }
+
     public function test_world_cup_48_requires_every_participant_before_generating_groups(): void
     {
         [$admin, $tournament] = $this->competition(TournamentFormat::WorldCup48, 47);

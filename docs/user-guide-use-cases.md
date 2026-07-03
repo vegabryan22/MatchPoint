@@ -564,7 +564,7 @@ La selección pertenece al torneo actual; no modifica las elecciones históricas
 
 **Rutas:** `GET /tournaments/{slug}/draw/create` y `POST /tournaments/{slug}/draw/preview`.
 
-**Precondiciones:** torneo en Inscripciones y al menos dos participantes inscritos.
+**Precondiciones:** torneo en Inscripciones o En curso y al menos dos participantes inscritos.
 
 **Pasos:**
 
@@ -598,7 +598,7 @@ La llave sólo puede regenerarse antes de registrar resultados. Eliminarla desbl
 
 **Formatos:** Round Robin, liga o grupos más eliminación.
 
-**Precondiciones:** torneo en Inscripciones, al menos tres participantes y sin resultados previos.
+**Precondiciones:** torneo en Inscripciones o En curso, al menos tres participantes y sin resultados previos.
 
 **Pasos:**
 
@@ -802,8 +802,8 @@ Los recordatorios se preparan para 24 horas y 1 hora antes del partido mediante 
 6. Crear el torneo en `/tournaments/create`.
 7. Abrir inscripciones desde `/tournaments/{slug}`.
 8. Inscribir participantes en `/tournaments/{slug}/registrations`.
-9. Generar llave o grupos.
-10. Cambiar el torneo a En curso.
+9. Cambiar el torneo a En curso para cerrar altas y retiros.
+10. Generar llave o grupos con la lista definitiva.
 11. Delegar resultados a árbitros.
 12. Revisar campeón, estadísticas, reportes y auditoría.
 13. Finalizar el torneo.

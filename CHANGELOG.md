@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-07-03 — Generación competitiva En curso
+
+- Las llaves, grupos y calendarios pueden generarse después de cerrar inscripciones y pasar a En curso.
+- La regeneración continúa bloqueada cuando existen resultados para proteger la integridad competitiva.
+
 ## 2026-06-30 — Consolas y programación automática
 
 - Registro de consolas por torneo con plataforma, ubicación, estado y disponibilidad.
