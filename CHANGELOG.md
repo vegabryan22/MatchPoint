@@ -4,6 +4,8 @@
 
 - Las llaves, grupos y calendarios pueden generarse después de cerrar inscripciones y pasar a En curso.
 - La regeneración continúa bloqueada cuando existen resultados para proteger la integridad competitiva.
+- Eliminación simple ajusta la llave a los inscritos mediante preliminares compactos, sin partidos `BYE` vacíos.
+- Con 38 inscritos se generan 6 preliminares, 26 pases directos y 37 partidos totales.
 
 ## 2026-06-30 — Consolas y programación automática
 
@@ -71,7 +73,7 @@ El formato sigue Keep a Changelog y el proyecto utiliza versionado semántico.
 ### Added
 
 - Formato estricto Mundial 48 con 12 grupos, ranking de terceros y clasificación automática a una llave de 32.
-- Capacidad 48 para eliminación simple mediante llave de 64 espacios y 16 pases automáticos.
+- Capacidad 48 para eliminación simple mediante 16 preliminares y llave principal compacta de 32.
 - Seeder idempotente con llaves de 32, 48 y 64 participantes, además de un Mundial 48 completo.
 - QR automáticos para formularios públicos con copia de enlace, descargas PNG/SVG y afiche imprimible.
 - Selecciones mundialistas con tipo, código de país, bandera, escudo y asignación en inscripciones, llaves y resultados.

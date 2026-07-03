@@ -4,7 +4,6 @@ namespace App\Services\Brackets;
 
 use App\Enums\BracketType;
 use App\Enums\MatchSlot;
-use App\Enums\MatchStatus;
 use App\Enums\TournamentFormat;
 use App\Models\Tournament;
 
@@ -18,14 +17,28 @@ final class SingleEliminationBracketGenerator implements BracketGeneratorInterfa
     public function build(Tournament $tournament, array $plan): BracketBlueprint
     {
         $blueprint = new BracketBlueprint;
+        $preliminaryPairs = $plan['preliminary_pairs'] ?? [];
+        $mainMatches = $plan['main_matches'] ?? $this->legacyMainMatches($plan['pairs']);
+        $hasPreliminaryRound = $preliminaryPairs !== [];
         $roundCount = (int) log($plan['bracket_size'], 2);
+
+        if ($hasPreliminaryRound) {
+            $blueprint->addRound('p1', 'Ronda preliminar', 1, BracketType::Main);
+            foreach ($preliminaryPairs as $index => $pair) {
+                $sequence = $index + 1;
+                $blueprint->addMatch('p1m'.$sequence, 'p1', $sequence, [
+                    'participant_a_id' => $pair['participant_a_id'],
+                    'participant_b_id' => $pair['participant_b_id'],
+                ]);
+            }
+        }
 
         for ($roundNumber = 1; $roundNumber <= $roundCount; $roundNumber++) {
             $roundKey = $this->roundKey($roundNumber);
             $blueprint->addRound(
                 $roundKey,
                 $this->roundName($roundNumber, $roundCount),
-                $roundNumber,
+                $roundNumber + ($hasPreliminaryRound ? 1 : 0),
                 BracketType::Main,
             );
 
@@ -36,10 +49,12 @@ final class SingleEliminationBracketGenerator implements BracketGeneratorInterfa
                     $matchKey,
                     $roundKey,
                     $sequence,
-                    $roundNumber === 1 ? $this->firstRoundAttributes($plan['pairs'][$sequence - 1]) : [],
+                    $roundNumber === 1 ? $this->mainFirstRoundAttributes($mainMatches[$sequence - 1]) : [],
                 );
 
-                if ($roundNumber > 1) {
+                if ($roundNumber === 1) {
+                    $this->linkPreliminarySources($blueprint, $mainMatches[$sequence - 1], $matchKey);
+                } elseif ($roundNumber > 1) {
                     $firstSource = ($sequence * 2) - 1;
                     $blueprint->linkWinner($this->matchKey($roundNumber - 1, $firstSource), $matchKey, MatchSlot::A);
                     $blueprint->linkWinner($this->matchKey($roundNumber - 1, $firstSource + 1), $matchKey, MatchSlot::B);
@@ -50,16 +65,29 @@ final class SingleEliminationBracketGenerator implements BracketGeneratorInterfa
         return $blueprint;
     }
 
-    private function firstRoundAttributes(array $pair): array
+    private function mainFirstRoundAttributes(array $definition): array
     {
-        $isBye = $pair['participant_b_id'] === null;
-
         return [
-            'participant_a_id' => $pair['participant_a_id'],
-            'participant_b_id' => $pair['participant_b_id'],
-            'winner_id' => $isBye ? $pair['participant_a_id'] : null,
-            'status' => $isBye ? MatchStatus::Bye : MatchStatus::Pending,
+            'participant_a_id' => $definition['a']['participant_id'] ?? null,
+            'participant_b_id' => $definition['b']['participant_id'] ?? null,
         ];
+    }
+
+    private function linkPreliminarySources(BracketBlueprint $blueprint, array $definition, string $target): void
+    {
+        foreach (['a' => MatchSlot::A, 'b' => MatchSlot::B] as $key => $slot) {
+            if (isset($definition[$key]['preliminary_match'])) {
+                $blueprint->linkWinner('p1m'.$definition[$key]['preliminary_match'], $target, $slot);
+            }
+        }
+    }
+
+    private function legacyMainMatches(array $pairs): array
+    {
+        return array_map(fn (array $pair): array => [
+            'a' => ['participant_id' => $pair['participant_a_id']],
+            'b' => ['participant_id' => $pair['participant_b_id']],
+        ], $pairs);
     }
 
     private function roundName(int $number, int $total): string
@@ -68,6 +96,9 @@ final class SingleEliminationBracketGenerator implements BracketGeneratorInterfa
             0 => 'Final',
             1 => 'Semifinales',
             2 => 'Cuartos de final',
+            3 => 'Octavos de final',
+            4 => 'Dieciseisavos de final',
+            5 => 'Treintaidosavos de final',
             default => 'Ronda '.$number,
         };
     }

@@ -20,7 +20,7 @@ class TournamentDrawTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_random_draw_assigns_seeds_creates_byes_and_locks_registrations(): void
+    public function test_random_draw_assigns_seeds_creates_compact_bracket_and_locks_registrations(): void
     {
         $admin = $this->administrator();
         $tournament = $this->registrationTournament(attributes: ['max_participants' => 8]);
@@ -36,8 +36,8 @@ class TournamentDrawTest extends TestCase
 
         $this->assertDatabaseHas('tournament_draws', ['tournament_id' => $tournament->id, 'method' => 'random']);
         $this->assertSame(3, $tournament->rounds()->count());
-        $this->assertSame(7, $tournament->matches()->count());
-        $this->assertSame(2, $tournament->matches()->where('status', MatchStatus::Bye)->count());
+        $this->assertSame(5, $tournament->matches()->count());
+        $this->assertSame(0, $tournament->matches()->where('status', MatchStatus::Bye)->count());
         $this->assertSame(range(1, 6), $tournament->players()->pluck('tournament_players.seed')->sort()->values()->all());
         $this->assertTrue(AuditLog::query()->where('action', 'draw.generated')->where('auditable_id', $tournament->id)->exists());
 
@@ -61,7 +61,9 @@ class TournamentDrawTest extends TestCase
         ])->assertRedirect(route('tournaments.draws.show', $tournament))->assertSessionHasNoErrors();
 
         $this->assertDatabaseHas('tournament_draws', ['tournament_id' => $tournament->id]);
-        $this->assertSame(63, $tournament->matches()->count());
+        $this->assertSame(37, $tournament->matches()->count());
+        $this->assertSame(6, $tournament->rounds()->where('name', 'Ronda preliminar')->firstOrFail()->matches()->count());
+        $this->assertSame(0, $tournament->matches()->where('status', MatchStatus::Bye)->count());
     }
 
     public function test_manual_seeding_respects_exact_order_and_rejects_invalid_set(): void

@@ -51,7 +51,9 @@ El optimizador consulta partidos finalizados de torneos anteriores con la misma 
 
 ## Byes
 
-La llave usa la siguiente potencia de dos. Los espacios faltantes se asignan como pases automáticos a las primeras semillas. Esos partidos se guardan con estado `bye` y ganador preasignado.
+En eliminación simple, una cantidad que no sea potencia de dos genera una ronda preliminar compacta. Si `P` es la potencia de dos inferior y existen `N` inscritos, se crean `N - P` preliminares; los demás participantes pasan directamente a la llave principal de `P`. No se persisten partidos vacíos ni estados `bye`.
+
+Ejemplo: 38 inscritos generan 6 preliminares, 26 pases directos a una llave principal de 32 y exactamente 37 partidos totales. En eliminación doble se conserva la estructura completa requerida por los cuadros de ganadores y perdedores.
 
 ## Flujo
 
@@ -68,7 +70,7 @@ El sorteo puede eliminarse o regenerarse mientras no exista ningún partido fina
 ## Estados de partido
 
 - `pending`: pendiente de resultado.
-- `bye`: pase automático.
+- `bye`: reservado para estructuras que necesitan propagación automática, principalmente eliminación doble.
 - `completed`: finalizado; bloquea regeneración.
 - `cancelled`: cancelado.
 
@@ -92,4 +94,4 @@ Todos los usuarios activos pueden consultar. Administradores y organizadores gen
 
 ## Pruebas
 
-La suite cubre semillas aleatorias, manuales y automáticas, byes, primera ronda, historial, validaciones, bloqueo de inscripciones, reinicio, resultados existentes, formatos no compatibles, auditoría y permisos.
+La suite cubre semillas aleatorias, manuales y automáticas, preliminares compactos, cantidades no potencia de dos, historial, validaciones, bloqueo de inscripciones, reinicio, resultados existentes, formatos no compatibles, auditoría y permisos.

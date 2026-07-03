@@ -573,7 +573,7 @@ La selección pertenece al torneo actual; no modifica las elecciones históricas
 3. Activar **Evitar enfrentamientos históricos** si corresponde.
 4. Para semillas manuales, asignar posiciones sin repetir.
 5. Presionar **Previsualizar**.
-6. Revisar orden, cruces, tamaño de llave y pases automáticos.
+6. Revisar orden, preliminares necesarios, tamaño de llave principal y pases directos.
 7. Confirmar el sorteo.
 
 **Resultado esperado:** se generan rondas y partidos; las inscripciones quedan bloqueadas.
@@ -627,7 +627,7 @@ Cada grupo debe tener al menos dos participantes. En grupos más eliminación, e
 7. Clasificar a los 24 participantes directos y los ocho mejores terceros.
 8. Abrir la llave de 32 generada.
 
-Con menos de 48 inscritos, MatchPoint muestra cuántos faltan y bloquea la generación. Para eliminación simple con 48 inscritos se crea una llave de 64 espacios y 16 pases automáticos.
+Con menos de 48 inscritos, MatchPoint muestra cuántos faltan y bloquea la generación del formato Mundial 48. En eliminación simple con 48 inscritos se crean 16 preliminares y luego una llave principal compacta de 32, sin partidos vacíos.
 
 ### UC-30 — Clasificar a la fase eliminatoria
 

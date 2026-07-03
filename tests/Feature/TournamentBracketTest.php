@@ -116,27 +116,50 @@ class TournamentBracketTest extends TestCase
         $this->assertSame(2, substr_count($response->getContent(), '<article class="mp-mobile-match'));
     }
 
-    public function test_single_elimination_with_48_players_uses_64_slots_and_16_byes(): void
+    public function test_single_elimination_with_48_players_uses_compact_preliminary_round(): void
     {
         [, $tournament] = $this->generateBracket(TournamentFormat::SingleElimination, 48);
 
         $this->assertSame(6, $tournament->rounds()->count());
-        $this->assertSame(63, $tournament->matches()->count());
-        $this->assertSame(16, $tournament->rounds()->where('number', 1)->firstOrFail()->matches()->where('status', MatchStatus::Bye)->count());
+        $this->assertSame(47, $tournament->matches()->count());
+        $this->assertSame(16, $tournament->rounds()->where('number', 1)->firstOrFail()->matches()->count());
+        $this->assertSame(0, $tournament->matches()->where('status', MatchStatus::Bye)->count());
+        $this->assertSame(16, $tournament->rounds()->where('number', 2)->firstOrFail()->matches()->count());
     }
 
-    public function test_first_round_byes_are_propagated_to_the_next_round(): void
+    public function test_preliminary_winner_advances_into_main_round(): void
     {
         [$admin, $tournament] = $this->generateBracket(TournamentFormat::SingleElimination, 6);
 
         $firstRound = $tournament->rounds()->where('number', 1)->firstOrFail();
-        $byeMatches = $firstRound->matches()->where('status', MatchStatus::Bye)->get();
-        $destination = GameMatch::query()->findOrFail($byeMatches->first()->winner_next_match_id);
+        $preliminaryMatches = $firstRound->matches()->get();
+        $preliminary = $preliminaryMatches->first();
+        $preliminary->update(['winner_id' => $preliminary->participant_a_id, 'status' => MatchStatus::Completed]);
+        MatchCompleted::dispatch($preliminary->id, $admin->id);
+        $destination = GameMatch::query()->findOrFail($preliminary->winner_next_match_id);
 
-        $this->assertCount(2, $byeMatches);
+        $this->assertCount(2, $preliminaryMatches);
         $this->assertNotNull($destination->participant_a_id);
         $this->assertNotNull($destination->participant_b_id);
         $this->assertSame(MatchStatus::Pending, $destination->status);
+    }
+
+    public function test_compact_bracket_connects_all_preliminary_winners_with_fifteen_players(): void
+    {
+        [$admin, $tournament] = $this->generateBracket(TournamentFormat::SingleElimination, 15);
+        $preliminaryRound = $tournament->rounds()->where('number', 1)->firstOrFail();
+
+        foreach ($preliminaryRound->matches as $match) {
+            $match->update(['winner_id' => $match->participant_a_id, 'status' => MatchStatus::Completed]);
+            MatchCompleted::dispatch($match->id, $admin->id);
+        }
+
+        $mainRound = $tournament->rounds()->where('number', 2)->firstOrFail();
+        $this->assertSame(7, $preliminaryRound->matches()->count());
+        $this->assertSame(4, $mainRound->matches()->count());
+        $this->assertSame(14, $tournament->matches()->count());
+        $this->assertSame(0, $tournament->matches()->where('status', MatchStatus::Bye)->count());
+        $this->assertTrue($mainRound->matches->every(fn (GameMatch $match): bool => $match->participant_a_id !== null && $match->participant_b_id !== null));
     }
 
     public function test_completed_match_advances_winner_once_and_records_audit(): void

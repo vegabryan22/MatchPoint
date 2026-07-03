@@ -54,6 +54,12 @@ final class TournamentDrawService
         $this->validateResolvedOrder($participants, $order);
         $pairing = $this->pairings->pair($tournament, $order, (bool) ($data['avoid_rematches'] ?? false));
         $participantMap = $participants->keyBy('id');
+        $hydratePairs = fn (array $pairs): array => collect($pairs)->map(fn (array $pair): array => [
+            'participant_a_id' => $pair[0],
+            'participant_b_id' => $pair[1],
+            'participant_a' => $participantMap->get($pair[0]),
+            'participant_b' => $pair[1] === null ? null : $participantMap->get($pair[1]),
+        ])->all();
 
         return [
             'method' => $method,
@@ -63,14 +69,13 @@ final class TournamentDrawService
                 'seed' => $index + 1,
                 'participant' => $participantMap->get($id),
             ])->all(),
-            'pairs' => collect($pairing['pairs'])->map(fn (array $pair): array => [
-                'participant_a_id' => $pair[0],
-                'participant_b_id' => $pair[1],
-                'participant_a' => $participantMap->get($pair[0]),
-                'participant_b' => $pair[1] === null ? null : $participantMap->get($pair[1]),
-            ])->all(),
+            'pairs' => $hydratePairs($pairing['pairs']),
+            'preliminary_pairs' => $hydratePairs($pairing['preliminary_pairs'] ?? []),
+            'main_matches' => $pairing['main_matches'] ?? null,
+            'direct_participant_ids' => $pairing['direct_participant_ids'] ?? [],
             'bracket_size' => $pairing['bracket_size'],
             'bye_count' => $pairing['bye_count'],
+            'preliminary_count' => $pairing['preliminary_count'] ?? 0,
         ];
     }
 
@@ -100,6 +105,8 @@ final class TournamentDrawService
                     'pairs' => collect($plan['pairs'])->map(fn ($pair): array => [$pair['participant_a_id'], $pair['participant_b_id']])->all(),
                     'bracket_size' => $plan['bracket_size'],
                     'bye_count' => $plan['bye_count'],
+                    'preliminary_count' => $plan['preliminary_count'],
+                    'main_matches' => $plan['main_matches'],
                 ],
                 'generated_at' => now(),
             ]);
