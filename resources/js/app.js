@@ -228,11 +228,21 @@ document.addEventListener('submit', async (event) => {
             body: new FormData(form),
             headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
         });
-        const payload = await response.json();
+        const responseBody = await response.text();
+        let payload = {};
+        try {
+            payload = JSON.parse(responseBody);
+        } catch {
+            if (response.status === 419) {
+                throw new Error('La sesión venció. Recarga la página e intenta nuevamente.');
+            }
+            throw new Error(`El servidor respondió ${response.status} sin datos válidos.`);
+        }
         if (! response.ok) {
             const messages = Object.values(payload.errors ?? {}).flat();
             if (errorBox) {
-                errorBox.replaceChildren(...messages.map((message) => {
+                const visibleMessages = messages.length > 0 ? messages : [payload.message ?? `No fue posible guardar (${response.status}).`];
+                errorBox.replaceChildren(...visibleMessages.map((message) => {
                     const item = document.createElement('div');
                     item.textContent = message;
                     return item;
@@ -259,9 +269,11 @@ document.addEventListener('submit', async (event) => {
         }
         showToast(payload.message);
         document.querySelector('[data-bracket-stage]')?.dispatchEvent(new Event('matchpoint:refresh'));
-    } catch {
+    } catch (error) {
         if (errorBox) {
-            errorBox.textContent = 'No fue posible guardar. Verifica la conexión e inténtalo nuevamente.';
+            errorBox.textContent = error instanceof Error
+                ? error.message
+                : 'No fue posible guardar. Verifica la conexión e inténtalo nuevamente.';
             errorBox.classList.remove('d-none');
         }
     } finally {

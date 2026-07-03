@@ -11,6 +11,7 @@
 - La llave muestra el progreso clasificatorio y completa la fase principal al registrarse el último resultado.
 - Los apodos de la llave muestran el nombre completo del participante mediante tooltip, incluso tras actualizaciones en vivo.
 - Nueva mesa de llegada para armar cruces manuales sólo con quienes se presentan e incorporar jugadores progresivamente antes del primer resultado.
+- El marcador rápido informa errores HTTP, sesiones vencidas y respuestas inválidas directamente dentro de la tarjeta.
 
 ## 2026-06-30 — Consolas y programación automática
 

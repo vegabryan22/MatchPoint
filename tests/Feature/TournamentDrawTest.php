@@ -152,6 +152,40 @@ class TournamentDrawTest extends TestCase
         ])->assertSessionHasErrors('draw');
     }
 
+    public function test_one_zero_result_is_saved_from_progressive_manual_bracket(): void
+    {
+        $admin = $this->administrator();
+        $tournament = $this->registrationTournament(attributes: ['max_participants' => 8]);
+        $players = Player::factory()->count(8)->create();
+        $this->attachPlayers($tournament, $players, $admin->id);
+        $presentIds = $players->take(4)->pluck('id')->map(fn ($id): int => (int) $id)->all();
+
+        $this->actingAs($admin)->post(route('tournaments.draws.store', $tournament), [
+            'method' => DrawMethod::Manual->value,
+            'avoid_rematches' => '0',
+            'manual_pairing' => '1',
+            'selected_participants' => $presentIds,
+            'resolved_order' => $presentIds,
+        ]);
+        $tournament->update(['status' => TournamentStatus::InProgress]);
+        $match = $tournament->rounds()->where('number', 1)->firstOrFail()->matches()->firstOrFail();
+
+        $this->actingAs($admin)->postJson(route('matches.results.store', $match), [
+            'inline' => true,
+            'games' => [['participant_a_score' => 1, 'participant_b_score' => 0]],
+        ])->assertOk()->assertJson([
+            'status' => MatchStatus::Completed->label(),
+            'score_a' => 1,
+            'score_b' => 0,
+        ]);
+
+        $this->assertDatabaseHas('scores', [
+            'match_id' => $match->id,
+            'participant_a_score' => 1,
+            'participant_b_score' => 0,
+        ]);
+    }
+
     public function test_automatic_seeding_prioritizes_competitive_level(): void
     {
         $admin = $this->administrator();
