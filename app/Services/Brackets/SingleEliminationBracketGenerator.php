@@ -23,7 +23,7 @@ final class SingleEliminationBracketGenerator implements BracketGeneratorInterfa
         $roundCount = (int) log($plan['bracket_size'], 2);
 
         if ($hasPreliminaryRound) {
-            $blueprint->addRound('p1', 'Ronda preliminar', 1, BracketType::Main);
+            $blueprint->addRound('p1', 'Ronda clasificatoria', 1, BracketType::Main);
             foreach ($preliminaryPairs as $index => $pair) {
                 $sequence = $index + 1;
                 $blueprint->addMatch('p1m'.$sequence, 'p1', $sequence, [

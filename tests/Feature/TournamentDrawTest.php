@@ -36,7 +36,7 @@ class TournamentDrawTest extends TestCase
 
         $this->assertDatabaseHas('tournament_draws', ['tournament_id' => $tournament->id, 'method' => 'random']);
         $this->assertSame(3, $tournament->rounds()->count());
-        $this->assertSame(5, $tournament->matches()->count());
+        $this->assertSame(6, $tournament->matches()->count());
         $this->assertSame(0, $tournament->matches()->where('status', MatchStatus::Bye)->count());
         $this->assertSame(range(1, 6), $tournament->players()->pluck('tournament_players.seed')->sort()->values()->all());
         $this->assertTrue(AuditLog::query()->where('action', 'draw.generated')->where('auditable_id', $tournament->id)->exists());
@@ -61,8 +61,8 @@ class TournamentDrawTest extends TestCase
         ])->assertRedirect(route('tournaments.draws.show', $tournament))->assertSessionHasNoErrors();
 
         $this->assertDatabaseHas('tournament_draws', ['tournament_id' => $tournament->id]);
-        $this->assertSame(37, $tournament->matches()->count());
-        $this->assertSame(6, $tournament->rounds()->where('name', 'Ronda preliminar')->firstOrFail()->matches()->count());
+        $this->assertSame(50, $tournament->matches()->count());
+        $this->assertSame(19, $tournament->rounds()->where('name', 'Ronda clasificatoria')->firstOrFail()->matches()->count());
         $this->assertSame(0, $tournament->matches()->where('status', MatchStatus::Bye)->count());
     }
 
@@ -99,14 +99,15 @@ class TournamentDrawTest extends TestCase
         $beginner = Player::factory()->create(['level' => PlayerLevel::Beginner, 'nickname' => 'Beginner']);
         $professional = Player::factory()->create(['level' => PlayerLevel::Professional, 'nickname' => 'Professional']);
         $advanced = Player::factory()->create(['level' => PlayerLevel::Advanced, 'nickname' => 'Advanced']);
-        $this->attachPlayers($tournament, collect([$beginner, $professional, $advanced]), $admin->id);
+        $intermediate = Player::factory()->create(['level' => PlayerLevel::Intermediate, 'nickname' => 'Intermediate']);
+        $this->attachPlayers($tournament, collect([$beginner, $professional, $advanced, $intermediate]), $admin->id);
 
         $plan = app(TournamentDrawService::class)->preview($tournament, [
             'method' => DrawMethod::Automatic->value,
             'avoid_rematches' => false,
         ]);
 
-        $this->assertSame([$professional->id, $advanced->id, $beginner->id], $plan['order']);
+        $this->assertSame([$professional->id, $advanced->id, $intermediate->id, $beginner->id], $plan['order']);
     }
 
     public function test_rematch_avoidance_selects_an_alternative_opponent(): void

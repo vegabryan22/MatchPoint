@@ -255,7 +255,7 @@ final class TournamentScheduleService
         }
 
         return match ($format) {
-            TournamentFormat::SingleElimination => $this->singleEliminationRounds($participants),
+            TournamentFormat::SingleElimination => $this->singleEliminationRepechageRounds($participants),
             TournamentFormat::DoubleElimination => $this->doubleEliminationRounds($participants),
             TournamentFormat::RoundRobin, TournamentFormat::League => $this->roundRobinRounds($participants),
             TournamentFormat::GroupsKnockout => $this->groupsKnockoutRounds($participants),
@@ -276,6 +276,22 @@ final class TournamentScheduleService
         }
 
         return $rounds;
+    }
+
+    /** @return list<int> */
+    private function singleEliminationRepechageRounds(int $participants): array
+    {
+        if ($participants % 2 !== 0) {
+            return [];
+        }
+
+        $qualifyingMatches = intdiv($participants, 2);
+        $mainBracketSize = 1;
+        while ($mainBracketSize < $qualifyingMatches) {
+            $mainBracketSize *= 2;
+        }
+
+        return [$qualifyingMatches, ...$this->singleEliminationRounds($mainBracketSize)];
     }
 
     /** @return list<int> */

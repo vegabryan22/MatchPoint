@@ -26,7 +26,7 @@ class LargeBracketDemoSeederTest extends TestCase
         $this->assertSame(5, $bracket32->rounds()->count());
         $this->assertSame(31, $bracket32->matches()->count());
         $this->assertSame(48, $bracket48->players()->count());
-        $this->assertSame(47, $bracket48->matches()->count());
+        $this->assertSame(55, $bracket48->matches()->count());
         $this->assertSame(0, $bracket48->matches()->where('status', 'bye')->count());
         $this->assertSame(64, $bracket64->players()->count());
         $this->assertSame(6, $bracket64->rounds()->count());
@@ -43,7 +43,7 @@ class LargeBracketDemoSeederTest extends TestCase
         $this->seed(LargeBracketDemoSeeder::class);
 
         $this->assertSame(31, $bracket32->matches()->count());
-        $this->assertSame(47, $bracket48->matches()->count());
+        $this->assertSame(55, $bracket48->matches()->count());
         $this->assertSame(63, $bracket64->matches()->count());
         $this->assertSame(103, $worldCup48->matches()->count());
     }

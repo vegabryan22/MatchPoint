@@ -66,7 +66,7 @@ La misma pantalla ofrece una proyección antes de generar el horario. Sus entrad
 
 Cuando ya existen rondas, el cálculo usa todos los partidos jugables de la estructura real. Antes del sorteo utiliza estas proyecciones:
 
-- Eliminación simple: `n - 1` partidos distribuidos por rondas.
+- Eliminación simple: `n / 2` clasificatorios más la llave principal completada con mejores perdedores.
 - Eliminación doble: hasta `2n - 2` partidos sin final de reinicio condicional.
 - Round Robin o liga: `n(n - 1) / 2` partidos.
 - Grupos más eliminación: grupos proyectados de cuatro participantes y fase eliminatoria posterior.

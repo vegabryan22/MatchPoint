@@ -43,6 +43,12 @@ final class TournamentDrawService
             throw ValidationException::withMessages(['draw' => 'Se necesitan al menos dos participantes inscritos.']);
         }
 
+        if ($tournament->format === TournamentFormat::SingleElimination && $participants->count() % 2 !== 0) {
+            throw ValidationException::withMessages([
+                'draw' => 'Para que todos jueguen la ronda clasificatoria, la cantidad de inscritos debe ser par.',
+            ]);
+        }
+
         if ($tournament->participant_type === ParticipantType::Team) {
             $participants->load('players');
         }
@@ -76,6 +82,8 @@ final class TournamentDrawService
             'bracket_size' => $pairing['bracket_size'],
             'bye_count' => $pairing['bye_count'],
             'preliminary_count' => $pairing['preliminary_count'] ?? 0,
+            'best_loser_count' => $pairing['best_loser_count'] ?? 0,
+            'repechage' => $pairing['repechage'] ?? false,
         ];
     }
 
@@ -106,6 +114,8 @@ final class TournamentDrawService
                     'bracket_size' => $plan['bracket_size'],
                     'bye_count' => $plan['bye_count'],
                     'preliminary_count' => $plan['preliminary_count'],
+                    'best_loser_count' => $plan['best_loser_count'],
+                    'repechage' => $plan['repechage'],
                     'main_matches' => $plan['main_matches'],
                 ],
                 'generated_at' => now(),

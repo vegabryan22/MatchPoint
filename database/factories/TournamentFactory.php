@@ -30,6 +30,8 @@ class TournamentFactory extends Factory
             'max_participants' => 16,
             'format' => TournamentFormat::SingleElimination,
             'best_of' => BestOf::One,
+            'match_duration_minutes' => 15,
+            'turnaround_minutes' => 5,
             'status' => TournamentStatus::Draft,
             'registration_starts_at' => now()->addDay(),
             'registration_ends_at' => now()->addWeek(),

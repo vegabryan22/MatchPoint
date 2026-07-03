@@ -24,10 +24,10 @@
         <div class="col-lg-7">
             <div class="mp-card p-4 h-100">
                 <div class="d-flex justify-content-between gap-2">
-                    <h2 class="h5 fw-bold">{{ $plan['preliminary_count'] > 0 ? 'Ronda preliminar' : 'Primera ronda' }}</h2>
+                    <h2 class="h5 fw-bold">{{ $plan['repechage'] ? 'Ronda clasificatoria · todos juegan' : 'Primera ronda' }}</h2>
                     <span class="mp-muted">
-                        @if($plan['preliminary_count'] > 0)
-                            {{ $plan['preliminary_count'] }} partidos · {{ $plan['bye_count'] }} pases directos a {{ $plan['bracket_size'] }}
+                        @if($plan['repechage'])
+                            {{ $plan['preliminary_count'] }} partidos · {{ $plan['preliminary_count'] }} ganadores + {{ $plan['best_loser_count'] }} mejores perdedores a {{ $plan['bracket_size'] }}
                         @else
                             {{ $plan['bracket_size'] }} participantes
                         @endif

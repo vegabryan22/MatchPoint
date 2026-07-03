@@ -15,6 +15,7 @@ final class MatchAdvancementService
     public function __construct(
         private readonly GameMatchRepositoryInterface $matches,
         private readonly AuditService $audit,
+        private readonly PreliminaryQualificationService $qualification,
     ) {}
 
     public function advance(GameMatch|int $match, ?int $actorId = null): void
@@ -39,6 +40,10 @@ final class MatchAdvancementService
 
         if ($match->winner_id === null || ! in_array($match->winner_id, [$match->participant_a_id, $match->participant_b_id], true)) {
             throw ValidationException::withMessages(['winner_id' => 'El ganador debe ser uno de los participantes del partido.']);
+        }
+
+        if ($this->qualification->handle($match, $actorId)) {
+            return;
         }
 
         $changedDestinations = [];

@@ -51,9 +51,11 @@ El optimizador consulta partidos finalizados de torneos anteriores con la misma 
 
 ## Byes
 
-En eliminación simple, una cantidad que no sea potencia de dos genera una ronda preliminar compacta. Si `P` es la potencia de dos inferior y existen `N` inscritos, se crean `N - P` preliminares; los demás participantes pasan directamente a la llave principal de `P`. No se persisten partidos vacíos ni estados `bye`.
+En eliminación simple todos los inscritos juegan una ronda clasificatoria completa. Los ganadores avanzan y los mejores perdedores necesarios completan la siguiente potencia de dos. Nadie recibe un pase directo sin haber disputado un partido.
 
-Ejemplo: 38 inscritos generan 6 preliminares, 26 pases directos a una llave principal de 32 y exactamente 37 partidos totales. En eliminación doble se conserva la estructura completa requerida por los cuadros de ganadores y perdedores.
+Ejemplo: 38 inscritos generan 19 partidos clasificatorios. Avanzan los 19 ganadores y los 13 mejores perdedores para formar una llave principal de 32. El torneo contiene 50 partidos en total. En eliminación doble se conserva la estructura completa requerida por los cuadros de ganadores y perdedores.
+
+Los mejores perdedores se ordenan por diferencia de goles, goles a favor, semilla y finalmente identificador. MatchPoint espera a que finalice toda la ronda clasificatoria y evita una revancha inmediata cuando distribuye los clasificados. Para garantizar que todos jueguen frente a un rival, la cantidad inicial debe ser par.
 
 ## Flujo
 
@@ -94,4 +96,4 @@ Todos los usuarios activos pueden consultar. Administradores y organizadores gen
 
 ## Pruebas
 
-La suite cubre semillas aleatorias, manuales y automáticas, preliminares compactos, cantidades no potencia de dos, historial, validaciones, bloqueo de inscripciones, reinicio, resultados existentes, formatos no compatibles, auditoría y permisos.
+La suite cubre semillas aleatorias, manuales y automáticas, ronda clasificatoria completa, ranking de mejores perdedores, cantidades impares, historial, bloqueo de inscripciones, reinicio, resultados existentes, auditoría y permisos.

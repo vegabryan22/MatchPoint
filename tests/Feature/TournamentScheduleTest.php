@@ -13,6 +13,7 @@ use App\Models\Round;
 use App\Models\Tournament;
 use App\Models\TournamentStation;
 use App\Models\User;
+use App\Services\TournamentScheduleService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -121,6 +122,23 @@ class TournamentScheduleTest extends TestCase
             ->assertSee('103')
             ->assertSee('4 h 55 min')
             ->assertSee('8 consolas');
+    }
+
+    public function test_all_play_projection_counts_qualifying_round_and_repechage_bracket(): void
+    {
+        $tournament = Tournament::factory()->create([
+            'format' => TournamentFormat::SingleElimination,
+            'participant_type' => ParticipantType::Individual,
+            'max_participants' => 48,
+        ]);
+        $players = Player::factory()->count(38)->create();
+        $tournament->players()->attach($players->pluck('id'), ['source' => 'manual', 'registered_at' => now()]);
+
+        $analysis = app(TournamentScheduleService::class)->capacityAnalysis($tournament);
+
+        $this->assertSame(38, $analysis['participant_count']);
+        $this->assertSame(50, $analysis['match_count']);
+        $this->assertSame([19, 16, 8, 4, 2, 1], $analysis['round_counts']);
     }
 
     public function test_only_assigned_organizer_manages_schedule_while_referee_can_view_it(): void

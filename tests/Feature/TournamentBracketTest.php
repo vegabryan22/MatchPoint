@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Enums\BracketType;
 use App\Enums\DrawMethod;
-use App\Enums\MatchSlot;
 use App\Enums\MatchStatus;
 use App\Enums\TournamentFormat;
 use App\Enums\TournamentStatus;
@@ -55,7 +54,7 @@ class TournamentBracketTest extends TestCase
         $this->assertSame(7, substr_count($content, '<article class="mp-world-match'));
     }
 
-    public function test_single_elimination_generates_every_round_and_destination(): void
+    public function test_single_elimination_generates_full_qualifying_and_empty_main_round(): void
     {
         [$admin, $tournament] = $this->generateBracket(TournamentFormat::SingleElimination, 8);
 
@@ -63,13 +62,12 @@ class TournamentBracketTest extends TestCase
         $this->assertSame(7, $tournament->matches()->count());
 
         $firstRound = $tournament->rounds()->where('number', 1)->firstOrFail();
-        $firstMatch = $firstRound->matches()->where('sequence', 1)->firstOrFail();
-        $secondMatch = $firstRound->matches()->where('sequence', 2)->firstOrFail();
+        $mainRound = $tournament->rounds()->where('number', 2)->firstOrFail();
 
-        $this->assertNotNull($firstMatch->winner_next_match_id);
-        $this->assertSame($firstMatch->winner_next_match_id, $secondMatch->winner_next_match_id);
-        $this->assertSame(MatchSlot::A, $firstMatch->winner_next_slot);
-        $this->assertSame(MatchSlot::B, $secondMatch->winner_next_slot);
+        $this->assertSame(4, $firstRound->matches()->count());
+        $this->assertTrue($firstRound->matches->every(fn (GameMatch $match): bool => $match->participant_a_id !== null && $match->participant_b_id !== null));
+        $this->assertSame(2, $mainRound->matches()->count());
+        $this->assertTrue($mainRound->matches->every(fn (GameMatch $match): bool => $match->participant_a_id === null && $match->participant_b_id === null));
     }
 
     public function test_projected_bracket_endpoint_reflects_results_recorded_from_another_session(): void
@@ -79,6 +77,7 @@ class TournamentBracketTest extends TestCase
         $tournament->players()->firstOrFail()->update(['user_id' => $viewer->id]);
         $tournament->update(['status' => TournamentStatus::InProgress]);
         $match = $tournament->rounds()->where('number', 1)->firstOrFail()->matches()->firstOrFail();
+        $secondMatch = $tournament->rounds()->where('number', 1)->firstOrFail()->matches()->whereKeyNot($match->id)->firstOrFail();
 
         $before = $this->actingAs($viewer)->getJson(route('tournaments.draws.live', $tournament))
             ->assertOk()
@@ -88,6 +87,9 @@ class TournamentBracketTest extends TestCase
         $this->actingAs($admin)->post(route('matches.results.store', $match), [
             'games' => [['participant_a_score' => 3, 'participant_b_score' => 1]],
         ])->assertRedirect(route('tournaments.draws.show', $tournament));
+        $this->actingAs($admin)->post(route('matches.results.store', $secondMatch), [
+            'games' => [['participant_a_score' => 2, 'participant_b_score' => 0]],
+        ])->assertRedirect(route('tournaments.draws.show', $tournament));
 
         $after = $this->actingAs($viewer)->getJson(route('tournaments.draws.live', $tournament))
             ->assertOk()
@@ -96,7 +98,8 @@ class TournamentBracketTest extends TestCase
         $this->assertNotSame($before['version'], $after['version']);
         $this->assertStringContainsString('mp-world-team is-winner', $after['html']);
         $this->assertStringContainsString('>3</strong>', $after['html']);
-        $this->assertSame($match->participant_a_id, GameMatch::query()->findOrFail($match->winner_next_match_id)->participant_a_id);
+        $mainMatch = $tournament->rounds()->where('number', 2)->firstOrFail()->matches()->firstOrFail();
+        $this->assertContains($match->participant_a_id, [$mainMatch->participant_a_id, $mainMatch->participant_b_id]);
     }
 
     public function test_in_progress_bracket_renders_inline_forms_and_mobile_referee_mode(): void
@@ -116,56 +119,68 @@ class TournamentBracketTest extends TestCase
         $this->assertSame(2, substr_count($response->getContent(), '<article class="mp-mobile-match'));
     }
 
-    public function test_single_elimination_with_48_players_uses_compact_preliminary_round(): void
+    public function test_single_elimination_with_48_players_uses_full_qualifying_round(): void
     {
         [, $tournament] = $this->generateBracket(TournamentFormat::SingleElimination, 48);
 
         $this->assertSame(6, $tournament->rounds()->count());
-        $this->assertSame(47, $tournament->matches()->count());
-        $this->assertSame(16, $tournament->rounds()->where('number', 1)->firstOrFail()->matches()->count());
+        $this->assertSame(55, $tournament->matches()->count());
+        $this->assertSame(24, $tournament->rounds()->where('number', 1)->firstOrFail()->matches()->count());
         $this->assertSame(0, $tournament->matches()->where('status', MatchStatus::Bye)->count());
         $this->assertSame(16, $tournament->rounds()->where('number', 2)->firstOrFail()->matches()->count());
     }
 
-    public function test_preliminary_winner_advances_into_main_round(): void
+    public function test_qualifying_round_selects_winners_and_best_loser(): void
     {
         [$admin, $tournament] = $this->generateBracket(TournamentFormat::SingleElimination, 6);
 
-        $firstRound = $tournament->rounds()->where('number', 1)->firstOrFail();
-        $preliminaryMatches = $firstRound->matches()->get();
-        $preliminary = $preliminaryMatches->first();
-        $preliminary->update(['winner_id' => $preliminary->participant_a_id, 'status' => MatchStatus::Completed]);
-        MatchCompleted::dispatch($preliminary->id, $admin->id);
-        $destination = GameMatch::query()->findOrFail($preliminary->winner_next_match_id);
+        $qualifyingMatches = $tournament->rounds()->where('number', 1)->firstOrFail()->matches()->get();
+        $bestLoserId = $qualifyingMatches->first()->participant_b_id;
 
-        $this->assertCount(2, $preliminaryMatches);
-        $this->assertNotNull($destination->participant_a_id);
-        $this->assertNotNull($destination->participant_b_id);
-        $this->assertSame(MatchStatus::Pending, $destination->status);
-    }
-
-    public function test_compact_bracket_connects_all_preliminary_winners_with_fifteen_players(): void
-    {
-        [$admin, $tournament] = $this->generateBracket(TournamentFormat::SingleElimination, 15);
-        $preliminaryRound = $tournament->rounds()->where('number', 1)->firstOrFail();
-
-        foreach ($preliminaryRound->matches as $match) {
+        foreach ($qualifyingMatches as $index => $match) {
+            $participantAScore = $index === 0 ? 5 : 3;
+            $participantBScore = $index === 0 ? 4 : 0;
+            $match->scores()->create([
+                'game_number' => 1,
+                'participant_a_score' => $participantAScore,
+                'participant_b_score' => $participantBScore,
+                'winner_id' => $match->participant_a_id,
+                'created_by' => $admin->id,
+            ]);
             $match->update(['winner_id' => $match->participant_a_id, 'status' => MatchStatus::Completed]);
             MatchCompleted::dispatch($match->id, $admin->id);
         }
 
-        $mainRound = $tournament->rounds()->where('number', 2)->firstOrFail();
-        $this->assertSame(7, $preliminaryRound->matches()->count());
-        $this->assertSame(4, $mainRound->matches()->count());
-        $this->assertSame(14, $tournament->matches()->count());
-        $this->assertSame(0, $tournament->matches()->where('status', MatchStatus::Bye)->count());
-        $this->assertTrue($mainRound->matches->every(fn (GameMatch $match): bool => $match->participant_a_id !== null && $match->participant_b_id !== null));
+        $mainMatches = $tournament->rounds()->where('number', 2)->firstOrFail()->matches;
+        $qualifiedIds = $mainMatches->flatMap(fn (GameMatch $match): array => [$match->participant_a_id, $match->participant_b_id]);
+
+        $this->assertCount(3, $qualifyingMatches);
+        $this->assertCount(2, $mainMatches);
+        $this->assertContains($bestLoserId, $qualifiedIds);
+        $this->assertTrue($mainMatches->every(fn (GameMatch $match): bool => $match->participant_a_id !== null && $match->participant_b_id !== null));
+    }
+
+    public function test_all_play_format_rejects_odd_participant_count(): void
+    {
+        $admin = $this->administrator();
+        $tournament = $this->registrationTournament(attributes: ['format' => TournamentFormat::SingleElimination]);
+        $players = Player::factory()->count(15)->create();
+        $tournament->players()->attach($players->pluck('id'), ['source' => 'manual', 'registered_at' => now()]);
+
+        $this->actingAs($admin)->post(route('tournaments.draws.store', $tournament), [
+            'method' => DrawMethod::Random->value,
+            'avoid_rematches' => '0',
+            'resolved_order' => $players->pluck('id')->all(),
+        ])->assertSessionHasErrors('draw');
+
+        $this->assertSame(0, $tournament->matches()->count());
     }
 
     public function test_completed_match_advances_winner_once_and_records_audit(): void
     {
-        [$admin, $tournament] = $this->generateBracket(TournamentFormat::SingleElimination, 4);
-        $match = $tournament->rounds()->where('number', 1)->firstOrFail()->matches()->firstOrFail();
+        [$admin, $tournament] = $this->generateBracket(TournamentFormat::SingleElimination, 8);
+        $this->completeQualificationRound($tournament, $admin);
+        $match = $tournament->rounds()->where('number', 2)->firstOrFail()->matches()->firstOrFail();
         $match->update(['winner_id' => $match->participant_a_id, 'status' => MatchStatus::Completed]);
 
         MatchCompleted::dispatch($match->id, $admin->id);
@@ -280,6 +295,18 @@ class TournamentBracketTest extends TestCase
         $this->assertSame(MatchStatus::Cancelled, $reset->status);
         $this->assertNull($reset->participant_a_id);
         $this->assertNull($reset->participant_b_id);
+    }
+
+    private function completeQualificationRound(Tournament $tournament, User $admin): void
+    {
+        $matches = $tournament->rounds()->where('number', 1)->firstOrFail()->matches;
+        foreach ($matches as $match) {
+            $match->update([
+                'winner_id' => $match->participant_a_id,
+                'status' => MatchStatus::Completed,
+            ]);
+            MatchCompleted::dispatch($match->id, $admin->id);
+        }
     }
 
     /** @return array{0: User, 1: Tournament} */
