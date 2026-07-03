@@ -16,6 +16,7 @@
     @csrf
     @if($isCorrection) @method('PUT') @endif
     <input name="batch" type="hidden" value="{{ $match->tournament_draw_id }}">
+    <input name="match_id" type="hidden" value="{{ $match->id }}">
 
     <details class="mp-quick-result" @if($match->best_of->value === 1 && ! $isCorrection) open @endif>
         <summary>{{ $isCorrection ? 'Corregir marcador' : ($match->best_of->value === 1 ? 'Marcador rápido' : 'Ingresar '.$match->best_of->label()) }}</summary>
@@ -46,9 +47,14 @@
                 </div>
             @endfor
         </div>
+        @if((int) old('match_id') === $match->id && $errors->any())
+            <div class="alert alert-danger mb-2" role="alert">
+                @foreach($errors->all() as $error)<div>{{ $error }}</div>@endforeach
+            </div>
+        @endif
         <div class="alert alert-danger d-none mb-2" data-inline-result-errors role="alert"></div>
         <div class="d-flex gap-2">
-            <button class="btn btn-primary btn-sm flex-grow-1" type="button" onclick="@if($isCorrection)if(!window.confirm('¿Guardar esta corrección y recalcular la siguiente ronda?'))return;@endif this.disabled=true;this.textContent='Guardando…';this.form.submit();">{{ $isCorrection ? 'Guardar corrección' : 'Guardar resultado' }}</button>
+            <button class="btn btn-primary btn-sm flex-grow-1" type="submit">{{ $isCorrection ? 'Guardar corrección' : 'Guardar resultado' }}</button>
             <a class="btn btn-outline-secondary btn-sm" href="{{ route('matches.results.edit', $match) }}" aria-label="Abrir detalles del partido">⋯</a>
         </div>
     </details>

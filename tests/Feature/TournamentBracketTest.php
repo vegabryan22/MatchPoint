@@ -115,7 +115,7 @@ class TournamentBracketTest extends TestCase
             ->assertSee('Modo árbitro')
             ->assertSee('Ingreso rápido de marcadores')
             ->assertSee('name="batch"', false)
-            ->assertSee('this.form.submit()', false)
+            ->assertSee('name="match_id"', false)
             ->assertSee('data-score-step="1"', false)
             ->assertSee('data-score-step="-1"', false);
 
