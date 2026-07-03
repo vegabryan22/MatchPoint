@@ -109,6 +109,7 @@ class TournamentBracketTest extends TestCase
     {
         [$admin, $tournament] = $this->generateBracket(TournamentFormat::SingleElimination, 4);
         $tournament->update(['status' => TournamentStatus::InProgress]);
+        $match = $tournament->rounds()->where('number', 1)->firstOrFail()->matches()->firstOrFail();
 
         $response = $this->actingAs($admin)->get(route('tournaments.draws.show', $tournament))
             ->assertOk()
@@ -116,6 +117,7 @@ class TournamentBracketTest extends TestCase
             ->assertSee('Ingreso rápido de marcadores')
             ->assertSee('name="batch"', false)
             ->assertSee('name="match_id"', false)
+            ->assertSee('formaction="'.route('matches.results.quick-store', $match).'"', false)
             ->assertSee('data-score-step="1"', false)
             ->assertSee('data-score-step="-1"', false);
 

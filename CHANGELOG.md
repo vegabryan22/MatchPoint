@@ -19,6 +19,7 @@
 - El botón de resultado utiliza `type=submit` sin código inline y muestra los errores de validación dentro de la tarjeta correspondiente.
 - Los partidos BO1 usan un endpoint rápido dedicado con campos planos, confirmación de sesión y persistencia independiente del formulario avanzado.
 - Los empates eliminatorios admiten marcador oficial y tanda de penales separados; el ganador avanza sin sumar penales a las estadísticas de goles.
+- Cada control rápido se vincula mediante `form`, `formaction` y un identificador único para evitar asociaciones incorrectas entre las vistas duplicadas de escritorio y móvil.
 
 ## 2026-06-30 — Consolas y programación automática
 
