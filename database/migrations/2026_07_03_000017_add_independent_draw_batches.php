@@ -10,6 +10,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('tournament_draws', function (Blueprint $table): void {
+            $table->index('tournament_id', 'tournament_draws_tournament_id_index');
+        });
+
+        Schema::table('tournament_draws', function (Blueprint $table): void {
             $table->dropUnique(['tournament_id']);
             $table->unsignedSmallInteger('batch_number')->default(1)->after('tournament_id');
             $table->string('name')->nullable()->after('batch_number');
@@ -54,6 +58,9 @@ return new class extends Migration
             $table->dropUnique(['tournament_id', 'batch_number']);
             $table->dropColumn(['batch_number', 'name', 'is_final_stage', 'winner_id', 'completed_at']);
             $table->unique('tournament_id');
+        });
+        Schema::table('tournament_draws', function (Blueprint $table): void {
+            $table->dropIndex('tournament_draws_tournament_id_index');
         });
     }
 };
