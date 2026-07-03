@@ -152,3 +152,6 @@ La suite cubre:
 ## Integración con estadísticas
 
 El módulo 8 utiliza `scores` y partidos finalizados para calcular estadísticas de jugadores y equipos: jugados, victorias, derrotas, goles, diferencia, promedio y racha. El evento `MatchCompleted` también sincroniza automáticamente al campeón cuando el partido es una final decisiva.
+## Definición por penales
+
+En partidos eliminatorios, el marcador oficial puede terminar empatado si se registra una tanda de penales con ganador. MatchPoint conserva los goles oficiales separados de los penales, utiliza estos últimos únicamente para definir quién avanza y los muestra debajo del partido en la llave. Los penales no alteran goles a favor, goles en contra ni diferencia de gol.

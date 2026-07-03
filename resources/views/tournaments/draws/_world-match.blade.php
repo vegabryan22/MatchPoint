@@ -21,6 +21,7 @@
         <span class="mp-world-team-name">{{ $matchData['participant_b'] }}@if($matchData['club_b'])<small>{{ $matchData['club_b']['name'] }}</small>@endif</span>
         <strong class="mp-world-score" data-inline-score-b>{{ $matchData['score_b'] ?? '–' }}</strong>
     </div>
+    @if($matchData['has_penalties'])<div class="mp-world-match-note">Penales: {{ $matchData['penalties_a'] }}–{{ $matchData['penalties_b'] }}</div>@endif
     @if ($match->is_conditional)<div class="mp-world-match-note">Partido condicional</div>@endif
     @if ($tournament->status === App\Enums\TournamentStatus::InProgress && $match->participant_a_id && $match->participant_b_id && in_array($match->status, [App\Enums\MatchStatus::Pending, App\Enums\MatchStatus::Completed], true))
         @can('recordResult', $match)

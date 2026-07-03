@@ -22,11 +22,11 @@
         <summary>{{ $isCorrection ? 'Corregir marcador' : ($match->best_of->value === 1 ? 'Marcador rápido' : 'Ingresar '.$match->best_of->label()) }}</summary>
         <div class="mp-quick-games">
             @for($gameNumber = 1; $gameNumber <= $match->best_of->value; $gameNumber++)
-                @php($score = $existingScores->get($gameNumber))
+                @php $score = $existingScores->get($gameNumber); @endphp
                 <div class="mp-quick-game">
                     <span>J{{ $gameNumber }}</span>
                     @foreach(['participant_a_score' => $participantAName, 'participant_b_score' => $participantBName] as $field => $participantName)
-                        @php($inputId = $formPrefix.'-'.$gameNumber.'-'.$field)
+                        @php $inputId = $formPrefix.'-'.$gameNumber.'-'.$field; @endphp
                         <div class="mp-score-stepper">
                             <button type="button" data-score-step="-1" data-score-target="{{ $inputId }}" aria-label="Restar gol a {{ $participantName }}">−</button>
                             <input
@@ -42,6 +42,20 @@
                                 @required($gameNumber === 1)
                             >
                             <button type="button" data-score-step="1" data-score-target="{{ $inputId }}" aria-label="Sumar gol a {{ $participantName }}">+</button>
+                        </div>
+                    @endforeach
+                </div>
+                <div class="mp-quick-game">
+                    <span>Pen.</span>
+                    @foreach(['participant_a_penalties' => $participantAName, 'participant_b_penalties' => $participantBName] as $field => $participantName)
+                        @php
+                            $inputId = $formPrefix.'-'.$gameNumber.'-'.$field;
+                            $quickName = $field === 'participant_a_penalties' ? 'penalties_a' : 'penalties_b';
+                        @endphp
+                        <div class="mp-score-stepper">
+                            <button type="button" data-score-step="-1" data-score-target="{{ $inputId }}" aria-label="Restar penal a {{ $participantName }}">−</button>
+                            <input id="{{ $inputId }}" name="{{ ! $isCorrection && $match->best_of->value === 1 ? $quickName : 'games['.($gameNumber - 1).']['.$field.']' }}" type="number" inputmode="numeric" min="0" max="99" value="{{ ! $isCorrection && $match->best_of->value === 1 ? old($quickName, $score?->{$field}) : old('games.'.($gameNumber - 1).'.'.$field, $score?->{$field}) }}" placeholder="–" aria-label="Penales de {{ $participantName }}, juego {{ $gameNumber }}">
+                            <button type="button" data-score-step="1" data-score-target="{{ $inputId }}" aria-label="Sumar penal a {{ $participantName }}">+</button>
                         </div>
                     @endforeach
                 </div>

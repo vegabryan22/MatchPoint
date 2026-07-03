@@ -17,6 +17,8 @@ class StoreMatchResultRequest extends FormRequest
             'games' => ['required', 'array', 'min:1', 'max:5'],
             'games.*.participant_a_score' => ['nullable', 'required_with:games.*.participant_b_score', 'integer', 'min:0', 'max:99'],
             'games.*.participant_b_score' => ['nullable', 'required_with:games.*.participant_a_score', 'integer', 'min:0', 'max:99'],
+            'games.*.participant_a_penalties' => ['nullable', 'required_with:games.*.participant_b_penalties', 'integer', 'min:0', 'max:99'],
+            'games.*.participant_b_penalties' => ['nullable', 'required_with:games.*.participant_a_penalties', 'integer', 'min:0', 'max:99'],
             'duration_minutes' => ['nullable', 'integer', 'min:1', 'max:600'],
             'observations' => ['nullable', 'string', 'max:2000'],
         ];
@@ -27,6 +29,8 @@ class StoreMatchResultRequest extends FormRequest
         return [
             'games.*.participant_a_score' => 'marcador del participante A',
             'games.*.participant_b_score' => 'marcador del participante B',
+            'games.*.participant_a_penalties' => 'penales del participante A',
+            'games.*.participant_b_penalties' => 'penales del participante B',
             'duration_minutes' => 'duración',
             'observations' => 'observaciones',
         ];

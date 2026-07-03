@@ -105,6 +105,9 @@ final class BracketPresentationService
             'participant_b_real_name' => $this->participantRealName($participantB, $tournament->participant_type),
             'score_a' => $hasScore ? $match->scores->sum('participant_a_score') : null,
             'score_b' => $hasScore ? $match->scores->sum('participant_b_score') : null,
+            'penalties_a' => $hasScore ? $match->scores->sum('participant_a_penalties') : null,
+            'penalties_b' => $hasScore ? $match->scores->sum('participant_b_penalties') : null,
+            'has_penalties' => $match->scores->contains(fn ($score): bool => $score->participant_a_penalties !== null),
             'club_a' => $clubA === null ? null : ['name' => $clubA->name, 'crest' => $clubA->crestUrl(), 'flag' => $clubA->countryFlag()],
             'club_b' => $clubB === null ? null : ['name' => $clubB->name, 'crest' => $clubB->crestUrl(), 'flag' => $clubB->countryFlag()],
             'status_class' => match ($match->status) {

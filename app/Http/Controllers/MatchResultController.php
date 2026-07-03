@@ -37,13 +37,16 @@ final class MatchResultController extends Controller
             'games' => [[
                 'participant_a_score' => $data['score_a'],
                 'participant_b_score' => $data['score_b'],
+                'participant_a_penalties' => $data['penalties_a'] ?? null,
+                'participant_b_penalties' => $data['penalties_b'] ?? null,
             ]],
         ], $request->user());
 
         return redirect()->route('tournaments.draws.show', [
             $match->tournament,
             'batch' => $match->tournament_draw_id,
-        ])->with('success', 'Resultado guardado: '.$data['score_a'].'-'.$data['score_b'].'.');
+        ])->with('success', 'Resultado guardado: '.$data['score_a'].'-'.$data['score_b']
+            .(isset($data['penalties_a']) ? ' (penales '.$data['penalties_a'].'-'.$data['penalties_b'].')' : '').'.');
     }
 
     public function update(UpdateMatchResultRequest $request, GameMatch $match): RedirectResponse|JsonResponse

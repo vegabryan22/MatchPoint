@@ -117,6 +117,54 @@ class MatchResultTest extends TestCase
         $this->assertSame(MatchStatus::Completed, $match->refresh()->status);
     }
 
+    public function test_penalty_shootout_preserves_official_draw_and_advances_winner(): void
+    {
+        $admin = $this->administrator();
+        [$match, $destination] = $this->pendingMatch(BestOf::One, $admin, true);
+
+        $this->actingAs($admin)->post(route('matches.results.quick-store', $match), [
+            'match_id' => $match->id,
+            'score_a' => 1,
+            'score_b' => 1,
+            'penalties_a' => 5,
+            'penalties_b' => 4,
+        ])->assertRedirect()->assertSessionHas('success', 'Resultado guardado: 1-1 (penales 5-4).');
+
+        $this->assertDatabaseHas('scores', [
+            'match_id' => $match->id,
+            'participant_a_score' => 1,
+            'participant_b_score' => 1,
+            'participant_a_penalties' => 5,
+            'participant_b_penalties' => 4,
+            'winner_id' => $match->participant_a_id,
+        ]);
+        $this->assertSame($match->participant_a_id, $match->refresh()->winner_id);
+        $this->assertSame($match->participant_a_id, $destination->refresh()->participant_a_id);
+    }
+
+    public function test_penalties_require_an_official_draw_and_a_winner(): void
+    {
+        $admin = $this->administrator();
+        [$firstMatch] = $this->pendingMatch(BestOf::One, $admin);
+
+        $this->actingAs($admin)->post(route('matches.results.quick-store', $firstMatch), [
+            'match_id' => $firstMatch->id,
+            'score_a' => 1,
+            'score_b' => 0,
+            'penalties_a' => 5,
+            'penalties_b' => 4,
+        ])->assertSessionHasErrors('games');
+
+        [$secondMatch] = $this->pendingMatch(BestOf::One, $admin);
+        $this->actingAs($admin)->post(route('matches.results.quick-store', $secondMatch), [
+            'match_id' => $secondMatch->id,
+            'score_a' => 1,
+            'score_b' => 1,
+            'penalties_a' => 5,
+            'penalties_b' => 5,
+        ])->assertSessionHasErrors('games');
+    }
+
     public function test_single_elimination_applies_three_goal_mercy_rule(): void
     {
         $admin = $this->administrator();

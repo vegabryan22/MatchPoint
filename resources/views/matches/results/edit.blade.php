@@ -100,6 +100,12 @@
                             >
                         </div>
                     </div>
+                    <div class="mp-score-row">
+                        <div class="mp-score-game">Penales {{ $gameNumber }}</div>
+                        <div><label class="visually-hidden" for="game-{{ $gameNumber }}-pa">Penales {{ $participantAName }}</label><input class="form-control text-center fw-bold" id="game-{{ $gameNumber }}-pa" name="games[{{ $gameNumber - 1 }}][participant_a_penalties]" type="number" min="0" max="99" value="{{ old('games.'.($gameNumber - 1).'.participant_a_penalties', $score?->participant_a_penalties) }}" placeholder="—"></div>
+                        <div class="mp-score-separator">—</div>
+                        <div><label class="visually-hidden" for="game-{{ $gameNumber }}-pb">Penales {{ $participantBName }}</label><input class="form-control text-center fw-bold" id="game-{{ $gameNumber }}-pb" name="games[{{ $gameNumber - 1 }}][participant_b_penalties]" type="number" min="0" max="99" value="{{ old('games.'.($gameNumber - 1).'.participant_b_penalties', $score?->participant_b_penalties) }}" placeholder="—"></div>
+                    </div>
                 @endfor
             </div>
 

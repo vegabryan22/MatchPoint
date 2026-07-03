@@ -17,6 +17,8 @@ class Score extends Model
         'game_number',
         'participant_a_score',
         'participant_b_score',
+        'participant_a_penalties',
+        'participant_b_penalties',
         'winner_id',
         'created_by',
     ];

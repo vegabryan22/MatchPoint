@@ -122,6 +122,8 @@ final class MatchResultService
         foreach ($submittedGames as $game) {
             $aScore = $game['participant_a_score'] ?? null;
             $bScore = $game['participant_b_score'] ?? null;
+            $aPenalties = $game['participant_a_penalties'] ?? null;
+            $bPenalties = $game['participant_b_penalties'] ?? null;
 
             if ($aScore === null && $bScore === null) {
                 continue;
@@ -130,7 +132,12 @@ final class MatchResultService
                 throw ValidationException::withMessages(['games' => 'Cada juego debe incluir ambos marcadores.']);
             }
 
-            $games[] = ['participant_a_score' => (int) $aScore, 'participant_b_score' => (int) $bScore];
+            $games[] = [
+                'participant_a_score' => (int) $aScore,
+                'participant_b_score' => (int) $bScore,
+                'participant_a_penalties' => $aPenalties === null ? null : (int) $aPenalties,
+                'participant_b_penalties' => $bPenalties === null ? null : (int) $bPenalties,
+            ];
         }
 
         $bestOf = $match->best_of->value;
@@ -151,17 +158,31 @@ final class MatchResultService
                 $game = $this->applyMercyRule($game);
             }
             if ($game['participant_a_score'] === $game['participant_b_score']) {
-                if (! $drawAllowed) {
-                    throw ValidationException::withMessages(['games' => 'Los juegos eliminatorios no pueden terminar empatados.']);
-                }
-                $normalizedGames[] = ['game_number' => 1, ...$game, 'winner_id' => null];
+                $hasPenalties = $game['participant_a_penalties'] !== null || $game['participant_b_penalties'] !== null;
+                if ($drawAllowed && ! $hasPenalties) {
+                    $normalizedGames[] = ['game_number' => 1, ...$game, 'winner_id' => null];
 
-                continue;
+                    continue;
+                }
+
+                if ($game['participant_a_penalties'] === null || $game['participant_b_penalties'] === null) {
+                    throw ValidationException::withMessages(['games' => 'El empate eliminatorio requiere ambos marcadores de penales.']);
+                }
+                if ($game['participant_a_penalties'] === $game['participant_b_penalties']) {
+                    throw ValidationException::withMessages(['games' => 'La tanda de penales debe definir un ganador.']);
+                }
+                $winnerId = $game['participant_a_penalties'] > $game['participant_b_penalties']
+                    ? $match->participant_a_id
+                    : $match->participant_b_id;
+            } else {
+                if ($game['participant_a_penalties'] !== null || $game['participant_b_penalties'] !== null) {
+                    throw ValidationException::withMessages(['games' => 'Los penales sólo pueden registrarse cuando el marcador oficial está empatado.']);
+                }
+                $winnerId = $game['participant_a_score'] > $game['participant_b_score']
+                    ? $match->participant_a_id
+                    : $match->participant_b_id;
             }
 
-            $winnerId = $game['participant_a_score'] > $game['participant_b_score']
-                ? $match->participant_a_id
-                : $match->participant_b_id;
             $winnerId === $match->participant_a_id ? $participantAWins++ : $participantBWins++;
             $normalizedGames[] = [
                 'game_number' => $index + 1,
@@ -290,6 +311,8 @@ final class MatchResultService
                 'game_number' => $score->game_number,
                 'participant_a_score' => $score->participant_a_score,
                 'participant_b_score' => $score->participant_b_score,
+                'participant_a_penalties' => $score->participant_a_penalties,
+                'participant_b_penalties' => $score->participant_b_penalties,
             ])->all(),
         ];
     }
