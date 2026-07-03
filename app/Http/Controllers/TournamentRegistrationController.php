@@ -38,6 +38,7 @@ final class TournamentRegistrationController extends Controller
             'candidates' => $this->registrations->candidates($tournament, $filters['candidate_search'] ?? null),
             'registeredCount' => $count,
             'remainingSlots' => max(0, $tournament->max_participants - $count),
+            'registrationOpen' => $this->registrations->isOpen($tournament),
             'gameClubs' => GameClub::query()
                 ->whereHas('availabilities', fn ($query) => $query->where('game', $tournament->game->value))
                 ->where('is_active', true)
@@ -67,6 +68,17 @@ final class TournamentRegistrationController extends Controller
         $this->registrations->assignGameClub($tournament, $participant, $clubId === null ? null : (int) $clubId, $request->user());
 
         return back()->with('success', 'Equipo del videojuego actualizado.');
+    }
+
+    public function toggleExtraordinary(Request $request, Tournament $tournament): RedirectResponse
+    {
+        Gate::authorize('manageRegistrations', $tournament);
+        $enabled = $request->boolean('enabled');
+        $this->registrations->setExtraordinaryRegistration($tournament, $enabled, $request->user());
+
+        return back()->with('success', $enabled
+            ? 'Inscripciones extraordinarias habilitadas.'
+            : 'Inscripciones extraordinarias cerradas.');
     }
 
     public function import(ImportRegistrationsRequest $request, Tournament $tournament): RedirectResponse

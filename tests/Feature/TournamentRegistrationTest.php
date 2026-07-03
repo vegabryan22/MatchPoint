@@ -7,6 +7,7 @@ use App\Enums\TournamentStatus;
 use App\Models\AuditLog;
 use App\Models\Player;
 use App\Models\Team;
+use App\Models\TournamentDraw;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -86,5 +87,28 @@ class TournamentRegistrationTest extends TestCase
             ->assertSessionHasErrors('registration');
         $this->actingAs($admin)->post(route('tournaments.registrations.store', $future), ['participant_id' => $player->id])
             ->assertSessionHasErrors('registration');
+    }
+
+    public function test_manager_can_toggle_extraordinary_registrations_during_active_tournament(): void
+    {
+        $admin = $this->administrator();
+        $tournament = $this->registrationTournament(attributes: ['status' => TournamentStatus::InProgress]);
+        TournamentDraw::factory()->create(['tournament_id' => $tournament->id]);
+        $player = Player::factory()->create();
+
+        $this->actingAs($admin)->post(route('tournaments.registrations.store', $tournament), ['participant_id' => $player->id])
+            ->assertSessionHasErrors('registration');
+
+        $this->actingAs($admin)->patch(route('tournaments.registrations.extraordinary', $tournament), ['enabled' => 1])
+            ->assertRedirect()->assertSessionHas('success', 'Inscripciones extraordinarias habilitadas.');
+        $this->actingAs($admin)->post(route('tournaments.registrations.store', $tournament), ['participant_id' => $player->id])
+            ->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('tournament_players', ['tournament_id' => $tournament->id, 'player_id' => $player->id]);
+        $this->assertTrue($tournament->refresh()->extraordinary_registration_enabled);
+        $this->assertTrue(AuditLog::query()->where('action', 'registration.extraordinary_toggled')->exists());
+
+        $this->actingAs($admin)->get(route('tournaments.registrations.index', $tournament))
+            ->assertOk()->assertSee('Periodo extraordinario activo')->assertSee('Cerrar extraordinarias');
     }
 }

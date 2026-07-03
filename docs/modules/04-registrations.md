@@ -95,3 +95,6 @@ Todos los usuarios activos pueden consultar y exportar. Administradores y organi
 ## Pruebas
 
 La suite cubre modalidades, inactivos, duplicados, capacidad, estado, ventana temporal, retiro, auditoría, importación parcial, Job grande, CSV, XLSX, permisos y búsqueda.
+## Inscripciones extraordinarias
+
+Administradores y organizadores asignados pueden habilitar temporalmente altas y retiros aunque el torneo esté En curso, fuera de fechas o tenga llaves generadas. El interruptor no cambia el estado competitivo y las inscripciones nuevas no alteran tandas existentes; deben incorporarse al crear una tanda posterior. La misma habilitación permite el formulario público rápido cuando éste ya está configurado. Cada apertura y cierre queda auditado.

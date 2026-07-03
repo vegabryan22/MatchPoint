@@ -40,6 +40,7 @@ class Tournament extends Model
         'starts_at',
         'ends_at',
         'quick_registration_enabled',
+        'extraordinary_registration_enabled',
         'quick_registration_levels',
         'quick_registration_notice',
     ];
@@ -59,6 +60,7 @@ class Tournament extends Model
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
             'quick_registration_enabled' => 'boolean',
+            'extraordinary_registration_enabled' => 'boolean',
             'quick_registration_levels' => 'array',
         ];
     }

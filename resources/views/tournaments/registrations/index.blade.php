@@ -14,6 +14,13 @@
     <x-field-error name="participant_id" />
     <x-field-error name="file" />
 
+    @can('manageRegistrations', $tournament)
+        <div class="mp-card p-3 mb-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div><strong>Inscripciones extraordinarias</strong><div class="mp-muted small">Permite altas y retiros manuales aunque el torneo esté En curso o tenga llaves.</div></div>
+            <form method="post" action="{{ route('tournaments.registrations.extraordinary', $tournament) }}">@csrf @method('PATCH')<input type="hidden" name="enabled" value="{{ $tournament->extraordinary_registration_enabled ? 0 : 1 }}"><button class="btn {{ $tournament->extraordinary_registration_enabled ? 'btn-outline-danger' : 'btn-warning' }}">{{ $tournament->extraordinary_registration_enabled ? 'Cerrar extraordinarias' : 'Habilitar extraordinarias' }}</button></form>
+        </div>
+    @endcan
+
     @if ($tournament->quick_registration_enabled)
         <div class="alert alert-success d-flex flex-wrap justify-content-between align-items-center gap-2">
             <div><strong>Inscripción pública activa.</strong><div class="small">{{ route('quick-registrations.create', $tournament) }}</div></div>
@@ -46,7 +53,9 @@
         </div>
     </div>
 
-    @if ($tournament->status !== App\Enums\TournamentStatus::Registration)
+    @if ($tournament->extraordinary_registration_enabled)
+        <div class="alert alert-warning"><strong>Periodo extraordinario activo.</strong> Las nuevas inscripciones podrán incluirse en una tanda nueva sin modificar las llaves existentes.</div>
+    @elseif ($tournament->status !== App\Enums\TournamentStatus::Registration)
         <div class="alert alert-warning">Las altas y retiros están bloqueados porque el torneo no está en estado Inscripciones.</div>
     @elseif ($tournament->registration_starts_at?->isFuture())
         <div class="alert alert-info">El periodo abre el {{ $tournament->registration_starts_at->format('d/m/Y H:i') }}.</div>
@@ -71,7 +80,7 @@
                     <form method="post" action="{{ route('tournaments.registrations.store', $tournament) }}">
                         @csrf
                         <div class="input-group">
-                            <select class="form-select" name="participant_id" required @disabled($remainingSlots === 0 || $tournament->status !== App\Enums\TournamentStatus::Registration)>
+                            <select class="form-select" name="participant_id" required @disabled($remainingSlots === 0 || ! $registrationOpen)>
                                 <option value="">Seleccionar participante…</option>
                                 @foreach ($candidates as $candidate)
                                     <option value="{{ $candidate->id }}">
@@ -79,7 +88,7 @@
                                     </option>
                                 @endforeach
                             </select>
-                            <button class="btn btn-primary" @disabled($remainingSlots === 0 || $tournament->status !== App\Enums\TournamentStatus::Registration)>Inscribir</button>
+                            <button class="btn btn-primary" @disabled($remainingSlots === 0 || ! $registrationOpen)>Inscribir</button>
                         </div>
                     </form>
                 </div>
@@ -97,7 +106,7 @@
                     </p>
                     <form method="post" action="{{ route('tournaments.registrations.import', $tournament) }}" enctype="multipart/form-data">
                         @csrf
-                        <div class="input-group"><input class="form-control" name="file" type="file" accept=".csv,text/csv" required><button class="btn btn-outline-primary">Importar</button></div>
+                        <div class="input-group"><input class="form-control" name="file" type="file" accept=".csv,text/csv" required @disabled(! $registrationOpen)><button class="btn btn-outline-primary" @disabled(! $registrationOpen)>Importar</button></div>
                     </form>
                 </div>
             </div>

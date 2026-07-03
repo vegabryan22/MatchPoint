@@ -70,6 +70,7 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     Route::patch('/tournaments/{tournament}/status', [TournamentController::class, 'transition'])->name('tournaments.status');
     Route::get('/tournaments/{tournament}/registrations', [TournamentRegistrationController::class, 'index'])->name('tournaments.registrations.index');
     Route::post('/tournaments/{tournament}/registrations', [TournamentRegistrationController::class, 'store'])->name('tournaments.registrations.store');
+    Route::patch('/tournaments/{tournament}/registrations/extraordinary', [TournamentRegistrationController::class, 'toggleExtraordinary'])->name('tournaments.registrations.extraordinary');
     Route::delete('/tournaments/{tournament}/registrations/{participant}', [TournamentRegistrationController::class, 'destroy'])->name('tournaments.registrations.destroy');
     Route::patch('/tournaments/{tournament}/registrations/{participant}/game-club', [TournamentRegistrationController::class, 'assignGameClub'])->name('tournaments.registrations.game-club');
     Route::post('/tournaments/{tournament}/registrations/import', [TournamentRegistrationController::class, 'import'])->name('tournaments.registrations.import');

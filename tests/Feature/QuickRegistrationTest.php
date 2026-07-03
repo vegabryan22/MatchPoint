@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\ParticipantType;
+use App\Enums\TournamentStatus;
 use App\Models\Player;
 use App\Models\TournamentPlayer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -78,6 +79,26 @@ class QuickRegistrationTest extends TestCase
 
         $teams = $this->quickTournament(['participant_type' => ParticipantType::Team]);
         $this->get(route('quick-registrations.create', $teams))->assertOk()->assertSee('torneos individuales');
+    }
+
+    public function test_public_form_opens_during_extraordinary_period(): void
+    {
+        $tournament = $this->quickTournament([
+            'status' => TournamentStatus::InProgress,
+            'extraordinary_registration_enabled' => true,
+            'registration_ends_at' => now()->subHour(),
+        ]);
+
+        $this->get(route('quick-registrations.create', $tournament))->assertOk()->assertSee('Confirmar inscripción');
+        $this->post(route('quick-registrations.store', $tournament), [
+            'full_name' => 'Ingreso Extraordinario',
+            'username' => 'ExtraFC',
+            'academic_level' => '11',
+            'controller_platform' => 'ps5',
+            'bring_own_controller' => '1',
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('players', ['nickname' => 'ExtraFC']);
     }
 
     public function test_public_routes_are_rate_limited(): void

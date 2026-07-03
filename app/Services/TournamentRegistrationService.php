@@ -38,6 +38,17 @@ final class TournamentRegistrationService
         return $this->registrations->count($tournament);
     }
 
+    public function isOpen(Tournament $tournament): bool
+    {
+        return $tournament->extraordinary_registration_enabled || (
+            $tournament->status === TournamentStatus::Registration
+            && ! $tournament->draw()->exists()
+            && ! $tournament->groups()->exists()
+            && ! $tournament->registration_starts_at?->isFuture()
+            && ! $tournament->registration_ends_at?->isPast()
+        );
+    }
+
     public function register(
         Tournament $tournament,
         int $participantId,
@@ -106,8 +117,19 @@ final class TournamentRegistrationService
         });
     }
 
+    public function setExtraordinaryRegistration(Tournament $tournament, bool $enabled, User $actor): void
+    {
+        $oldValue = $tournament->extraordinary_registration_enabled;
+        $tournament->update(['extraordinary_registration_enabled' => $enabled]);
+        $this->audit->record('registration.extraordinary_toggled', $tournament, ['enabled' => $oldValue], ['enabled' => $enabled], $actor->id);
+    }
+
     private function ensureOpen(Tournament $tournament): void
     {
+        if ($tournament->extraordinary_registration_enabled) {
+            return;
+        }
+
         if ($tournament->draw()->exists() || $tournament->groups()->exists()) {
             throw ValidationException::withMessages([
                 'registration' => 'Las inscripciones están bloqueadas porque el sorteo ya fue generado.',
