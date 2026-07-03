@@ -16,6 +16,7 @@
 - Cada tanda registra su ganador y puede eliminarse individualmente sólo mientras no tenga resultados.
 - Los ganadores de tandas pueden disputar una final independiente que corona al campeón general.
 - El marcador rápido usa envío nativo confirmado por el servidor y regresa a la misma tanda, evitando estados visuales desactualizados por caché o JavaScript.
+- El botón de resultado fuerza el envío HTML nativo y omite manejadores JavaScript antiguos que puedan permanecer en caché durante despliegues.
 
 ## 2026-06-30 — Consolas y programación automática
 

@@ -48,7 +48,7 @@
         </div>
         <div class="alert alert-danger d-none mb-2" data-inline-result-errors role="alert"></div>
         <div class="d-flex gap-2">
-            <button class="btn btn-primary btn-sm flex-grow-1" type="submit" data-inline-submit>{{ $isCorrection ? 'Guardar corrección' : 'Guardar resultado' }}</button>
+            <button class="btn btn-primary btn-sm flex-grow-1" type="button" onclick="@if($isCorrection)if(!window.confirm('¿Guardar esta corrección y recalcular la siguiente ronda?'))return;@endif this.disabled=true;this.textContent='Guardando…';this.form.submit();">{{ $isCorrection ? 'Guardar corrección' : 'Guardar resultado' }}</button>
             <a class="btn btn-outline-secondary btn-sm" href="{{ route('matches.results.edit', $match) }}" aria-label="Abrir detalles del partido">⋯</a>
         </div>
     </details>
