@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\MatchStatus;
 use App\Models\GameMatch;
 use App\Models\Tournament;
+use App\Models\TournamentDraw;
 use App\Repositories\Contracts\TournamentDrawRepositoryInterface;
 use App\Services\Brackets\BracketGeneratorResolver;
 
@@ -16,7 +17,7 @@ final class BracketGenerationService
         private readonly MatchAdvancementService $advancement,
     ) {}
 
-    public function generate(Tournament $tournament, array $plan): void
+    public function generate(Tournament $tournament, array $plan, ?TournamentDraw $draw = null): void
     {
         $blueprint = $this->generators->resolve($tournament->format)->build($tournament, $plan);
         $rounds = [];
@@ -25,6 +26,7 @@ final class BracketGenerationService
         foreach ($blueprint->rounds() as $key => $round) {
             $rounds[$key] = $this->draws->createRound([
                 'tournament_id' => $tournament->id,
+                'tournament_draw_id' => $draw?->id,
                 'name' => $round['name'],
                 'number' => $round['number'],
                 'bracket' => $round['bracket'],
@@ -35,6 +37,7 @@ final class BracketGenerationService
         foreach ($blueprint->matches() as $key => $definition) {
             $matches[$key] = $this->draws->createMatch([
                 'tournament_id' => $tournament->id,
+                'tournament_draw_id' => $draw?->id,
                 'round_id' => $rounds[$definition['round_key']]->id,
                 'sequence' => $definition['sequence'],
                 'participant_type' => $tournament->participant_type,

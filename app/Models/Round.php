@@ -14,7 +14,7 @@ class Round extends Model
     /** @use HasFactory<RoundFactory> */
     use HasFactory;
 
-    protected $fillable = ['tournament_id', 'name', 'number', 'bracket', 'starts_at'];
+    protected $fillable = ['tournament_id', 'tournament_draw_id', 'name', 'number', 'bracket', 'starts_at'];
 
     protected function casts(): array
     {
@@ -25,6 +25,11 @@ class Round extends Model
     public function tournament(): BelongsTo
     {
         return $this->belongsTo(Tournament::class);
+    }
+
+    public function draw(): BelongsTo
+    {
+        return $this->belongsTo(TournamentDraw::class, 'tournament_draw_id');
     }
 
     /** @return HasMany<GameMatch, $this> */

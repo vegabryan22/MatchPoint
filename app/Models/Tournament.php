@@ -119,7 +119,12 @@ class Tournament extends Model
     /** @return HasOne<TournamentDraw, $this> */
     public function draw(): HasOne
     {
-        return $this->hasOne(TournamentDraw::class);
+        return $this->hasOne(TournamentDraw::class)->latestOfMany('batch_number');
+    }
+
+    public function draws(): HasMany
+    {
+        return $this->hasMany(TournamentDraw::class)->orderBy('batch_number');
     }
 
     /** @return HasMany<Round, $this> */

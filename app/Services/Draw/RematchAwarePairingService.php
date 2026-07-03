@@ -39,6 +39,20 @@ final class RematchAwarePairingService
     private function qualifyingSingleElimination(Tournament $tournament, array $orderedIds, bool $avoidRematches, bool $manualPairing): array
     {
         $participantCount = count($orderedIds);
+        if ($participantCount === 2) {
+            return [
+                'bracket_size' => 2,
+                'bye_count' => 0,
+                'preliminary_count' => 0,
+                'best_loser_count' => 0,
+                'repechage' => false,
+                'pairs' => [array_values($orderedIds)],
+                'preliminary_pairs' => [],
+                'main_matches' => null,
+                'direct_participant_ids' => $orderedIds,
+            ];
+        }
+
         $qualifyingMatchCount = intdiv($participantCount, 2);
         $bracketSize = $this->nextPowerOfTwo($qualifyingMatchCount);
         $bestLoserCount = $bracketSize - $qualifyingMatchCount;

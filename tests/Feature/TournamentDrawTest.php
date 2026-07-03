@@ -186,6 +186,74 @@ class TournamentDrawTest extends TestCase
         ]);
     }
 
+    public function test_new_batch_does_not_modify_an_active_batch_with_results(): void
+    {
+        $admin = $this->administrator();
+        $tournament = $this->registrationTournament(attributes: ['max_participants' => 8]);
+        $players = Player::factory()->count(8)->create();
+        $this->attachPlayers($tournament, $players, $admin->id);
+        $firstIds = $players->take(4)->pluck('id')->map(fn ($id): int => (int) $id)->all();
+        $secondIds = $players->skip(4)->pluck('id')->map(fn ($id): int => (int) $id)->all();
+
+        $this->generateManualBatch($tournament, $admin, $firstIds, 'replace', 'Tanda 1');
+        $firstDraw = $tournament->draws()->firstOrFail();
+        $tournament->update(['status' => TournamentStatus::InProgress]);
+        $playedMatch = $firstDraw->matches()->where('status', MatchStatus::Pending)->firstOrFail();
+        $this->actingAs($admin)->postJson(route('matches.results.store', $playedMatch), [
+            'inline' => true,
+            'games' => [['participant_a_score' => 2, 'participant_b_score' => 0]],
+        ])->assertOk();
+
+        $this->generateManualBatch($tournament, $admin, $secondIds, 'append', 'Tanda 2');
+
+        $this->assertSame(2, $tournament->draws()->count());
+        $this->assertDatabaseHas('matches', ['id' => $playedMatch->id, 'status' => MatchStatus::Completed->value]);
+        $this->assertDatabaseHas('scores', ['match_id' => $playedMatch->id, 'participant_a_score' => 2]);
+        $this->assertSame(3, $firstDraw->matches()->count());
+        $this->assertSame($firstIds, $firstDraw->fresh()->metadata['active_participant_ids']);
+        $secondDraw = $tournament->draws()->reorder()->orderByDesc('batch_number')->firstOrFail();
+        $this->assertSame($secondIds, $secondDraw->metadata['active_participant_ids']);
+        $this->actingAs($admin)->get(route('tournaments.draws.show', [$tournament, 'batch' => $firstDraw->id]))
+            ->assertOk()->assertSee('Tanda 1')->assertSee($players[0]->nickname);
+        $this->actingAs($admin)->get(route('tournaments.draws.show', [$tournament, 'batch' => $secondDraw->id]))
+            ->assertOk()->assertSee('Tanda 2')->assertSee($players[4]->nickname);
+    }
+
+    public function test_final_batch_can_be_generated_from_completed_batch_winners(): void
+    {
+        $admin = $this->administrator();
+        $tournament = $this->registrationTournament(attributes: ['max_participants' => 8]);
+        $players = Player::factory()->count(8)->create();
+        $this->attachPlayers($tournament, $players, $admin->id);
+        $firstIds = $players->take(4)->pluck('id')->map(fn ($id): int => (int) $id)->all();
+        $secondIds = $players->skip(4)->pluck('id')->map(fn ($id): int => (int) $id)->all();
+        $this->generateManualBatch($tournament, $admin, $firstIds, 'replace', 'Tanda 1');
+        $this->generateManualBatch($tournament, $admin, $secondIds, 'append', 'Tanda 2');
+        $draws = $tournament->draws()->orderBy('batch_number')->get();
+        $draws[0]->update(['winner_id' => $firstIds[0], 'completed_at' => now()]);
+        $draws[1]->update(['winner_id' => $secondIds[0], 'completed_at' => now()]);
+
+        $this->generateManualBatch($tournament, $admin, [$firstIds[0], $secondIds[0]], 'final', 'Final de tandas');
+
+        $final = $tournament->draws()->where('is_final_stage', true)->firstOrFail();
+        $this->assertSame('Final de tandas', $final->name);
+        $this->assertSame([$firstIds[0], $secondIds[0]], $final->metadata['active_participant_ids']);
+        $this->assertSame(1, $final->matches()->count());
+
+        $tournament->update(['status' => TournamentStatus::InProgress]);
+        $finalMatch = $final->matches()->firstOrFail();
+        $this->actingAs($admin)->post(route('matches.results.store', $finalMatch), [
+            'games' => [['participant_a_score' => 1, 'participant_b_score' => 0]],
+        ])->assertRedirect();
+
+        $this->assertSame($firstIds[0], $final->refresh()->winner_id);
+        $this->assertDatabaseHas('tournament_champions', [
+            'tournament_id' => $tournament->id,
+            'participant_id' => $firstIds[0],
+            'deciding_match_id' => $finalMatch->id,
+        ]);
+    }
+
     public function test_automatic_seeding_prioritizes_competitive_level(): void
     {
         $admin = $this->administrator();
@@ -280,5 +348,18 @@ class TournamentDrawTest extends TestCase
             'source' => 'manual',
             'registered_at' => now(),
         ]);
+    }
+
+    private function generateManualBatch($tournament, $admin, array $participantIds, string $mode, string $name): void
+    {
+        $this->actingAs($admin)->post(route('tournaments.draws.store', $tournament), [
+            'method' => DrawMethod::Manual->value,
+            'avoid_rematches' => '0',
+            'manual_pairing' => '1',
+            'generation_mode' => $mode,
+            'batch_name' => $name,
+            'selected_participants' => $participantIds,
+            'resolved_order' => $participantIds,
+        ])->assertRedirect(route('tournaments.draws.show', $tournament))->assertSessionHasNoErrors();
     }
 }

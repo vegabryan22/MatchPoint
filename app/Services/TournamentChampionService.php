@@ -35,13 +35,24 @@ final class TournamentChampionService
     {
         DB::transaction(function () use ($matchId, $actorId): void {
             $match = $this->matches->findForUpdate($matchId);
-            $match->load(['round', 'tournament']);
+            $match->load(['round', 'tournament', 'draw']);
 
             if (! $this->isFinalRelated($match)) {
                 return;
             }
 
             $winnerId = $this->decisiveWinner($match);
+            if ($match->draw !== null) {
+                $match->draw->update([
+                    'winner_id' => $winnerId,
+                    'completed_at' => $winnerId === null ? null : ($match->completed_at ?? now()),
+                ]);
+            }
+
+            if ($match->draw !== null && ! $match->draw->is_final_stage && $match->tournament->draws()->count() > 1) {
+                return;
+            }
+
             $existing = $this->champions->findForTournament($match->tournament);
 
             if ($winnerId === null) {
@@ -104,6 +115,7 @@ final class TournamentChampionService
 
         $reset = GameMatch::query()
             ->where('tournament_id', $match->tournament_id)
+            ->where('tournament_draw_id', $match->tournament_draw_id)
             ->where('is_conditional', true)
             ->lockForUpdate()
             ->first();

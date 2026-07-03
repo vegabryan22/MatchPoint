@@ -7,7 +7,10 @@
     <div class="d-flex flex-wrap gap-2">
         <a class="btn btn-outline-secondary" href="{{ route('tournaments.show', $tournament) }}">Volver</a>
         @if(in_array($tournament->format, [\App\Enums\TournamentFormat::SingleElimination, \App\Enums\TournamentFormat::DoubleElimination], true))
-            @can('manageDraw', $tournament)<a class="btn btn-primary" href="{{ route('tournaments.draws.create', $tournament) }}">{{ $tournament->draw ? 'Agregar llegadas / regenerar' : 'Armar llave con presentes' }}</a>@endcan
+            @can('manageDraw', $tournament)
+                @if($drawBatches->isNotEmpty())<a class="btn btn-primary" href="{{ route('tournaments.draws.create', [$tournament, 'mode' => 'append']) }}">+ Crear nueva tanda</a>@else<a class="btn btn-primary" href="{{ route('tournaments.draws.create', $tournament) }}">Armar primera llave</a>@endif
+                @if($drawBatches->where('is_final_stage', false)->whereNotNull('winner_id')->count() >= 2 && ! $drawBatches->contains('is_final_stage', true))<a class="btn btn-warning" href="{{ route('tournaments.draws.create', [$tournament, 'mode' => 'final']) }}">Crear final entre ganadores</a>@endif
+            @endcan
         @endif
     </div>
 </x-page-header>
@@ -17,6 +20,9 @@
 @if ($bracketSections === [])
     <div class="mp-card mp-empty"><h2 class="h5 fw-bold">Todavía no hay llave</h2><p class="mp-muted mb-0">Las inscripciones ya pueden estar cerradas: genera ahora el sorteo para iniciar los partidos.</p></div>
 @else
+    <nav class="nav nav-pills gap-2 mb-4" aria-label="Tandas del torneo">
+        @foreach($drawBatches as $batch)<a class="nav-link {{ $selectedDraw?->id === $batch->id ? 'active' : '' }}" href="{{ route('tournaments.draws.show', [$tournament, 'batch' => $batch->id]) }}">{{ $batch->name }}@if($batch->winner_id) ✓@endif</a>@endforeach
+    </nav>
     <div class="mp-world-summary mb-4">
         <div><span>Formato</span><strong>{{ $tournament->format->label() }}</strong></div>
         <div><span>Método</span><strong>{{ $tournament->draw?->method->label() ?? 'Clasificación de grupos' }}</strong></div>
@@ -34,13 +40,13 @@
         </div>
     </div>
 
-    <div class="mp-world-stage" data-bracket-stage data-bracket-live-url="{{ route('tournaments.draws.live', $tournament) }}">
+    <div class="mp-world-stage" data-bracket-stage data-bracket-live-url="{{ route('tournaments.draws.live', [$tournament, 'batch' => $selectedDraw?->id]) }}">
         @include('tournaments.draws._world-sections')
     </div>
 
     @if($tournament->draw)
         @can('manageDraw', $tournament)
-            <form class="mt-4" method="post" action="{{ route('tournaments.draws.destroy', $tournament) }}" data-confirm="¿Eliminar toda la llave y desbloquear inscripciones?">@csrf @method('DELETE')<button class="btn btn-outline-danger">Eliminar llave</button></form>
+            <form class="mt-4" method="post" action="{{ route('tournaments.draws.destroy', $tournament) }}" data-confirm="¿Eliminar esta tanda? Las demás llaves no serán modificadas.">@csrf @method('DELETE')<input type="hidden" name="batch" value="{{ $selectedDraw?->id }}"><button class="btn btn-outline-danger">Eliminar esta tanda</button></form>
         @endcan
     @endif
 @endif

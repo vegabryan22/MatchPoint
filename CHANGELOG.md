@@ -12,6 +12,9 @@
 - Los apodos de la llave muestran el nombre completo del participante mediante tooltip, incluso tras actualizaciones en vivo.
 - Nueva mesa de llegada para armar cruces manuales sólo con quienes se presentan e incorporar jugadores progresivamente antes del primer resultado.
 - El marcador rápido informa errores HTTP, sesiones vencidas y respuestas inválidas directamente dentro de la tarjeta.
+- Los torneos admiten múltiples llaves por tandas: nuevas llegadas generan estructuras independientes sin interrumpir partidos activos.
+- Cada tanda registra su ganador y puede eliminarse individualmente sólo mientras no tenga resultados.
+- Los ganadores de tandas pueden disputar una final independiente que corona al campeón general.
 
 ## 2026-06-30 — Consolas y programación automática
 

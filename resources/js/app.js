@@ -57,7 +57,7 @@ document.querySelectorAll('[data-copy-url]').forEach((button) => {
 });
 
 document.querySelectorAll('[data-arrival-draw-form]').forEach((form) => {
-    const checkboxes = Array.from(form.querySelectorAll('[data-arrival-participant]'));
+    const checkboxes = Array.from(form.querySelectorAll('[data-arrival-participant]:not(:disabled)'));
     const countLabel = form.querySelector('[data-present-count]');
     const warning = form.querySelector('[data-arrival-warning]');
     const submit = form.querySelector('[data-arrival-submit]');

@@ -140,6 +140,7 @@ final class MatchAdvancementService
 
         $reset = GameMatch::query()
             ->where('tournament_id', $match->tournament_id)
+            ->where('tournament_draw_id', $match->tournament_draw_id)
             ->where('is_conditional', true)
             ->lockForUpdate()
             ->first();

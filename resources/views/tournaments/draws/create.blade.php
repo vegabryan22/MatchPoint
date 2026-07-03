@@ -3,7 +3,7 @@
 @section('title', 'Generar sorteo · '.$tournament->name)
 
 @section('content')
-    <x-page-header :title="'Sorteo · '.$tournament->name" subtitle="Selecciona la estrategia y revisa la vista previa">
+    <x-page-header :title="($generationMode === 'append' ? 'Nueva tanda · ' : ($generationMode === 'final' ? 'Final de tandas · ' : 'Sorteo · ')).$tournament->name" subtitle="Selecciona participantes y revisa la vista previa">
         <a class="btn btn-outline-secondary" href="{{ route('tournaments.show', $tournament) }}">Volver al torneo</a>
     </x-page-header>
 
@@ -14,6 +14,8 @@
     <div class="mp-card p-4">
         <form method="post" action="{{ route('tournaments.draws.preview', $tournament) }}" data-arrival-draw-form>
             @csrf
+            <input type="hidden" name="generation_mode" value="{{ $generationMode }}">
+            <div class="mb-3"><label class="form-label" for="batch_name">Nombre de la tanda</label><input class="form-control" id="batch_name" name="batch_name" value="{{ old('batch_name', $generationMode === 'final' ? 'Final de tandas' : '') }}" maxlength="80" placeholder="Ejemplo: Tanda de las 10:00"></div>
             <div class="alert alert-info d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <div><strong>Mesa de llegada.</strong> Marca quienes están presentes. Puedes volver aquí e incorporar nuevos jugadores mientras no existan resultados.</div>
                 <span class="badge text-bg-primary" data-present-count>0 presentes</span>
@@ -57,13 +59,17 @@
                             $oldSelected = old('selected_participants');
                             $isSelected = is_array($oldSelected)
                                 ? in_array((string) $participant->id, array_map('strval', $oldSelected), true)
-                                : ($activeParticipantIds->isNotEmpty() ? $activeParticipantIds->contains((int) $participant->id) : true);
+                                : ($activeParticipantIds->isNotEmpty() ? $activeParticipantIds->contains((int) $participant->id) : $generationMode === 'replace');
+                            $alreadyAssigned = $generationMode === 'append' && $usedParticipantIds->contains((int) $participant->id);
+                            $notFinalist = $generationMode === 'final' && ! $activeParticipantIds->contains((int) $participant->id);
                         @endphp
                         <tr>
-                            <td><div class="form-check form-switch"><input class="form-check-input" id="present-{{ $participant->id }}" name="selected_participants[]" type="checkbox" value="{{ $participant->id }}" data-arrival-participant @checked($isSelected)></div></td>
+                            <td><div class="form-check form-switch"><input class="form-check-input" id="present-{{ $participant->id }}" name="selected_participants[]" type="checkbox" value="{{ $participant->id }}" data-arrival-participant @checked($isSelected) @disabled($alreadyAssigned || $notFinalist)></div></td>
                             <td>
                                 <label for="present-{{ $participant->id }}"><strong>{{ $tournament->participant_type === App\Enums\ParticipantType::Individual ? $participant->nickname : $participant->name }}</strong>
                                 @if ($tournament->participant_type === App\Enums\ParticipantType::Individual)<div class="mp-muted small">{{ $participant->name }} · {{ $participant->level->label() }}</div>@endif
+                                @if($alreadyAssigned)<div class="text-success small">Ya compite en otra tanda</div>@endif
+                                @if($generationMode === 'final' && $activeParticipantIds->contains((int) $participant->id))<div class="text-warning small">Ganador de tanda</div>@endif
                                 </label>
                             </td>
                             <td><input class="form-control" name="seeds[{{ $participant->id }}]" type="number" min="1" max="{{ $participants->count() }}" value="{{ old('seeds.'.$participant->id, $loop->iteration) }}" data-arrival-position></td>

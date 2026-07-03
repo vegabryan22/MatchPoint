@@ -38,7 +38,7 @@ final class EloquentTournamentDrawRepository implements TournamentDrawRepository
     public function deleteArtifacts(Tournament $tournament): void
     {
         $tournament->rounds()->delete();
-        $tournament->draw()->delete();
+        $tournament->draws()->delete();
     }
 
     public function hasCompletedMatches(Tournament $tournament): bool

@@ -1060,9 +1060,11 @@ La fase principal no se completa parcialmente: debe esperar el último marcador 
 3. Marcar los jugadores que ya se encuentran físicamente en el evento.
 4. Elegir **Semillas manuales** y revisar las posiciones: `1 vs 2`, `3 vs 4`, etc.
 5. Generar la vista previa y confirmar la llave.
-6. Si llegan más jugadores antes del primer marcador, usar **Agregar llegadas / regenerar**, marcarlos y confirmar otra vez.
+6. Si llegan más jugadores, usar **Crear nueva tanda**, marcarlos y confirmar otra llave independiente.
+7. Usar las pestañas **Tanda 1**, **Tanda 2**, etc. para operar cada llave.
+8. Cuando finalicen al menos dos tandas, seleccionar **Crear final entre ganadores**.
 
-La cantidad debe ser par para que todos jueguen. Una vez registrado el primer resultado, la llave queda protegida y ya no admite regeneración.
+La cantidad de cada tanda debe ser par para que todos jueguen. Las tandas nuevas no modifican partidos ni resultados existentes. Un jugador ya asignado queda bloqueado en la mesa de nuevas llegadas.
 
 ## 24. Lista de aceptación de una competencia
 

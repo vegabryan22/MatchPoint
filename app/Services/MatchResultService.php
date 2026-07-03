@@ -227,6 +227,7 @@ final class MatchResultService
         if ($this->isGrandFinal($match)) {
             $reset = GameMatch::query()
                 ->where('tournament_id', $match->tournament_id)
+                ->where('tournament_draw_id', $match->tournament_draw_id)
                 ->where('is_conditional', true)
                 ->lockForUpdate()
                 ->first();
@@ -264,6 +265,7 @@ final class MatchResultService
 
         $reset = GameMatch::query()
             ->where('tournament_id', $match->tournament_id)
+            ->where('tournament_draw_id', $match->tournament_draw_id)
             ->where('is_conditional', true)
             ->lockForUpdate()
             ->first();

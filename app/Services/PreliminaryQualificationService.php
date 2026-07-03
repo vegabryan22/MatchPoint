@@ -16,8 +16,8 @@ final class PreliminaryQualificationService
 
     public function handle(GameMatch $match, ?int $actorId): bool
     {
-        $match->loadMissing(['round', 'tournament.draw']);
-        $metadata = $match->tournament->draw?->metadata ?? [];
+        $match->loadMissing(['round', 'draw']);
+        $metadata = $match->draw?->metadata ?? [];
 
         if (! ($metadata['repechage'] ?? false)
             || $match->round?->bracket !== BracketType::Main
@@ -37,6 +37,7 @@ final class PreliminaryQualificationService
         }
 
         $mainRound = $match->tournament->rounds()
+            ->where('tournament_draw_id', $match->tournament_draw_id)
             ->where('bracket', BracketType::Main)
             ->where('number', 2)
             ->firstOrFail();
@@ -105,9 +106,12 @@ final class PreliminaryQualificationService
 
     private function seedMap(GameMatch $match): Collection
     {
-        $individual = $match->participant_type === ParticipantType::Individual;
+        $order = $match->draw?->metadata['order'] ?? [];
+        if ($order !== []) {
+            return collect($order)->mapWithKeys(fn ($participantId, $index): array => [(int) $participantId => $index + 1]);
+        }
 
-        return DB::table($individual ? 'tournament_players' : 'tournament_teams')
+        return DB::table($match->participant_type === ParticipantType::Individual ? 'tournament_players' : 'tournament_teams')
             ->where('tournament_id', $match->tournament_id)
             ->pluck('seed', $individual ? 'player_id' : 'team_id');
     }

@@ -75,6 +75,8 @@ final class TournamentDrawService
 
         return [
             'method' => $method,
+            'generation_mode' => $data['generation_mode'] ?? 'replace',
+            'batch_name' => trim((string) ($data['batch_name'] ?? '')),
             'avoid_rematches' => (bool) ($data['avoid_rematches'] ?? false),
             'manual_pairing' => $manualPairing,
             'order' => $order,
@@ -100,17 +102,32 @@ final class TournamentDrawService
 
         DB::transaction(function () use ($tournament, $plan, $actor): void {
             $lockedTournament = Tournament::query()->whereKey($tournament->id)->lockForUpdate()->firstOrFail();
+            $mode = $plan['generation_mode'];
 
-            if ($this->draws->hasCompletedMatches($lockedTournament)) {
+            if ($mode === 'replace' && $this->draws->hasCompletedMatches($lockedTournament)) {
                 throw ValidationException::withMessages(['draw' => 'No se puede regenerar un sorteo con resultados registrados.']);
             }
 
-            $version = ($lockedTournament->draw?->version ?? 0) + 1;
-            $this->draws->deleteArtifacts($lockedTournament);
-            $this->draws->clearSeeds($lockedTournament);
-            $this->draws->updateSeeds($lockedTournament, $plan['order']);
-            $this->draws->createDraw([
+            if ($mode === 'append') {
+                $this->ensureParticipantsAvailableForNewBatch($lockedTournament, $plan['order']);
+                $lockedTournament->champion()->delete();
+            } elseif ($mode === 'final') {
+                $this->ensureFinalistsAreBatchWinners($lockedTournament, $plan['order']);
+            } else {
+                $this->draws->deleteArtifacts($lockedTournament);
+                $this->draws->clearSeeds($lockedTournament);
+            }
+
+            $batchNumber = ((int) $lockedTournament->draws()->max('batch_number')) + 1;
+            $version = ((int) $lockedTournament->draws()->max('version')) + 1;
+            if ($mode === 'replace') {
+                $this->draws->updateSeeds($lockedTournament, $plan['order']);
+            }
+            $draw = $this->draws->createDraw([
                 'tournament_id' => $lockedTournament->id,
+                'batch_number' => $batchNumber,
+                'name' => $plan['batch_name'] !== '' ? $plan['batch_name'] : ($mode === 'final' ? 'Final de tandas' : 'Tanda '.$batchNumber),
+                'is_final_stage' => $mode === 'final',
                 'generated_by' => $actor->id,
                 'method' => $plan['method'],
                 'avoid_rematches' => $plan['avoid_rematches'],
@@ -129,7 +146,7 @@ final class TournamentDrawService
                 ],
                 'generated_at' => now(),
             ]);
-            $this->brackets->generate($lockedTournament, $plan);
+            $this->brackets->generate($lockedTournament, $plan, $draw);
 
             $this->audit->record('draw.generated', $lockedTournament, [], [
                 'method' => $plan['method']->value,
@@ -137,28 +154,49 @@ final class TournamentDrawService
                 'avoid_rematches' => $plan['avoid_rematches'],
                 'manual_pairing' => $plan['manual_pairing'],
                 'participant_order' => $plan['order'],
+                'batch_number' => $batchNumber,
+                'generation_mode' => $mode,
             ], $actor->id);
         });
     }
 
-    public function reset(Tournament $tournament, User $actor): void
+    public function reset(Tournament $tournament, User $actor, ?int $drawId = null): void
     {
-        DB::transaction(function () use ($tournament, $actor): void {
+        DB::transaction(function () use ($tournament, $actor, $drawId): void {
             $lockedTournament = Tournament::query()->whereKey($tournament->id)->lockForUpdate()->firstOrFail();
+            $draw = $drawId === null
+                ? $lockedTournament->draws()->reorder()->orderByDesc('batch_number')->first()
+                : $lockedTournament->draws()->whereKey($drawId)->first();
 
-            if ($this->draws->hasCompletedMatches($lockedTournament)) {
-                throw ValidationException::withMessages(['draw' => 'No se puede eliminar un sorteo con resultados registrados.']);
+            if ($draw === null) {
+                throw ValidationException::withMessages(['draw' => 'La tanda seleccionada no existe.']);
             }
 
-            $this->draws->deleteArtifacts($lockedTournament);
-            $this->draws->clearSeeds($lockedTournament);
-            $this->audit->record('draw.reset', $lockedTournament, [], [], $actor->id);
+            if ($draw->matches()->where('status', MatchStatus::Completed)->exists()) {
+                throw ValidationException::withMessages(['draw' => 'No se puede eliminar una tanda con resultados registrados.']);
+            }
+
+            $snapshot = $draw->toArray();
+            $draw->delete();
+            if (! $lockedTournament->draws()->exists()) {
+                $this->draws->clearSeeds($lockedTournament);
+            }
+            $this->audit->record('draw.reset', $lockedTournament, $snapshot, [], $actor->id);
         });
     }
 
-    public function details(Tournament $tournament): array
+    public function details(Tournament $tournament, ?int $drawId = null): array
     {
-        $tournament->load(['draw.generator', 'rounds.matches.scores', 'rounds.matches.station', 'champion']);
+        $tournament->load(['draws.generator', 'draws.rounds.matches.scores', 'draws.rounds.matches.station', 'rounds.matches.scores', 'rounds.matches.station', 'champion']);
+        $legacyRounds = $tournament->rounds;
+        $selectedDraw = $drawId === null
+            ? $tournament->draws->last()
+            : $tournament->draws->firstWhere('id', $drawId);
+        if ($drawId !== null && $selectedDraw === null) {
+            abort(404);
+        }
+        $tournament->setRelation('draw', $selectedDraw);
+        $tournament->setRelation('rounds', $selectedDraw?->rounds ?? $legacyRounds);
         $participants = $this->participants($tournament)->keyBy('id');
         $clubs = GameClub::query()->whereIn('id', $participants->pluck('pivot.game_club_id')->filter()->unique())->get()->keyBy('id');
         $qualificationProgress = null;
@@ -174,6 +212,8 @@ final class TournamentDrawService
 
         return [
             'tournament' => $tournament,
+            'drawBatches' => $tournament->draws,
+            'selectedDraw' => $selectedDraw,
             'participantsById' => $participants,
             'activeParticipantCount' => count($tournament->draw?->metadata['active_participant_ids'] ?? $participants->keys()->all()),
             'qualificationProgress' => $qualificationProgress,
@@ -212,6 +252,47 @@ final class TournamentDrawService
         if ($selected->count() < 2 || $selected->duplicates()->isNotEmpty() || $selected->diff($registeredIds)->isNotEmpty()) {
             throw ValidationException::withMessages([
                 'selected_participants' => 'Selecciona al menos dos participantes inscritos sin repetirlos.',
+            ]);
+        }
+    }
+
+    private function ensureParticipantsAvailableForNewBatch(Tournament $tournament, array $participantIds): void
+    {
+        if ($tournament->draws()->where('is_final_stage', true)->exists()) {
+            throw ValidationException::withMessages([
+                'draw' => 'No se pueden agregar tandas después de crear la final entre ganadores.',
+            ]);
+        }
+
+        $usedIds = $tournament->draws()->get()->flatMap(
+            fn ($draw) => $draw->metadata['active_participant_ids'] ?? [],
+        );
+
+        if (collect($participantIds)->intersect($usedIds)->isNotEmpty()) {
+            throw ValidationException::withMessages([
+                'selected_participants' => 'Uno o más participantes ya pertenecen a otra tanda. Selecciona únicamente nuevas llegadas.',
+            ]);
+        }
+    }
+
+    private function ensureFinalistsAreBatchWinners(Tournament $tournament, array $participantIds): void
+    {
+        if ($tournament->draws()->where('is_final_stage', true)->exists()) {
+            throw ValidationException::withMessages(['draw' => 'La final entre ganadores ya fue creada.']);
+        }
+
+        $batches = $tournament->draws()->where('is_final_stage', false)->get();
+        if ($batches->count() < 2 || $batches->contains(fn ($draw): bool => $draw->winner_id === null)) {
+            throw ValidationException::withMessages(['draw' => 'Todas las tandas deben estar finalizadas antes de crear la final.']);
+        }
+
+        $winnerIds = $batches->pluck('winner_id');
+        $selected = collect($participantIds)->sort()->values()->all();
+        $expected = $winnerIds->map(fn ($id): int => (int) $id)->sort()->values()->all();
+
+        if ($selected !== $expected) {
+            throw ValidationException::withMessages([
+                'selected_participants' => 'La final debe incluir exactamente a los ganadores de todas las tandas finalizadas.',
             ]);
         }
     }

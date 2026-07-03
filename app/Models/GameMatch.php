@@ -21,6 +21,7 @@ class GameMatch extends Model
 
     protected $fillable = [
         'tournament_id',
+        'tournament_draw_id',
         'round_id',
         'group_id',
         'sequence',
@@ -63,6 +64,11 @@ class GameMatch extends Model
     public function tournament(): BelongsTo
     {
         return $this->belongsTo(Tournament::class);
+    }
+
+    public function draw(): BelongsTo
+    {
+        return $this->belongsTo(TournamentDraw::class, 'tournament_draw_id');
     }
 
     /** @return BelongsTo<Round, $this> */
