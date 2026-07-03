@@ -9,6 +9,14 @@ window.bootstrap = bootstrap;
 
 document.querySelectorAll('.toast').forEach((element) => new bootstrap.Toast(element).show());
 
+const initializeTooltips = (container = document) => {
+    container.querySelectorAll('[data-bs-toggle="tooltip"]').forEach((element) => {
+        bootstrap.Tooltip.getOrCreateInstance(element);
+    });
+};
+
+initializeTooltips();
+
 const showToast = (message, variant = 'success') => {
     let container = document.querySelector('[data-dynamic-toast-container]');
     if (! container) {
@@ -288,6 +296,7 @@ document.querySelectorAll('[data-bracket-stage]').forEach((stage) => {
                     const scrollPositions = Array.from(stage.querySelectorAll('[data-bracket-scroll]')).map((scroll) => scroll.scrollLeft);
                     stage.innerHTML = payload.html;
                     stage.querySelectorAll('[data-bracket-scroll]').forEach((scroll, index) => { scroll.scrollLeft = scrollPositions[index] ?? 0; });
+                    initializeTooltips(stage);
                     bindScroll();
                     applyZoom();
                 }

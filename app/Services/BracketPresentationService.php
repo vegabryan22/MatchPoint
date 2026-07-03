@@ -98,9 +98,11 @@ final class BracketPresentationService
         return [
             'model' => $match,
             'participant_a' => $participantA === null ? 'Por definir' : $this->participantName($participantA, $tournament->participant_type),
+            'participant_a_real_name' => $this->participantRealName($participantA, $tournament->participant_type),
             'participant_b' => $participantB === null
                 ? ($match->status === MatchStatus::Bye ? 'Pase automático' : 'Por definir')
                 : $this->participantName($participantB, $tournament->participant_type),
+            'participant_b_real_name' => $this->participantRealName($participantB, $tournament->participant_type),
             'score_a' => $hasScore ? $match->scores->sum('participant_a_score') : null,
             'score_b' => $hasScore ? $match->scores->sum('participant_b_score') : null,
             'club_a' => $clubA === null ? null : ['name' => $clubA->name, 'crest' => $clubA->crestUrl(), 'flag' => $clubA->countryFlag()],
@@ -117,5 +119,14 @@ final class BracketPresentationService
     private function participantName(mixed $participant, ParticipantType $type): string
     {
         return $type === ParticipantType::Individual ? $participant->nickname : $participant->name;
+    }
+
+    private function participantRealName(mixed $participant, ParticipantType $type): ?string
+    {
+        if ($participant === null || $type !== ParticipantType::Individual) {
+            return null;
+        }
+
+        return $participant->name;
     }
 }

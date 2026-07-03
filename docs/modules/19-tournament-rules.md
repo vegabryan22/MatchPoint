@@ -46,6 +46,8 @@ Cada resultado guardado actualiza inmediatamente el partido y la versión de la 
 
 La llave principal permanece **Por definir** hasta completar toda la clasificatoria. Esto es necesario porque MatchPoint sólo puede ordenar los mejores perdedores después de conocer todos los marcadores. Al guardarse el último resultado, coloca automáticamente ganadores y mejores perdedores; otras sesiones reciben el cambio mediante el refresco en vivo.
 
+Cada participante individual conserva su apodo como identificación principal. Al pasar el cursor, enfocar con teclado o tocar su fila, un tooltip muestra el nombre completo para facilitar el llamado presencial. Los tooltips se reinicializan después de cada refresco en vivo.
+
 ## Pruebas
 
 - Documento accesible y preparado para impresión.

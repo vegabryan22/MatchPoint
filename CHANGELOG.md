@@ -9,6 +9,7 @@
 - Cada torneo de eliminación simple incluye un reglamento A4 imprimible con sus cantidades reales.
 - La diferencia máxima oficial es de tres goles y los marcadores superiores se normalizan automáticamente.
 - La llave muestra el progreso clasificatorio y completa la fase principal al registrarse el último resultado.
+- Los apodos de la llave muestran el nombre completo del participante mediante tooltip, incluso tras actualizaciones en vivo.
 
 ## 2026-06-30 — Consolas y programación automática
 

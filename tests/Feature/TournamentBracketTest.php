@@ -23,6 +23,7 @@ class TournamentBracketTest extends TestCase
     public function test_bracket_renders_world_cup_layout_with_rounds_teams_and_scores(): void
     {
         [$admin, $tournament] = $this->generateBracket(TournamentFormat::SingleElimination, 8);
+        $participant = $tournament->players()->firstOrFail();
         $match = $tournament->rounds()->where('number', 1)->firstOrFail()->matches()->firstOrFail();
         $match->update(['winner_id' => $match->participant_a_id, 'status' => MatchStatus::Completed]);
         $match->scores()->create([
@@ -44,6 +45,8 @@ class TournamentBracketTest extends TestCase
             ->assertSee('Copa MatchPoint')
             ->assertSee('mp-world-team is-winner', false)
             ->assertSee('data-bracket-fullscreen', false)
+            ->assertSee('data-bs-toggle="tooltip"', false)
+            ->assertSee('Nombre completo: '.$participant->name)
             ->assertSee('3');
 
         $content = $response->getContent();
