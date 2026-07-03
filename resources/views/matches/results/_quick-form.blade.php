@@ -74,7 +74,7 @@
         @endif
         <div class="alert alert-danger d-none mb-2" data-inline-result-errors role="alert"></div>
         <div class="d-flex gap-2">
-            <button class="btn btn-primary btn-sm flex-grow-1" type="submit" form="{{ $formId }}" formaction="{{ $formAction }}" formmethod="post">{{ $isCorrection ? 'Guardar corrección' : 'Guardar resultado' }}</button>
+            <button class="btn btn-primary btn-sm flex-grow-1" type="submit" form="{{ $formId }}" formaction="{{ $formAction }}" formmethod="post" data-bracket-interactive>{{ $isCorrection ? 'Guardar corrección' : 'Guardar resultado' }}</button>
             <a class="btn btn-outline-secondary btn-sm" href="{{ route('matches.results.edit', $match) }}" aria-label="Abrir detalles del partido">⋯</a>
         </div>
     </details>

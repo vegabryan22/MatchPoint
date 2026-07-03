@@ -295,6 +295,9 @@ document.querySelectorAll('[data-bracket-stage]').forEach((stage) => {
             let startX = 0;
             let startScroll = 0;
             scroll.addEventListener('pointerdown', (event) => {
+                if (event.target.closest('button, input, a, select, textarea, label, form, details, summary')) {
+                    return;
+                }
                 startX = event.clientX;
                 startScroll = scroll.scrollLeft;
                 scroll.classList.add('is-dragging');
