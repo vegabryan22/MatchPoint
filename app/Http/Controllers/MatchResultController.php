@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Matches\StoreMatchResultRequest;
+use App\Http\Requests\Matches\StoreQuickMatchResultRequest;
 use App\Http\Requests\Matches\UpdateMatchResultRequest;
 use App\Models\GameMatch;
 use App\Services\MatchResultService;
@@ -27,6 +28,22 @@ final class MatchResultController extends Controller
         $this->results->record($match, $request->validated(), $request->user());
 
         return $this->successResponse($request, $match, 'Resultado registrado y llave actualizada.');
+    }
+
+    public function quickStore(StoreQuickMatchResultRequest $request, GameMatch $match): RedirectResponse
+    {
+        $data = $request->validated();
+        $this->results->record($match, [
+            'games' => [[
+                'participant_a_score' => $data['score_a'],
+                'participant_b_score' => $data['score_b'],
+            ]],
+        ], $request->user());
+
+        return redirect()->route('tournaments.draws.show', [
+            $match->tournament,
+            'batch' => $match->tournament_draw_id,
+        ])->with('success', 'Resultado guardado: '.$data['score_a'].'-'.$data['score_b'].'.');
     }
 
     public function update(UpdateMatchResultRequest $request, GameMatch $match): RedirectResponse|JsonResponse

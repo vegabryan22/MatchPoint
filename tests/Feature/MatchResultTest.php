@@ -97,6 +97,26 @@ class MatchResultTest extends TestCase
         $this->assertSame(MatchStatus::Completed, $match->refresh()->status);
     }
 
+    public function test_dedicated_bo1_quick_endpoint_saves_flat_scores(): void
+    {
+        $admin = $this->administrator();
+        [$match] = $this->pendingMatch(BestOf::One, $admin);
+
+        $this->actingAs($admin)->post(route('matches.results.quick-store', $match), [
+            'match_id' => $match->id,
+            'batch' => $match->tournament_draw_id,
+            'score_a' => 1,
+            'score_b' => 0,
+        ])->assertRedirect()->assertSessionHas('success', 'Resultado guardado: 1-0.');
+
+        $this->assertDatabaseHas('scores', [
+            'match_id' => $match->id,
+            'participant_a_score' => 1,
+            'participant_b_score' => 0,
+        ]);
+        $this->assertSame(MatchStatus::Completed, $match->refresh()->status);
+    }
+
     public function test_single_elimination_applies_three_goal_mercy_rule(): void
     {
         $admin = $this->administrator();

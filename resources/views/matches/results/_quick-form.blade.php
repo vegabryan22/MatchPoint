@@ -7,7 +7,7 @@
 <form
     class="mp-quick-result-form"
     method="post"
-    action="{{ $isCorrection ? route('matches.results.update', $match) : route('matches.results.store', $match) }}"
+    action="{{ $isCorrection ? route('matches.results.update', $match) : ($match->best_of->value === 1 ? route('matches.results.quick-store', $match) : route('matches.results.store', $match)) }}"
     data-native-result-form
     data-dirty="false"
     @if($isCorrection) data-confirm="¿Guardar esta corrección y recalcular la siguiente ronda?" @endif
@@ -31,12 +31,12 @@
                             <button type="button" data-score-step="-1" data-score-target="{{ $inputId }}" aria-label="Restar gol a {{ $participantName }}">−</button>
                             <input
                                 id="{{ $inputId }}"
-                                name="games[{{ $gameNumber - 1 }}][{{ $field }}]"
+                                name="{{ ! $isCorrection && $match->best_of->value === 1 ? ($field === 'participant_a_score' ? 'score_a' : 'score_b') : 'games['.($gameNumber - 1).']['.$field.']' }}"
                                 type="number"
                                 inputmode="numeric"
                                 min="0"
                                 max="99"
-                                value="{{ old('games.'.($gameNumber - 1).'.'.$field, $score?->{$field}) }}"
+                                value="{{ ! $isCorrection && $match->best_of->value === 1 ? old($field === 'participant_a_score' ? 'score_a' : 'score_b', $score?->{$field}) : old('games.'.($gameNumber - 1).'.'.$field, $score?->{$field}) }}"
                                 placeholder="0"
                                 aria-label="{{ $participantName }}, juego {{ $gameNumber }}"
                                 @required($gameNumber === 1)

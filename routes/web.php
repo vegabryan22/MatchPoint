@@ -98,6 +98,7 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     Route::post('/tournaments/{tournament}/groups', [TournamentGroupController::class, 'store'])->name('tournaments.groups.store');
     Route::post('/tournaments/{tournament}/groups/qualify', [TournamentGroupController::class, 'qualify'])->name('tournaments.groups.qualify');
     Route::get('/matches/{match}/result', [MatchResultController::class, 'edit'])->name('matches.results.edit');
+    Route::post('/matches/{match}/quick-result', [MatchResultController::class, 'quickStore'])->name('matches.results.quick-store');
     Route::post('/matches/{match}/result', [MatchResultController::class, 'store'])->name('matches.results.store');
     Route::put('/matches/{match}/result', [MatchResultController::class, 'update'])->name('matches.results.update');
     Route::resource('tournaments', TournamentController::class);
