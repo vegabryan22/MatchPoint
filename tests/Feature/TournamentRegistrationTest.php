@@ -12,6 +12,7 @@ use App\Models\Player;
 use App\Models\Team;
 use App\Models\TournamentDraw;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 class TournamentRegistrationTest extends TestCase
@@ -117,6 +118,7 @@ class TournamentRegistrationTest extends TestCase
 
     public function test_manager_records_filters_and_audits_attendance(): void
     {
+        Carbon::setTestNow(Carbon::parse('2026-07-06 19:36:00', 'UTC'));
         $admin = $this->administrator();
         $tournament = $this->registrationTournament(attributes: ['status' => TournamentStatus::InProgress]);
         [$present, $absent] = Player::factory()->count(2)->create();
@@ -144,7 +146,7 @@ class TournamentRegistrationTest extends TestCase
         $this->actingAs($admin)->get(route('tournaments.registrations.index', [
             'tournament' => $tournament,
             'attendance' => AttendanceStatus::Present->value,
-        ]))->assertOk()->assertSee($present->nickname)->assertDontSee($absent->nickname);
+        ]))->assertOk()->assertSee($present->nickname)->assertSee('06/07/2026 13:36')->assertDontSee($absent->nickname);
     }
 
     public function test_finished_tournament_attendance_is_read_only(): void

@@ -32,3 +32,5 @@ Cuando un torneo todavía no tiene controles de asistencia, sus resultados hist�
 ## Auditoría
 
 Cada cambio registra el usuario responsable, la fecha, el estado anterior, el estado nuevo y la inscripción afectada mediante la acción `registration.attendance_updated`.
+
+Las fechas se almacenan en UTC y se muestran en la zona configurada por `APP_DISPLAY_TIMEZONE`. El valor predeterminado es `America/Costa_Rica`.

@@ -182,7 +182,7 @@
                         @php($attendanceStatus = App\Enums\AttendanceStatus::from($participant->pivot->attendance_status))
                         <td style="min-width: 230px">
                             <span class="badge {{ $attendanceStatus->badgeClass() }} mb-2">{{ $attendanceStatus->label() }}</span>
-                            @if($participant->pivot->checked_in_at)<div class="small mp-muted mb-2">{{ \Illuminate\Support\Carbon::parse($participant->pivot->checked_in_at)->format('d/m/Y H:i') }}</div>@endif
+                            @if($participant->pivot->checked_in_at)<div class="small mp-muted mb-2">{{ \Illuminate\Support\Carbon::parse($participant->pivot->checked_in_at)->timezone(config('app.display_timezone'))->format('d/m/Y H:i') }}</div>@endif
                             @can('manageRegistrations', $tournament)
                                 <div class="d-flex flex-wrap gap-1" role="group" aria-label="Asistencia de {{ $participant->nickname ?? $participant->name }}">
                                     @foreach($attendanceStatuses as $status)
