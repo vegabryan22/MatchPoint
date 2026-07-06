@@ -13,7 +13,7 @@
 @foreach($bracketSections as $section)
     <section class="mp-world-section">
         <header class="mp-world-section-header">
-            <div><div class="mp-eyebrow">Cuadro competitivo</div><h2>{{ $section['label'] }}</h2></div>
+            <div><div class="mp-eyebrow">{{ $section['label'] === 'Fase clasificatoria' ? 'Acceso a la llave principal' : 'Cuadro competitivo' }}</div><h2>{{ $section['label'] }}</h2></div>
             <span>{{ $section['match_count'] }} partidos</span>
         </header>
         <div class="mp-world-scroll" data-bracket-scroll>

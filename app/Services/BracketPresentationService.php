@@ -14,7 +14,7 @@ final class BracketPresentationService
     {
         $sections = collect(BracketType::cases())
             ->reject(fn (BracketType $type): bool => $type === BracketType::Group)
-            ->map(function (BracketType $type) use ($tournament, $participants, $clubs): array {
+            ->flatMap(function (BracketType $type) use ($tournament, $participants, $clubs): array {
                 $rounds = $tournament->rounds->where('bracket', $type)->sortBy('number')->values();
 
                 $presentedRounds = $rounds->map(fn ($round, int $roundIndex): array => [
@@ -28,21 +28,18 @@ final class BracketPresentationService
                         ->all(),
                 ])->all();
 
-                $symmetricLayout = $type === BracketType::Main
-                    ? $this->symmetricLayout($presentedRounds)
-                    : null;
+                if ($type === BracketType::Main
+                    && ($tournament->draw?->metadata['repechage'] ?? false)
+                    && count($presentedRounds) > 1) {
+                    $qualificationRound = array_shift($presentedRounds);
 
-                return [
-                    'type' => $type,
-                    'label' => $type->label(),
-                    'match_count' => $rounds->sum(fn ($round): int => $round->matches->count()),
-                    'rounds' => $presentedRounds,
-                    'layout' => $symmetricLayout === null ? 'linear' : 'symmetric',
-                    'left_rounds' => $symmetricLayout['left_rounds'] ?? [],
-                    'center_round' => $symmetricLayout['center_round'] ?? null,
-                    'center_match' => $symmetricLayout['center_match'] ?? null,
-                    'right_rounds' => $symmetricLayout['right_rounds'] ?? [],
-                ];
+                    return [
+                        $this->section($type, 'Fase clasificatoria', [$qualificationRound], false),
+                        $this->section($type, 'Llave principal', $presentedRounds, true),
+                    ];
+                }
+
+                return [$this->section($type, $type->label(), $presentedRounds, $type === BracketType::Main)];
             })->filter(fn (array $section): bool => $section['rounds'] !== [])->values()->all();
 
         $champion = $tournament->champion;
@@ -54,6 +51,23 @@ final class BracketPresentationService
                 'name' => $this->participantName($championParticipant, $tournament->participant_type),
                 'crowned_at' => $champion->crowned_at,
             ],
+        ];
+    }
+
+    private function section(BracketType $type, string $label, array $rounds, bool $symmetric): array
+    {
+        $symmetricLayout = $symmetric ? $this->symmetricLayout($rounds) : null;
+
+        return [
+            'type' => $type,
+            'label' => $label,
+            'match_count' => collect($rounds)->sum(fn (array $round): int => count($round['matches'])),
+            'rounds' => $rounds,
+            'layout' => $symmetricLayout === null ? 'linear' : 'symmetric',
+            'left_rounds' => $symmetricLayout['left_rounds'] ?? [],
+            'center_round' => $symmetricLayout['center_round'] ?? null,
+            'center_match' => $symmetricLayout['center_match'] ?? null,
+            'right_rounds' => $symmetricLayout['right_rounds'] ?? [],
         ];
     }
 

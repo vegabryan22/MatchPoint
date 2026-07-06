@@ -55,9 +55,9 @@ class TournamentBracketTest extends TestCase
 
         $content = $response->getContent();
 
-        $this->assertSame(2, substr_count($content, 'data-bracket-side="left"'));
+        $this->assertSame(1, substr_count($content, 'data-bracket-side="left"'));
         $this->assertSame(1, substr_count($content, 'data-bracket-side="center"'));
-        $this->assertSame(2, substr_count($content, 'data-bracket-side="right"'));
+        $this->assertSame(1, substr_count($content, 'data-bracket-side="right"'));
         $this->assertSame(7, substr_count($content, '<article class="mp-world-match'));
     }
 
@@ -75,6 +75,10 @@ class TournamentBracketTest extends TestCase
         $this->assertTrue($firstRound->matches->every(fn (GameMatch $match): bool => $match->participant_a_id !== null && $match->participant_b_id !== null));
         $this->assertSame(2, $mainRound->matches()->count());
         $this->assertTrue($mainRound->matches->every(fn (GameMatch $match): bool => $match->participant_a_id === null && $match->participant_b_id === null));
+
+        $this->actingAs($admin)->get(route('tournaments.draws.show', $tournament))
+            ->assertOk()
+            ->assertSeeInOrder(['Fase clasificatoria', 'Llave principal']);
     }
 
     public function test_projected_bracket_endpoint_reflects_results_recorded_from_another_session(): void

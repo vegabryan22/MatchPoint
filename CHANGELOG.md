@@ -33,6 +33,7 @@
 - Las horas automáticas de asistencia se convierten desde UTC a `America/Costa_Rica` al mostrarse, configurable mediante `APP_DISPLAY_TIMEZONE`.
 - Finalizar un torneo convierte automáticamente en ausentes a todos los inscritos que continúen pendientes, sin alterar a quienes ya fueron confirmados presentes.
 - Los torneos finalizados existentes reciben el mismo cierre mediante migración, usando su fecha de finalización como hora de confirmación de ausencia.
+- En cantidades que no son potencia de dos, la fase clasificatoria se presenta como bloque independiente y la llave principal conserva un cuadro simétrico sin conectores cruzados entre fases.
 
 ## 2026-06-30 — Consolas y programación automática
 
