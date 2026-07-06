@@ -25,6 +25,7 @@
 - Administradores y organizadores pueden abrir o cerrar un periodo extraordinario de inscripciones sin cambiar el estado del torneo ni alterar llaves existentes.
 - La final reserva un bloque independiente para la copa y los conectores simétricos usan líneas continuas, más visibles y con uniones redondeadas.
 - Las llaves con sólo una final se centran automáticamente y los conectores usan trazos finos y discretos para reducir ruido visual.
+- Los conectores rígidos se sustituyen por curvas SVG fluidas que se recalculan con zoom, redimensionamiento y actualizaciones en vivo.
 
 ## 2026-06-30 — Consolas y programación automática
 

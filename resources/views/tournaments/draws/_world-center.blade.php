@@ -1,4 +1,4 @@
-<div class="mp-world-center" data-bracket-side="center">
+<div class="mp-world-center" data-bracket-side="center" data-round-number="{{ $section['center_round']['model']->number }}">
     <div class="mp-world-round-title mp-world-center-title">
         <span>{{ $section['center_round']['name'] }}</span>
         <small>Partido decisivo</small>

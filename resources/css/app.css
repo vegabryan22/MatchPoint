@@ -409,7 +409,7 @@ a { text-decoration: none; }
 .mp-world-section-header > span { color: #9299ad; font-size: .78rem; }
 .mp-world-scroll { overflow: auto; padding: 1.5rem; cursor: grab; scrollbar-color: var(--mp-primary) #111522; }
 .mp-world-scroll.is-dragging { cursor: grabbing; user-select: none; }
-.mp-world-bracket { display: flex; gap: 4rem; min-width: max-content; align-items: stretch; transform-origin: top left; }
+.mp-world-bracket { position: relative; display: flex; gap: 4rem; min-width: max-content; align-items: stretch; transform-origin: top left; }
 .mp-world-round { display: flex; width: 272px; flex: 0 0 272px; flex-direction: column; }
 .mp-world-round-title { display: flex; align-items: end; justify-content: space-between; min-height: 42px; margin-bottom: 1rem; padding: 0 .25rem .65rem; color: #fff; border-bottom: 2px solid rgba(124, 92, 255, .5); }
 .mp-world-round-title span { font-size: .78rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
@@ -421,6 +421,14 @@ a { text-decoration: none; }
 .mp-world-bracket.is-linear .mp-world-round + .mp-world-round .mp-world-match::before { position: absolute; top: 50%; left: -2rem; width: 2rem; height: 1px; content: ''; background: rgba(124, 92, 255, .55); }
 .mp-world-bracket.is-symmetric { --connector-color: rgba(190, 160, 82, .58); --connector-half: 2rem; gap: calc(var(--connector-half) * 2); }
 .mp-world-bracket.is-symmetric:not(.has-side-rounds) { width: 100%; min-width: 100%; justify-content: center; }
+.mp-world-bracket.is-symmetric > .mp-bracket-connectors { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.mp-world-bracket.is-symmetric > .mp-bracket-connectors path { fill: none; stroke: url(#mp-connector-gradient); stroke-width: 1.5; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.mp-world-bracket.is-symmetric > .mp-world-round,
+.mp-world-bracket.is-symmetric > .mp-world-center { position: relative; z-index: 1; }
+.mp-world-bracket.is-symmetric.has-svg-connectors .mp-world-round-matches::before,
+.mp-world-bracket.is-symmetric.has-svg-connectors .mp-world-round-matches::after,
+.mp-world-bracket.is-symmetric.has-svg-connectors .mp-world-match::before,
+.mp-world-bracket.is-symmetric.has-svg-connectors .mp-world-match::after { display: none; }
 .mp-world-bracket.is-symmetric .mp-world-round.is-left .mp-world-round-matches::after,
 .mp-world-bracket.is-symmetric .mp-world-round.is-right .mp-world-round-matches::before { position: absolute; top: calc(50% / var(--match-count)); bottom: calc(50% / var(--match-count)); width: 1px; content: ''; background: var(--connector-color); }
 .mp-world-bracket.is-symmetric .mp-world-round.is-left .mp-world-round-matches::after { right: calc(var(--connector-half) * -1); }

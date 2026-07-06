@@ -289,6 +289,54 @@ document.querySelectorAll('[data-bracket-stage]').forEach((stage) => {
     const applyZoom = () => {
         stage.querySelectorAll('[data-bracket-canvas]').forEach((canvas) => { canvas.style.zoom = zoom; });
         if (zoomLabel) zoomLabel.textContent = `${Math.round(zoom * 100)}%`;
+        window.requestAnimationFrame(() => drawBracketConnectors());
+    };
+    const drawBracketConnectors = () => {
+        stage.querySelectorAll('.mp-world-bracket.is-symmetric').forEach((bracket) => {
+            bracket.querySelector(':scope > .mp-bracket-connectors')?.remove();
+            const columns = Array.from(bracket.querySelectorAll(':scope > [data-round-number]'));
+            if (columns.length < 2) return;
+
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.classList.add('mp-bracket-connectors');
+            svg.setAttribute('aria-hidden', 'true');
+            svg.setAttribute('viewBox', `0 0 ${bracket.offsetWidth} ${bracket.offsetHeight}`);
+            svg.innerHTML = '<defs><linearGradient id="mp-connector-gradient" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7c5cff" stop-opacity=".42"/><stop offset=".5" stop-color="#ffd166" stop-opacity=".72"/><stop offset="1" stop-color="#20e3b2" stop-opacity=".42"/></linearGradient></defs>';
+            const bracketRect = bracket.getBoundingClientRect();
+            const scale = bracket.offsetWidth > 0 ? bracketRect.width / bracket.offsetWidth : 1;
+            const centerColumn = columns.find((column) => column.dataset.bracketSide === 'center');
+
+            ['left', 'right'].forEach((side) => {
+                const sideColumns = columns
+                    .filter((column) => column.dataset.bracketSide === side)
+                    .sort((first, second) => Number(first.dataset.roundNumber) - Number(second.dataset.roundNumber));
+                if (centerColumn) sideColumns.push(centerColumn);
+
+                sideColumns.slice(0, -1).forEach((sourceColumn, columnIndex) => {
+                    const targetColumn = sideColumns[columnIndex + 1];
+                    const sources = Array.from(sourceColumn.querySelectorAll('.mp-world-match'));
+                    const targets = Array.from(targetColumn.querySelectorAll('.mp-world-match'));
+                    sources.forEach((source, sourceIndex) => {
+                        const target = targets[Math.min(targets.length - 1, Math.floor(sourceIndex * targets.length / sources.length))];
+                        if (! target) return;
+                        const sourceRect = source.getBoundingClientRect();
+                        const targetRect = target.getBoundingClientRect();
+                        const travelsRight = sourceRect.left < targetRect.left;
+                        const startX = ((travelsRight ? sourceRect.right : sourceRect.left) - bracketRect.left) / scale;
+                        const endX = ((travelsRight ? targetRect.left : targetRect.right) - bracketRect.left) / scale;
+                        const startY = (sourceRect.top + sourceRect.height / 2 - bracketRect.top) / scale;
+                        const endY = (targetRect.top + targetRect.height / 2 - bracketRect.top) / scale;
+                        const controlX = (startX + endX) / 2;
+                        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                        path.setAttribute('d', `M ${startX} ${startY} C ${controlX} ${startY}, ${controlX} ${endY}, ${endX} ${endY}`);
+                        svg.append(path);
+                    });
+                });
+            });
+
+            bracket.prepend(svg);
+            bracket.classList.add('has-svg-connectors');
+        });
     };
     const bindScroll = () => {
         stage.querySelectorAll('[data-bracket-scroll]').forEach((scroll) => {
@@ -323,6 +371,7 @@ document.querySelectorAll('[data-bracket-stage]').forEach((stage) => {
         else stage.requestFullscreen();
     });
     bindScroll();
+    window.requestAnimationFrame(() => drawBracketConnectors());
 
     if (stage.dataset.bracketLiveUrl) {
         const refreshBracket = async () => {
@@ -345,6 +394,7 @@ document.querySelectorAll('[data-bracket-stage]').forEach((stage) => {
                     initializeTooltips(stage);
                     bindScroll();
                     applyZoom();
+                    window.requestAnimationFrame(() => drawBracketConnectors());
                 }
                 liveVersion = payload.version;
                 if (liveStatus) liveStatus.textContent = `En vivo · ${new Date().toLocaleTimeString()}`;
@@ -355,6 +405,12 @@ document.querySelectorAll('[data-bracket-stage]').forEach((stage) => {
         stage.addEventListener('matchpoint:refresh', refreshBracket);
         window.setInterval(refreshBracket, 5000);
     }
+
+    let connectorResizeTimer;
+    window.addEventListener('resize', () => {
+        window.clearTimeout(connectorResizeTimer);
+        connectorResizeTimer = window.setTimeout(drawBracketConnectors, 120);
+    });
 });
 
 const dashboardLive = document.querySelector('[data-dashboard-live]');

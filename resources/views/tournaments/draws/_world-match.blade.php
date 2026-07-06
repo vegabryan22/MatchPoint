@@ -3,7 +3,7 @@
     $mobile = $mobile ?? false;
     $instance = $instance ?? 'bracket';
 @endphp
-<article class="{{ $mobile ? 'mp-mobile-match' : 'mp-world-match' }} {{ $matchData['status_class'] }} {{ $match->is_conditional ? 'is-conditional' : '' }}">
+<article class="{{ $mobile ? 'mp-mobile-match' : 'mp-world-match' }} {{ $matchData['status_class'] }} {{ $match->is_conditional ? 'is-conditional' : '' }}" data-match-id="{{ $match->id }}">
     <div class="mp-world-match-meta">
         <span>Partido {{ $match->sequence }}</span>
         <span data-inline-status>{{ $match->status->label() }}</span>
