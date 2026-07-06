@@ -28,7 +28,7 @@ final class MatchReminderService
             }
         }
 
-return $sent;
+        return $sent;
     }
 
     private function recipients(GameMatch $match)
@@ -38,6 +38,6 @@ return $sent;
             $ids->push(...Player::query()->whereIn('id', [$match->participant_a_id, $match->participant_b_id])->pluck('user_id')->filter());
         }
 
-return User::query()->with('notificationPreference')->whereIn('id', $ids->filter()->unique())->where('is_active', true)->get()->filter(fn ($u) => $u->notificationPreference?->match_reminders !== false);
+        return User::query()->with('notificationPreference')->whereIn('id', $ids->filter()->unique())->where('is_active', true)->get()->filter(fn ($u) => $u->notificationPreference?->match_reminders !== false);
     }
 }
