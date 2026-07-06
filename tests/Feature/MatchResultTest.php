@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\AttendanceStatus;
 use App\Enums\BestOf;
 use App\Enums\BracketType;
 use App\Enums\MatchSlot;
@@ -54,6 +55,8 @@ class MatchResultTest extends TestCase
         ]);
         $this->assertSame($match->winner_id, $destination->refresh()->participant_a_id);
         $this->assertTrue(AuditLog::query()->where('action', 'match.result_recorded')->where('auditable_id', $match->id)->exists());
+        $this->assertSame(2, $match->tournament->playerRegistrations()->where('attendance_status', AttendanceStatus::Present)->count());
+        $this->assertSame(2, AuditLog::query()->where('action', 'registration.attendance_auto_confirmed')->count());
     }
 
     public function test_inline_mobile_result_returns_score_payload_without_leaving_bracket(): void

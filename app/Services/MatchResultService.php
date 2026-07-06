@@ -23,6 +23,7 @@ final class MatchResultService
         private readonly GameMatchRepositoryInterface $matches,
         private readonly MatchResultRepositoryInterface $results,
         private readonly TournamentRegistrationRepositoryInterface $registrations,
+        private readonly TournamentAttendanceService $attendance,
         private readonly AuditService $audit,
     ) {}
 
@@ -86,6 +87,7 @@ final class MatchResultService
                 $newResult,
                 $actor->id,
             );
+            $this->attendance->confirmMatchParticipants($lockedMatch, $actor);
 
             MatchCompleted::dispatch($lockedMatch->id, $actor->id);
 

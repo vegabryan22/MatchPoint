@@ -19,6 +19,8 @@ El módulo distingue a las personas inscritas de quienes realmente participaron.
 5. Exportar CSV o Excel cuando se necesite una lista de control.
 6. Finalizar el torneo cuando la asistencia esté confirmada.
 
+Al guardar el resultado de un partido, MatchPoint confirma automáticamente como presentes a sus dos participantes. La migración de instalación también aplica esta regla a los partidos finalizados antes de habilitar el módulo.
+
 ## Permisos y cierre
 
 Administradores y organizadores asignados pueden registrar asistencia mientras el torneo no esté finalizado ni cancelado. Después del cierre, la asistencia queda visible en modo lectura y no puede modificarse.

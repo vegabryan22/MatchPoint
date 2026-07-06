@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\AttendanceStatus;
 use App\Enums\ParticipantType;
 use App\Enums\TournamentStatus;
+use App\Models\GameMatch;
 use App\Models\Tournament;
 use App\Models\TournamentPlayer;
 use App\Models\TournamentTeam;
@@ -58,6 +59,35 @@ final class TournamentAttendanceService
         return collect(AttendanceStatus::cases())->mapWithKeys(
             fn (AttendanceStatus $status): array => [$status->value => (int) ($counts[$status->value] ?? 0)],
         )->all();
+    }
+
+    public function confirmMatchParticipants(GameMatch $match, User $actor): void
+    {
+        $match->loadMissing('tournament');
+
+        foreach ([$match->participant_a_id, $match->participant_b_id] as $participantId) {
+            if ($participantId === null) {
+                continue;
+            }
+
+            $registration = $this->registration($match->tournament, $participantId);
+            if ($registration->attendance_status === AttendanceStatus::Present) {
+                continue;
+            }
+
+            $previousStatus = $registration->attendance_status;
+            $registration->update([
+                'attendance_status' => AttendanceStatus::Present,
+                'checked_in_at' => $match->completed_at ?? now(),
+                'checked_in_by' => $actor->id,
+            ]);
+            $this->audit->record('registration.attendance_auto_confirmed', $registration, [
+                'attendance_status' => $previousStatus->value,
+            ], [
+                'attendance_status' => AttendanceStatus::Present->value,
+                'match_id' => $match->id,
+            ], $actor->id);
+        }
     }
 
     private function registration(Tournament $tournament, int $participantId): Model

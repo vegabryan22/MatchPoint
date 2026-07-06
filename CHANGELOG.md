@@ -29,6 +29,7 @@
 - Los penales se muestran como subíndice del marcador oficial dentro de cada participante, siguiendo el formato de resumen deportivo.
 - Al finalizar un torneo, la configuración, las inscripciones públicas y extraordinarias, y la eliminación o generación de llaves quedan bloqueadas; la información histórica continúa disponible en modo lectura.
 - El control de asistencia identifica inscritos pendientes, presentes y ausentes, registra auditoría, permite filtrar y exportar la lista, queda bloqueado al finalizar y limita las estadísticas a participantes confirmados presentes.
+- Registrar un resultado confirma automáticamente la presencia de ambos participantes y una migración recupera la asistencia de todos los partidos históricos ya finalizados.
 
 ## 2026-06-30 — Consolas y programación automática
 

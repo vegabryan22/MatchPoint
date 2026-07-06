@@ -3,9 +3,11 @@
 namespace Tests\Feature;
 
 use App\Enums\AttendanceStatus;
+use App\Enums\MatchStatus;
 use App\Enums\ParticipantType;
 use App\Enums\TournamentStatus;
 use App\Models\AuditLog;
+use App\Models\GameMatch;
 use App\Models\Player;
 use App\Models\Team;
 use App\Models\TournamentDraw;
@@ -170,5 +172,31 @@ class TournamentRegistrationTest extends TestCase
             'player_id' => $player->id,
             'attendance_status' => AttendanceStatus::Present->value,
         ]);
+    }
+
+    public function test_historical_completed_matches_are_migrated_to_present_attendance(): void
+    {
+        $admin = $this->administrator();
+        $tournament = $this->registrationTournament(attributes: ['status' => TournamentStatus::Finished]);
+        $players = Player::factory()->count(2)->create();
+        $tournament->players()->attach($players->pluck('id'), [
+            'registered_by' => $admin->id,
+            'source' => 'manual',
+            'registered_at' => now()->subDay(),
+        ]);
+        GameMatch::factory()->create([
+            'tournament_id' => $tournament->id,
+            'participant_a_id' => $players[0]->id,
+            'participant_b_id' => $players[1]->id,
+            'status' => MatchStatus::Completed,
+            'completed_by' => $admin->id,
+            'completed_at' => now()->subHour(),
+        ]);
+
+        $migration = require database_path('migrations/2026_07_05_000021_mark_existing_match_participants_present.php');
+        $migration->up();
+
+        $this->assertSame(2, $tournament->playerRegistrations()->where('attendance_status', AttendanceStatus::Present)->count());
+        $this->assertSame(0, $tournament->playerRegistrations()->where('attendance_status', AttendanceStatus::Pending)->count());
     }
 }
