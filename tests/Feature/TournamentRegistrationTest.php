@@ -201,4 +201,56 @@ class TournamentRegistrationTest extends TestCase
         $this->assertSame(2, $tournament->playerRegistrations()->where('attendance_status', AttendanceStatus::Present)->count());
         $this->assertSame(0, $tournament->playerRegistrations()->where('attendance_status', AttendanceStatus::Pending)->count());
     }
+
+    public function test_finishing_tournament_marks_every_pending_registration_absent(): void
+    {
+        $admin = $this->administrator();
+        $tournament = $this->registrationTournament(attributes: ['status' => TournamentStatus::InProgress]);
+        [$present, $pendingA, $pendingB] = Player::factory()->count(3)->create();
+        $tournament->players()->attach($present, [
+            'registered_by' => $admin->id,
+            'source' => 'manual',
+            'registered_at' => now(),
+            'attendance_status' => AttendanceStatus::Present->value,
+            'checked_in_at' => now(),
+            'checked_in_by' => $admin->id,
+        ]);
+        $tournament->players()->attach([$pendingA->id, $pendingB->id], [
+            'registered_by' => $admin->id,
+            'source' => 'manual',
+            'registered_at' => now(),
+        ]);
+
+        $this->actingAs($admin)->patch(route('tournaments.status', $tournament), [
+            'status' => TournamentStatus::Finished->value,
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->assertSame(TournamentStatus::Finished, $tournament->refresh()->status);
+        $this->assertDatabaseHas('tournament_players', [
+            'tournament_id' => $tournament->id,
+            'player_id' => $present->id,
+            'attendance_status' => AttendanceStatus::Present->value,
+        ]);
+        $this->assertSame(2, $tournament->playerRegistrations()->where('attendance_status', AttendanceStatus::Absent)->count());
+        $this->assertSame(2, AuditLog::query()->where('action', 'registration.attendance_auto_absent')->count());
+    }
+
+    public function test_existing_finished_tournament_pending_attendance_is_closed_by_migration(): void
+    {
+        $tournament = $this->registrationTournament(attributes: [
+            'status' => TournamentStatus::Finished,
+            'ends_at' => now()->subHour(),
+        ]);
+        $players = Player::factory()->count(2)->create();
+        $tournament->players()->attach($players->pluck('id'), [
+            'source' => 'manual',
+            'registered_at' => now()->subDay(),
+        ]);
+
+        $migration = require database_path('migrations/2026_07_06_000022_close_pending_attendance_for_finished_tournaments.php');
+        $migration->up();
+
+        $this->assertSame(2, $tournament->playerRegistrations()->where('attendance_status', AttendanceStatus::Absent)->count());
+        $this->assertSame(0, $tournament->playerRegistrations()->where('attendance_status', AttendanceStatus::Pending)->count());
+    }
 }

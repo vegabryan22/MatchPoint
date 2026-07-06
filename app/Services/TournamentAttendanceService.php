@@ -90,6 +90,30 @@ final class TournamentAttendanceService
         }
     }
 
+    public function closePendingAsAbsent(Tournament $tournament, User $actor): int
+    {
+        $registrations = $tournament->participant_type === ParticipantType::Individual
+            ? $tournament->playerRegistrations()
+            : $tournament->teamRegistrations();
+        $pending = $registrations->where('attendance_status', AttendanceStatus::Pending)->lockForUpdate()->get();
+
+        foreach ($pending as $registration) {
+            $registration->update([
+                'attendance_status' => AttendanceStatus::Absent,
+                'checked_in_at' => now(),
+                'checked_in_by' => $actor->id,
+            ]);
+            $this->audit->record('registration.attendance_auto_absent', $registration, [
+                'attendance_status' => AttendanceStatus::Pending->value,
+            ], [
+                'attendance_status' => AttendanceStatus::Absent->value,
+                'reason' => 'tournament_finished',
+            ], $actor->id);
+        }
+
+        return $pending->count();
+    }
+
     private function registration(Tournament $tournament, int $participantId): Model
     {
         $registration = $tournament->participant_type === ParticipantType::Individual

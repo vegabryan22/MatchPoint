@@ -93,7 +93,7 @@ final class TournamentController extends Controller
     public function transition(TransitionTournamentRequest $request, Tournament $tournament): RedirectResponse
     {
         $target = TournamentStatus::from($request->validated('status'));
-        $this->tournaments->transition($tournament, $target);
+        $this->tournaments->transition($tournament, $target, $request->user());
 
         return back()->with('success', "Estado actualizado a {$target->label()}.");
     }

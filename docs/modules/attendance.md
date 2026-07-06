@@ -20,6 +20,8 @@ El módulo distingue a las personas inscritas de quienes realmente participaron.
 6. Finalizar el torneo cuando la asistencia esté confirmada.
 
 Al guardar el resultado de un partido, MatchPoint confirma automáticamente como presentes a sus dos participantes. La migración de instalación también aplica esta regla a los partidos finalizados antes de habilitar el módulo.
+Al cambiar el torneo a **Finalizado**, todas las inscripciones que continúen pendientes se cierran automáticamente como ausentes.
+Una migración de datos aplica la misma regla a los torneos que ya estaban finalizados antes de esta funcionalidad.
 
 ## Permisos y cierre
 

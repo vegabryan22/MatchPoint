@@ -26,6 +26,7 @@ final class TournamentService
 
     public function __construct(
         private readonly TournamentRepositoryInterface $tournaments,
+        private readonly TournamentAttendanceService $attendance,
         private readonly AuditService $audit,
     ) {}
 
@@ -96,7 +97,7 @@ final class TournamentService
         return $copy;
     }
 
-    public function transition(Tournament $tournament, TournamentStatus $target): Tournament
+    public function transition(Tournament $tournament, TournamentStatus $target, User $actor): Tournament
     {
         if (! in_array($target, $this->allowedTransitions($tournament), true)) {
             throw ValidationException::withMessages([
@@ -115,7 +116,14 @@ final class TournamentService
             $changes['extraordinary_registration_enabled'] = false;
         }
 
-        $tournament = DB::transaction(fn (): Tournament => $this->tournaments->update($tournament, $changes));
+        $tournament = DB::transaction(function () use ($tournament, $changes, $target, $actor): Tournament {
+            $updated = $this->tournaments->update($tournament, $changes);
+            if ($target === TournamentStatus::Finished) {
+                $this->attendance->closePendingAsAbsent($updated, $actor);
+            }
+
+            return $updated;
+        });
         $this->audit->record('tournament.status_changed', $tournament, ['status' => $previous->value], ['status' => $target->value]);
 
         return $tournament;

@@ -31,6 +31,8 @@
 - El control de asistencia identifica inscritos pendientes, presentes y ausentes, registra auditoría, permite filtrar y exportar la lista, queda bloqueado al finalizar y limita las estadísticas a participantes confirmados presentes.
 - Registrar un resultado confirma automáticamente la presencia de ambos participantes y una migración recupera la asistencia de todos los partidos históricos ya finalizados.
 - Las horas automáticas de asistencia se convierten desde UTC a `America/Costa_Rica` al mostrarse, configurable mediante `APP_DISPLAY_TIMEZONE`.
+- Finalizar un torneo convierte automáticamente en ausentes a todos los inscritos que continúen pendientes, sin alterar a quienes ya fueron confirmados presentes.
+- Los torneos finalizados existentes reciben el mismo cierre mediante migración, usando su fecha de finalización como hora de confirmación de ausencia.
 
 ## 2026-06-30 — Consolas y programación automática
 
