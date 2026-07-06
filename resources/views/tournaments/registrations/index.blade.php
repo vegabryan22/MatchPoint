@@ -13,6 +13,7 @@
     <x-field-error name="registration" />
     <x-field-error name="participant_id" />
     <x-field-error name="file" />
+    <x-field-error name="attendance_status" />
 
     @can('manageRegistrations', $tournament)
         <div class="mp-card p-3 mb-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
@@ -21,7 +22,7 @@
         </div>
     @endcan
 
-    @if ($tournament->quick_registration_enabled)
+    @if (App\Enums\PublicFormType::QuickRegistration->isEnabled($tournament))
         <div class="alert alert-success d-flex flex-wrap justify-content-between align-items-center gap-2">
             <div><strong>Inscripción pública activa.</strong><div class="small">{{ route('quick-registrations.create', $tournament) }}</div></div>
             <a class="btn btn-success" href="{{ route('quick-registrations.create', $tournament) }}" target="_blank">Abrir formulario</a>
@@ -29,19 +30,26 @@
     @endif
 
     <div class="row g-3 mb-4">
-        <div class="col-sm-4">
+        <div class="col-sm-3">
             <div class="mp-card p-4 h-100">
                 <div class="mp-muted small">Inscritos</div>
                 <div class="mp-stat-value">{{ $registeredCount }}</div>
             </div>
         </div>
-        <div class="col-sm-4">
+        <div class="col-sm-3">
             <div class="mp-card p-4 h-100">
                 <div class="mp-muted small">Cupos disponibles</div>
                 <div class="mp-stat-value">{{ $remainingSlots }}</div>
             </div>
         </div>
-        <div class="col-sm-4">
+        <div class="col-sm-3">
+            <div class="mp-card p-4 h-100">
+                <div class="mp-muted small">Presentes</div>
+                <div class="mp-stat-value text-success">{{ $attendanceCounts['present'] }}</div>
+                <div class="small mp-muted">{{ $attendanceCounts['absent'] }} ausentes · {{ $attendanceCounts['pending'] }} pendientes</div>
+            </div>
+        </div>
+        <div class="col-sm-3">
             <div class="mp-card p-4 h-100">
                 <div class="mp-muted small mb-2">Ocupación</div>
                 <div class="progress" role="progressbar" aria-label="Ocupación del torneo">
@@ -128,8 +136,12 @@
 
     <div class="mp-card p-3 p-lg-4">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-            <form class="d-flex gap-2" method="get">
+            <form class="d-flex flex-wrap gap-2" method="get">
                 <input class="form-control" name="search" value="{{ request('search') }}" placeholder="Buscar inscrito…" aria-label="Buscar inscrito">
+                <select class="form-select" name="attendance" aria-label="Filtrar asistencia">
+                    <option value="">Toda asistencia</option>
+                    @foreach($attendanceStatuses as $attendanceStatus)<option value="{{ $attendanceStatus->value }}" @selected(request('attendance') === $attendanceStatus->value)>{{ $attendanceStatus->label() }}</option>@endforeach
+                </select>
                 <button class="btn btn-outline-primary">Buscar</button>
             </form>
             <div class="d-flex gap-2">
@@ -142,9 +154,9 @@
             <table class="table align-middle">
                 <thead>
                     @if ($tournament->participant_type === App\Enums\ParticipantType::Individual)
-                        <tr><th>Jugador</th><th>Nivel académico / Control</th><th>Nivel de juego</th><th>Equipo del juego</th><th>Origen</th><th>Fecha</th><th class="text-end">Acciones</th></tr>
+                        <tr><th>Jugador</th><th>Nivel académico / Control</th><th>Nivel de juego</th><th>Asistencia</th><th>Equipo del juego</th><th>Origen</th><th>Fecha</th><th class="text-end">Acciones</th></tr>
                     @else
-                        <tr><th>Equipo</th><th>Integrantes</th><th>Equipo del juego</th><th>Origen</th><th>Fecha</th><th class="text-end">Acciones</th></tr>
+                        <tr><th>Equipo</th><th>Integrantes</th><th>Asistencia</th><th>Equipo del juego</th><th>Origen</th><th>Fecha</th><th class="text-end">Acciones</th></tr>
                     @endif
                 </thead>
                 <tbody>
@@ -167,6 +179,18 @@
                         @else
                             <td>{{ $participant->players()->count() }}</td>
                         @endif
+                        @php($attendanceStatus = App\Enums\AttendanceStatus::from($participant->pivot->attendance_status))
+                        <td style="min-width: 230px">
+                            <span class="badge {{ $attendanceStatus->badgeClass() }} mb-2">{{ $attendanceStatus->label() }}</span>
+                            @if($participant->pivot->checked_in_at)<div class="small mp-muted mb-2">{{ \Illuminate\Support\Carbon::parse($participant->pivot->checked_in_at)->format('d/m/Y H:i') }}</div>@endif
+                            @can('manageRegistrations', $tournament)
+                                <div class="d-flex flex-wrap gap-1" role="group" aria-label="Asistencia de {{ $participant->nickname ?? $participant->name }}">
+                                    @foreach($attendanceStatuses as $status)
+                                        <form method="post" action="{{ route('tournaments.registrations.attendance', [$tournament, $participant->id]) }}">@csrf @method('PATCH')<input type="hidden" name="attendance_status" value="{{ $status->value }}"><button class="btn btn-sm {{ $attendanceStatus === $status ? 'btn-primary' : 'btn-outline-secondary' }}">{{ $status->label() }}</button></form>
+                                    @endforeach
+                                </div>
+                            @endcan
+                        </td>
                         <td style="min-width: 220px">
                             @can('manageRegistrations', $tournament)
                                 <form class="d-flex gap-1" method="post" action="{{ route('tournaments.registrations.game-club', [$tournament, $participant->id]) }}">@csrf @method('PATCH')
@@ -186,7 +210,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="7" class="mp-empty mp-muted">Todavía no hay participantes inscritos.</td></tr>
+                    <tr><td colspan="8" class="mp-empty mp-muted">Todavía no hay participantes inscritos.</td></tr>
                 @endforelse
                 </tbody>
             </table>

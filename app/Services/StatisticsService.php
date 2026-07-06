@@ -26,6 +26,16 @@ final class StatisticsService
         $type = ParticipantType::tryFrom($filters['participant_type'] ?? '') ?? ParticipantType::Individual;
         $filters['participant_type'] = $type;
         $matches = $this->statistics->completedMatches($filters);
+        $attendance = $this->statistics->attendanceByTournament($type, $matches->pluck('tournament_id')->unique()->all());
+        $matches = $matches->filter(function (GameMatch $match) use ($attendance): bool {
+            $tournamentAttendance = $attendance[$match->tournament_id] ?? null;
+            if ($tournamentAttendance === null) {
+                return true;
+            }
+
+            return in_array($match->participant_a_id, $tournamentAttendance['present'], true)
+                && in_array($match->participant_b_id, $tournamentAttendance['present'], true);
+        });
         $participantIds = $matches
             ->flatMap(fn (GameMatch $match): array => [$match->participant_a_id, $match->participant_b_id])
             ->filter()

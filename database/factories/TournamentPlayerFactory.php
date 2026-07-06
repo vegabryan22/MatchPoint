@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\AttendanceStatus;
 use App\Enums\RegistrationSource;
 use App\Models\Player;
 use App\Models\Tournament;
@@ -21,6 +22,7 @@ class TournamentPlayerFactory extends Factory
             'source' => RegistrationSource::Manual,
             'seed' => null,
             'registered_at' => now(),
+            'attendance_status' => AttendanceStatus::Pending,
         ];
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\AttendanceStatus;
 use App\Enums\GameType;
 use App\Enums\MatchStatus;
 use App\Enums\ParticipantType;
@@ -101,6 +102,27 @@ class StatisticsTest extends TestCase
             ->assertOk()
             ->assertSee('Victoria')
             ->assertSee($teams[1]->name);
+    }
+
+    public function test_statistics_exclude_absent_participants_after_attendance_tracking_starts(): void
+    {
+        $tournament = Tournament::factory()->create(['status' => TournamentStatus::Finished]);
+        $round = Round::factory()->create(['tournament_id' => $tournament->id]);
+        [$alpha, $beta, $absent] = Player::factory()->count(3)->create();
+        $tournament->players()->attach($alpha, ['source' => 'manual', 'registered_at' => now(), 'attendance_status' => AttendanceStatus::Present->value]);
+        $tournament->players()->attach($beta, ['source' => 'manual', 'registered_at' => now(), 'attendance_status' => AttendanceStatus::Present->value]);
+        $tournament->players()->attach($absent, ['source' => 'manual', 'registered_at' => now(), 'attendance_status' => AttendanceStatus::Absent->value]);
+
+        $this->completedMatch($tournament, $round, $alpha->id, $beta->id, $alpha->id, 2, 1, now()->subHour());
+        $this->completedMatch($tournament, $round, $alpha->id, $absent->id, $alpha->id, 3, 0, now(), 2);
+
+        $ranking = app(StatisticsService::class)->ranking([
+            'participant_type' => ParticipantType::Individual->value,
+            'tournament_id' => $tournament->id,
+        ])['ranking'];
+
+        $this->assertSame(1, $ranking->firstWhere('participant_id', $alpha->id)['played']);
+        $this->assertNull($ranking->firstWhere('participant_id', $absent->id));
     }
 
     private function completedMatch(

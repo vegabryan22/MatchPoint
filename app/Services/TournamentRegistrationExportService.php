@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\AttendanceStatus;
 use App\Enums\ParticipantType;
 use App\Models\GameClub;
 use App\Models\Tournament;
@@ -49,8 +50,8 @@ final class TournamentRegistrationExportService
     private function headers(Tournament $tournament): array
     {
         return $tournament->participant_type === ParticipantType::Individual
-            ? ['Apodo', 'Nombre', 'Club del juego', 'Correo', 'País', 'Nivel académico', 'Control', 'Nivel de juego', 'Origen', 'Fecha de inscripción']
-            : ['Equipo', 'Club del juego', 'Integrantes', 'Origen', 'Fecha de inscripción'];
+            ? ['Apodo', 'Nombre', 'Club del juego', 'Correo', 'País', 'Nivel académico', 'Control', 'Nivel de juego', 'Asistencia', 'Origen', 'Fecha de inscripción']
+            : ['Equipo', 'Club del juego', 'Integrantes', 'Asistencia', 'Origen', 'Fecha de inscripción'];
     }
 
     private function rows(Tournament $tournament): array
@@ -65,6 +66,7 @@ final class TournamentRegistrationExportService
         return $participants->map(function ($participant) use ($tournament, $clubs): array {
             $source = (string) $participant->pivot->source;
             $registeredAt = (string) $participant->pivot->registered_at;
+            $attendance = AttendanceStatus::from($participant->pivot->attendance_status)->label();
             $clubName = $clubs->get($participant->pivot->game_club_id)?->name;
 
             if ($tournament->participant_type === ParticipantType::Individual) {
@@ -77,12 +79,13 @@ final class TournamentRegistrationExportService
                     $participant->pivot->academic_level,
                     $participant->pivot->controller_platform,
                     $participant->level->label(),
+                    $attendance,
                     $source,
                     $registeredAt,
                 ];
             }
 
-            return [$participant->name, $clubName, $participant->players_count, $source, $registeredAt];
+            return [$participant->name, $clubName, $participant->players_count, $attendance, $source, $registeredAt];
         })->all();
     }
 }

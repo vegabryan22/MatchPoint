@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\AttendanceStatus;
 use App\Enums\ParticipantType;
 use App\Enums\RegistrationSource;
 use App\Enums\TournamentStatus;
@@ -23,9 +24,9 @@ final class TournamentRegistrationService
         private readonly AuditService $audit,
     ) {}
 
-    public function paginate(Tournament $tournament, ?string $search): LengthAwarePaginator
+    public function paginate(Tournament $tournament, ?string $search, ?AttendanceStatus $attendance = null): LengthAwarePaginator
     {
-        return $this->registrations->paginate($tournament, $search);
+        return $this->registrations->paginate($tournament, $search, $attendance);
     }
 
     public function candidates(Tournament $tournament, ?string $search): Collection

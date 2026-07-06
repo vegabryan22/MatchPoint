@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Contracts;
 
+use App\Enums\AttendanceStatus;
 use App\Enums\RegistrationSource;
 use App\Models\Player;
 use App\Models\Team;
@@ -14,7 +15,7 @@ interface TournamentRegistrationRepositoryInterface
     public function count(Tournament $tournament): int;
 
     /** @return LengthAwarePaginator<int, Player|Team> */
-    public function paginate(Tournament $tournament, ?string $search, int $perPage = 15): LengthAwarePaginator;
+    public function paginate(Tournament $tournament, ?string $search, ?AttendanceStatus $attendance = null, int $perPage = 15): LengthAwarePaginator;
 
     /** @return Collection<int, Player|Team> */
     public function candidates(Tournament $tournament, ?string $search): Collection;

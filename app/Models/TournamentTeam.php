@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AttendanceStatus;
 use App\Enums\RegistrationSource;
 use Database\Factories\TournamentTeamFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -20,6 +21,9 @@ class TournamentTeam extends Model
         'source',
         'seed',
         'registered_at',
+        'attendance_status',
+        'checked_in_at',
+        'checked_in_by',
         'game_club_id',
     ];
 
@@ -28,6 +32,8 @@ class TournamentTeam extends Model
         return [
             'source' => RegistrationSource::class,
             'registered_at' => 'datetime',
+            'attendance_status' => AttendanceStatus::class,
+            'checked_in_at' => 'datetime',
         ];
     }
 
@@ -47,6 +53,11 @@ class TournamentTeam extends Model
     public function registrar(): BelongsTo
     {
         return $this->belongsTo(User::class, 'registered_by');
+    }
+
+    public function checkedInBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'checked_in_by');
     }
 
     public function gameClub(): BelongsTo

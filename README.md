@@ -20,6 +20,7 @@ MatchPoint es una aplicación Laravel para administrar torneos competitivos de v
 - Módulo 13 — Cierre de producción: implementado.
 - Módulo 14 — Inscripción pública rápida sin cuenta: implementado.
 - Módulo 15 — Catálogo sin duplicados de clubes y selecciones, banderas, escudos y asignación por torneo: implementado.
+- Módulo 16 — Control de asistencia por torneo, filtros, auditoría y estadísticas basadas en participantes presentes: implementado.
 - Módulo 16 — QR descargable e imprimible para formularios públicos: implementado.
 
 Consulta [Núcleo](docs/modules/00-core-identity.md), [Jugadores](docs/modules/01-players.md), [Equipos](docs/modules/02-teams.md), [Torneos](docs/modules/03-tournaments.md), [Inscripciones](docs/modules/04-registrations.md), [Sorteo](docs/modules/05-draw-seeding.md), [Llaves](docs/modules/06-brackets.md), [Resultados](docs/modules/07-match-results.md), [Estadísticas](docs/modules/08-statistics-champions.md), [Dashboard](docs/modules/09-dashboard.md), [Grupos y liga](docs/modules/10-groups-leagues.md), [Reportes](docs/modules/11-reports.md), [Inscripción rápida](docs/modules/14-quick-registration.md), [Equipos y selecciones](docs/modules/15-game-clubs.md), [QR públicos](docs/modules/16-public-form-qrs.md) y [la arquitectura](docs/architecture.md).

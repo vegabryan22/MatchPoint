@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Registrations;
 
+use App\Enums\AttendanceStatus;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 final class RegistrationFilterRequest extends FormRequest
 {
@@ -16,6 +18,7 @@ final class RegistrationFilterRequest extends FormRequest
         return [
             'search' => ['nullable', 'string', 'max:160'],
             'candidate_search' => ['nullable', 'string', 'max:160'],
+            'attendance' => ['nullable', Rule::enum(AttendanceStatus::class)],
         ];
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Services\Reports;
 
+use App\Enums\AttendanceStatus;
 use App\Enums\ParticipantType;
 use App\Enums\ReportType;
 use App\Models\Tournament;
@@ -43,6 +44,7 @@ final class ReportDataService
             ['Juego', $tournament->gameLabel()], ['Formato', $tournament->format->label()],
             ['Modalidad', $tournament->participant_type->label()], ['Estado', $tournament->status->label()],
             ['Participantes', $this->registrations->count($tournament)], ['Partidos', $tournament->matches()->count()],
+            ['Presentes', $this->registrations->all($tournament)->where('pivot.attendance_status', AttendanceStatus::Present->value)->count()],
             ['Finalizados', $tournament->matches()->where('status', 'completed')->count()],
         ]);
     }
@@ -51,10 +53,10 @@ final class ReportDataService
     {
         $rows = $this->registrations->all($tournament)->map(fn ($participant): array => [
             $participant->pivot->seed ?? '—', $participant->nickname ?? $participant->name,
-            $participant->email ?? '—', $participant->pivot->registered_at,
+            $participant->email ?? '—', AttendanceStatus::from($participant->pivot->attendance_status)->label(), $participant->pivot->registered_at,
         ])->all();
 
-        return $this->data('Inscripciones · '.$tournament->name, ['Semilla', 'Participante', 'Correo', 'Fecha'], $rows);
+        return $this->data('Inscripciones · '.$tournament->name, ['Semilla', 'Participante', 'Correo', 'Asistencia', 'Fecha'], $rows);
     }
 
     private function results(Tournament $tournament): array

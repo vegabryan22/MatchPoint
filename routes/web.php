@@ -73,6 +73,7 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     Route::patch('/tournaments/{tournament}/registrations/extraordinary', [TournamentRegistrationController::class, 'toggleExtraordinary'])->name('tournaments.registrations.extraordinary');
     Route::delete('/tournaments/{tournament}/registrations/{participant}', [TournamentRegistrationController::class, 'destroy'])->name('tournaments.registrations.destroy');
     Route::patch('/tournaments/{tournament}/registrations/{participant}/game-club', [TournamentRegistrationController::class, 'assignGameClub'])->name('tournaments.registrations.game-club');
+    Route::patch('/tournaments/{tournament}/registrations/{participant}/attendance', [TournamentRegistrationController::class, 'updateAttendance'])->name('tournaments.registrations.attendance');
     Route::post('/tournaments/{tournament}/registrations/import', [TournamentRegistrationController::class, 'import'])->name('tournaments.registrations.import');
     Route::get('/tournaments/{tournament}/registrations/export/csv', [TournamentRegistrationController::class, 'exportCsv'])->name('tournaments.registrations.export.csv');
     Route::get('/tournaments/{tournament}/registrations/export/xlsx', [TournamentRegistrationController::class, 'exportXlsx'])->name('tournaments.registrations.export.xlsx');

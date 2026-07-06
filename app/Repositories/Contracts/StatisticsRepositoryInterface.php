@@ -18,6 +18,9 @@ interface StatisticsRepositoryInterface
     /** @return SupportCollection<int, Player|Team> */
     public function participants(ParticipantType $type, array $ids): SupportCollection;
 
+    /** @return array<int, array{present: list<int>}> */
+    public function attendanceByTournament(ParticipantType $type, array $tournamentIds): array;
+
     /** @return Collection<int, Tournament> */
     public function tournaments(array $visibleTournamentIds): Collection;
 }

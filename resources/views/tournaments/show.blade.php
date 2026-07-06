@@ -83,6 +83,7 @@
             ['Modalidad', $tournament->participant_type->label()],
             ['Formato', $tournament->format->label()],
             ['Inscritos', $registeredCount.' / '.$tournament->max_participants],
+            ['Presentes', $attendanceCounts['present']],
             ['Disponibles', $remainingSlots],
             ['Serie', $tournament->best_of->label()],
         ] as [$label, $value])

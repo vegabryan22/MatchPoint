@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\AttendanceStatus;
 use App\Enums\ParticipantType;
 use App\Enums\TournamentStatus;
 use App\Models\AuditLog;
@@ -110,5 +111,64 @@ class TournamentRegistrationTest extends TestCase
 
         $this->actingAs($admin)->get(route('tournaments.registrations.index', $tournament))
             ->assertOk()->assertSee('Periodo extraordinario activo')->assertSee('Cerrar extraordinarias');
+    }
+
+    public function test_manager_records_filters_and_audits_attendance(): void
+    {
+        $admin = $this->administrator();
+        $tournament = $this->registrationTournament(attributes: ['status' => TournamentStatus::InProgress]);
+        [$present, $absent] = Player::factory()->count(2)->create();
+        $tournament->players()->attach([$present->id, $absent->id], [
+            'registered_by' => $admin->id,
+            'source' => 'manual',
+            'registered_at' => now(),
+        ]);
+
+        $this->actingAs($admin)->patch(route('tournaments.registrations.attendance', [$tournament, $present->id]), [
+            'attendance_status' => AttendanceStatus::Present->value,
+        ])->assertRedirect()->assertSessionHasNoErrors();
+        $this->actingAs($admin)->patch(route('tournaments.registrations.attendance', [$tournament, $absent->id]), [
+            'attendance_status' => AttendanceStatus::Absent->value,
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('tournament_players', [
+            'tournament_id' => $tournament->id,
+            'player_id' => $present->id,
+            'attendance_status' => AttendanceStatus::Present->value,
+            'checked_in_by' => $admin->id,
+        ]);
+        $this->assertTrue(AuditLog::query()->where('action', 'registration.attendance_updated')->count() === 2);
+
+        $this->actingAs($admin)->get(route('tournaments.registrations.index', [
+            'tournament' => $tournament,
+            'attendance' => AttendanceStatus::Present->value,
+        ]))->assertOk()->assertSee($present->nickname)->assertDontSee($absent->nickname);
+    }
+
+    public function test_finished_tournament_attendance_is_read_only(): void
+    {
+        $admin = $this->administrator();
+        $tournament = $this->registrationTournament(attributes: ['status' => TournamentStatus::Finished]);
+        $player = Player::factory()->create();
+        $tournament->players()->attach($player, [
+            'registered_by' => $admin->id,
+            'source' => 'manual',
+            'registered_at' => now(),
+            'attendance_status' => AttendanceStatus::Present->value,
+            'checked_in_at' => now(),
+            'checked_in_by' => $admin->id,
+        ]);
+
+        $this->actingAs($admin)->get(route('tournaments.registrations.index', $tournament))
+            ->assertOk()->assertSee('Presente')->assertDontSee('Ausente</button>', false);
+        $this->actingAs($admin)->patch(route('tournaments.registrations.attendance', [$tournament, $player->id]), [
+            'attendance_status' => AttendanceStatus::Absent->value,
+        ])->assertForbidden();
+
+        $this->assertDatabaseHas('tournament_players', [
+            'tournament_id' => $tournament->id,
+            'player_id' => $player->id,
+            'attendance_status' => AttendanceStatus::Present->value,
+        ]);
     }
 }

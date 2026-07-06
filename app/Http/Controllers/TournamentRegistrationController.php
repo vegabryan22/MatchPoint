@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\AttendanceStatus;
 use App\Http\Requests\Registrations\AssignGameClubRequest;
 use App\Http\Requests\Registrations\ImportRegistrationsRequest;
 use App\Http\Requests\Registrations\RegistrationFilterRequest;
 use App\Http\Requests\Registrations\StoreRegistrationRequest;
+use App\Http\Requests\Registrations\UpdateAttendanceRequest;
 use App\Jobs\ImportTournamentRegistrations;
 use App\Models\GameClub;
 use App\Models\Tournament;
+use App\Services\TournamentAttendanceService;
 use App\Services\TournamentRegistrationExportService;
 use App\Services\TournamentRegistrationImportService;
 use App\Services\TournamentRegistrationService;
@@ -23,6 +26,7 @@ final class TournamentRegistrationController extends Controller
 {
     public function __construct(
         private readonly TournamentRegistrationService $registrations,
+        private readonly TournamentAttendanceService $attendance,
         private readonly TournamentRegistrationImportService $imports,
         private readonly TournamentRegistrationExportService $exports,
     ) {}
@@ -34,11 +38,17 @@ final class TournamentRegistrationController extends Controller
 
         return view('tournaments.registrations.index', [
             'tournament' => $tournament,
-            'participants' => $this->registrations->paginate($tournament, $filters['search'] ?? null),
+            'participants' => $this->registrations->paginate(
+                $tournament,
+                $filters['search'] ?? null,
+                isset($filters['attendance']) ? AttendanceStatus::from($filters['attendance']) : null,
+            ),
             'candidates' => $this->registrations->candidates($tournament, $filters['candidate_search'] ?? null),
             'registeredCount' => $count,
             'remainingSlots' => max(0, $tournament->max_participants - $count),
             'registrationOpen' => $this->registrations->isOpen($tournament),
+            'attendanceCounts' => $this->attendance->counts($tournament),
+            'attendanceStatuses' => AttendanceStatus::cases(),
             'gameClubs' => GameClub::query()
                 ->whereHas('availabilities', fn ($query) => $query->where('game', $tournament->game->value))
                 ->where('is_active', true)
@@ -68,6 +78,14 @@ final class TournamentRegistrationController extends Controller
         $this->registrations->assignGameClub($tournament, $participant, $clubId === null ? null : (int) $clubId, $request->user());
 
         return back()->with('success', 'Equipo del videojuego actualizado.');
+    }
+
+    public function updateAttendance(UpdateAttendanceRequest $request, Tournament $tournament, int $participant): RedirectResponse
+    {
+        $status = AttendanceStatus::from($request->validated('attendance_status'));
+        $this->attendance->update($tournament, $participant, $status, $request->user());
+
+        return back()->with('success', "Asistencia actualizada a {$status->label()}.");
     }
 
     public function toggleExtraordinary(Request $request, Tournament $tournament): RedirectResponse

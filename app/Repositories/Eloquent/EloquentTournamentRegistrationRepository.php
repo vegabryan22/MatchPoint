@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Eloquent;
 
+use App\Enums\AttendanceStatus;
 use App\Enums\ParticipantType;
 use App\Enums\RegistrationSource;
 use App\Models\Player;
@@ -20,11 +21,12 @@ final class EloquentTournamentRegistrationRepository implements TournamentRegist
             : $tournament->teams()->count();
     }
 
-    public function paginate(Tournament $tournament, ?string $search, int $perPage = 15): LengthAwarePaginator
+    public function paginate(Tournament $tournament, ?string $search, ?AttendanceStatus $attendance = null, int $perPage = 15): LengthAwarePaginator
     {
         if ($this->isIndividual($tournament)) {
             return $tournament->players()
                 ->when($search, fn ($query, $term) => $query->where(fn ($query) => $query->where('players.name', 'like', "%{$term}%")->orWhere('players.nickname', 'like', "%{$term}%")->orWhere('players.email', 'like', "%{$term}%")))
+                ->when($attendance, fn ($query, AttendanceStatus $status) => $query->where('tournament_players.attendance_status', $status->value))
                 ->orderBy('players.nickname')
                 ->paginate($perPage)
                 ->withQueryString();
@@ -32,6 +34,7 @@ final class EloquentTournamentRegistrationRepository implements TournamentRegist
 
         return $tournament->teams()
             ->when($search, fn ($query, $term) => $query->where('teams.name', 'like', "%{$term}%"))
+            ->when($attendance, fn ($query, AttendanceStatus $status) => $query->where('tournament_teams.attendance_status', $status->value))
             ->orderBy('teams.name')
             ->paginate($perPage)
             ->withQueryString();

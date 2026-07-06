@@ -15,6 +15,7 @@ use App\Http\Requests\Tournaments\TransitionTournamentRequest;
 use App\Http\Requests\Tournaments\UpdateTournamentRequest;
 use App\Models\Tournament;
 use App\Services\PublicFormQrService;
+use App\Services\TournamentAttendanceService;
 use App\Services\TournamentRegistrationService;
 use App\Services\TournamentService;
 use Illuminate\Http\RedirectResponse;
@@ -26,6 +27,7 @@ final class TournamentController extends Controller
     public function __construct(
         private readonly TournamentService $tournaments,
         private readonly TournamentRegistrationService $registrations,
+        private readonly TournamentAttendanceService $attendance,
         private readonly PublicFormQrService $qrCodes,
     ) {}
 
@@ -60,6 +62,7 @@ final class TournamentController extends Controller
             'tournament' => $tournament->load('creator'),
             'registeredCount' => $registeredCount,
             'remainingSlots' => max(0, $tournament->max_participants - $registeredCount),
+            'attendanceCounts' => $this->attendance->counts($tournament),
             'transitions' => $this->tournaments->allowedTransitions($tournament),
             'publicForm' => $this->qrCodes->shareData($tournament, PublicFormType::QuickRegistration),
         ]);
