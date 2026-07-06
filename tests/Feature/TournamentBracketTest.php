@@ -28,8 +28,10 @@ class TournamentBracketTest extends TestCase
         $match->update(['winner_id' => $match->participant_a_id, 'status' => MatchStatus::Completed]);
         $match->scores()->create([
             'game_number' => 1,
-            'participant_a_score' => 3,
+            'participant_a_score' => 1,
             'participant_b_score' => 1,
+            'participant_a_penalties' => 3,
+            'participant_b_penalties' => 2,
             'winner_id' => $match->participant_a_id,
             'created_by' => $admin->id,
         ]);
@@ -47,6 +49,8 @@ class TournamentBracketTest extends TestCase
             ->assertSee('data-bracket-fullscreen', false)
             ->assertSee('data-bs-toggle="tooltip"', false)
             ->assertSee('Nombre completo: '.$participant->name)
+            ->assertSee('mp-world-penalty-score', false)
+            ->assertDontSee('Penales:')
             ->assertSee('3');
 
         $content = $response->getContent();
@@ -100,7 +104,7 @@ class TournamentBracketTest extends TestCase
 
         $this->assertNotSame($before['version'], $after['version']);
         $this->assertStringContainsString('mp-world-team is-winner', $after['html']);
-        $this->assertStringContainsString('>3</strong>', $after['html']);
+        $this->assertStringContainsString('<span>3</span>', $after['html']);
         $mainMatch = $tournament->rounds()->where('number', 2)->firstOrFail()->matches()->firstOrFail();
         $this->assertContains($match->participant_a_id, [$mainMatch->participant_a_id, $mainMatch->participant_b_id]);
     }

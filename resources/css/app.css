@@ -458,6 +458,8 @@ a { text-decoration: none; }
 .mp-world-team.is-winner { color: #fff; font-weight: 850; background: linear-gradient(90deg, rgba(32, 227, 178, .16), transparent); box-shadow: inset 3px 0 #20e3b2; }
 .mp-world-team-mark { display: grid; width: 26px; height: 26px; place-items: center; color: #fff; font-size: .65rem; font-weight: 900; background: #30384f; border-radius: 50%; }
 .mp-world-team.is-winner .mp-world-team-mark { color: #07130f; background: #20e3b2; }
+.mp-world-score { display: inline-flex; align-items: baseline; justify-content: flex-end; line-height: 1; }
+.mp-world-penalty-score { margin-left: 2px; color: #ffd166; font-size: .58em; font-weight: 900; line-height: 1; vertical-align: sub; }
 .mp-world-team-mark img { width: 22px; height: 22px; object-fit: contain; }
 .mp-world-team-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mp-world-team-name small { display: block; overflow: hidden; color: #858da1; font-size: .62rem; font-weight: 500; text-overflow: ellipsis; }

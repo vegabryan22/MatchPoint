@@ -14,14 +14,13 @@
     <div class="mp-world-team {{ $match->winner_id === $match->participant_a_id ? 'is-winner' : '' }}" @if($matchData['participant_a_real_name']) tabindex="0" title="Nombre completo: {{ $matchData['participant_a_real_name'] }}" data-bs-toggle="tooltip" data-bs-placement="top" @endif>
         <span class="mp-world-team-mark">@if(!empty($matchData['club_a']['crest']))<img src="{{ $matchData['club_a']['crest'] }}" alt="" loading="lazy" referrerpolicy="no-referrer">@elseif(!empty($matchData['club_a']['flag'])){{ $matchData['club_a']['flag'] }}@else{{ mb_strtoupper(mb_substr($matchData['participant_a'], 0, 1)) }}@endif</span>
         <span class="mp-world-team-name">{{ $matchData['participant_a'] }}@if($matchData['club_a'])<small>{{ $matchData['club_a']['name'] }}</small>@endif</span>
-        <strong class="mp-world-score" data-inline-score-a>{{ $matchData['score_a'] ?? '–' }}</strong>
+        <strong class="mp-world-score" data-inline-score-a><span>{{ $matchData['score_a'] ?? '–' }}</span>@if($matchData['has_penalties'])<sub class="mp-world-penalty-score" title="{{ $matchData['penalties_a'] }} penales">{{ $matchData['penalties_a'] }}</sub>@endif</strong>
     </div>
     <div class="mp-world-team {{ $match->winner_id === $match->participant_b_id ? 'is-winner' : '' }}" @if($matchData['participant_b_real_name']) tabindex="0" title="Nombre completo: {{ $matchData['participant_b_real_name'] }}" data-bs-toggle="tooltip" data-bs-placement="top" @endif>
         <span class="mp-world-team-mark">@if(!empty($matchData['club_b']['crest']))<img src="{{ $matchData['club_b']['crest'] }}" alt="" loading="lazy" referrerpolicy="no-referrer">@elseif(!empty($matchData['club_b']['flag'])){{ $matchData['club_b']['flag'] }}@else{{ mb_strtoupper(mb_substr($matchData['participant_b'], 0, 1)) }}@endif</span>
         <span class="mp-world-team-name">{{ $matchData['participant_b'] }}@if($matchData['club_b'])<small>{{ $matchData['club_b']['name'] }}</small>@endif</span>
-        <strong class="mp-world-score" data-inline-score-b>{{ $matchData['score_b'] ?? '–' }}</strong>
+        <strong class="mp-world-score" data-inline-score-b><span>{{ $matchData['score_b'] ?? '–' }}</span>@if($matchData['has_penalties'])<sub class="mp-world-penalty-score" title="{{ $matchData['penalties_b'] }} penales">{{ $matchData['penalties_b'] }}</sub>@endif</strong>
     </div>
-    @if($matchData['has_penalties'])<div class="mp-world-match-note">Penales: {{ $matchData['penalties_a'] }}–{{ $matchData['penalties_b'] }}</div>@endif
     @if ($match->is_conditional)<div class="mp-world-match-note">Partido condicional</div>@endif
     @if ($tournament->status === App\Enums\TournamentStatus::InProgress && $match->participant_a_id && $match->participant_b_id && in_array($match->status, [App\Enums\MatchStatus::Pending, App\Enums\MatchStatus::Completed], true))
         @can('recordResult', $match)
