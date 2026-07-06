@@ -40,13 +40,19 @@ final class TournamentRegistrationService
 
     public function isOpen(Tournament $tournament): bool
     {
-        return $tournament->extraordinary_registration_enabled || (
-            $tournament->status === TournamentStatus::Registration
+        if (in_array($tournament->status, [TournamentStatus::Finished, TournamentStatus::Cancelled], true)) {
+            return false;
+        }
+
+        if ($tournament->extraordinary_registration_enabled) {
+            return true;
+        }
+
+        return $tournament->status === TournamentStatus::Registration
             && ! $tournament->draw()->exists()
             && ! $tournament->groups()->exists()
             && ! $tournament->registration_starts_at?->isFuture()
-            && ! $tournament->registration_ends_at?->isPast()
-        );
+            && ! $tournament->registration_ends_at?->isPast();
     }
 
     public function register(
@@ -119,6 +125,12 @@ final class TournamentRegistrationService
 
     public function setExtraordinaryRegistration(Tournament $tournament, bool $enabled, User $actor): void
     {
+        if (in_array($tournament->status, [TournamentStatus::Finished, TournamentStatus::Cancelled], true)) {
+            throw ValidationException::withMessages([
+                'registration' => 'No se pueden habilitar inscripciones en un torneo finalizado o cancelado.',
+            ]);
+        }
+
         $oldValue = $tournament->extraordinary_registration_enabled;
         $tournament->update(['extraordinary_registration_enabled' => $enabled]);
         $this->audit->record('registration.extraordinary_toggled', $tournament, ['enabled' => $oldValue], ['enabled' => $enabled], $actor->id);
@@ -126,6 +138,12 @@ final class TournamentRegistrationService
 
     private function ensureOpen(Tournament $tournament): void
     {
+        if (in_array($tournament->status, [TournamentStatus::Finished, TournamentStatus::Cancelled], true)) {
+            throw ValidationException::withMessages([
+                'registration' => 'El torneo está cerrado y no admite cambios en sus inscripciones.',
+            ]);
+        }
+
         if ($tournament->extraordinary_registration_enabled) {
             return;
         }

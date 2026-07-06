@@ -111,6 +111,10 @@ final class TournamentService
             $changes['ends_at'] = now();
         }
 
+        if ($target === TournamentStatus::Finished) {
+            $changes['extraordinary_registration_enabled'] = false;
+        }
+
         $tournament = DB::transaction(fn (): Tournament => $this->tournaments->update($tournament, $changes));
         $this->audit->record('tournament.status_changed', $tournament, ['status' => $previous->value], ['status' => $target->value]);
 

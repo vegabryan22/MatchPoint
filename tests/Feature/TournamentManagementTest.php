@@ -84,6 +84,7 @@ class TournamentManagementTest extends TestCase
             'created_by' => $admin,
             'status' => TournamentStatus::Draft,
             'ends_at' => null,
+            'extraordinary_registration_enabled' => true,
         ]);
 
         foreach ([TournamentStatus::Registration, TournamentStatus::InProgress, TournamentStatus::Finished] as $status) {
@@ -94,10 +95,11 @@ class TournamentManagementTest extends TestCase
         }
 
         $this->assertNotNull($tournament->ends_at);
+        $this->assertFalse($tournament->extraordinary_registration_enabled);
 
         $this->actingAs($admin)->patch(route('tournaments.status', $tournament), [
             'status' => TournamentStatus::Draft->value,
-        ])->assertSessionHasErrors('status');
+        ])->assertForbidden();
         $this->assertSame(TournamentStatus::Finished, $tournament->refresh()->status);
     }
 
@@ -112,6 +114,24 @@ class TournamentManagementTest extends TestCase
             ->assertSessionHasErrors('tournament');
 
         $this->assertDatabaseHas('tournaments', ['id' => $tournament->id, 'deleted_at' => null]);
+    }
+
+    public function test_finished_tournament_is_read_only_and_does_not_advertise_public_registration(): void
+    {
+        $admin = $this->administrator();
+        $tournament = Tournament::factory()->status(TournamentStatus::Finished)->create([
+            'created_by' => $admin,
+            'quick_registration_enabled' => true,
+            'extraordinary_registration_enabled' => true,
+        ]);
+
+        $this->actingAs($admin)->get(route('tournaments.show', $tournament))
+            ->assertOk()
+            ->assertDontSee('QR del formulario público')
+            ->assertDontSee(route('tournaments.edit', $tournament));
+
+        $this->actingAs($admin)->get(route('tournaments.edit', $tournament))->assertForbidden();
+        $this->actingAs($admin)->put(route('tournaments.update', $tournament), $this->validData())->assertForbidden();
     }
 
     public function test_custom_game_is_required_and_standard_game_discards_custom_value(): void

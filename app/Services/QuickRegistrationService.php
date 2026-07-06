@@ -23,6 +23,8 @@ final class QuickRegistrationService
         $registered = $tournament->players()->count();
         $remaining = max(0, $tournament->max_participants - $registered);
         $message = match (true) {
+            $tournament->status === TournamentStatus::Finished => 'Este torneo ya finalizó y no admite nuevas inscripciones.',
+            $tournament->status === TournamentStatus::Cancelled => 'Este torneo fue cancelado y no admite inscripciones.',
             $tournament->participant_type !== ParticipantType::Individual => 'La inscripción rápida sólo está disponible para torneos individuales.',
             ! $tournament->quick_registration_enabled => 'La inscripción pública no está habilitada para este torneo.',
             empty($tournament->quick_registration_levels) => 'El organizador todavía no configuró los niveles habilitados.',

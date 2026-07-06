@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Enums\RoleName;
+use App\Enums\TournamentStatus;
 use App\Models\Tournament;
 use App\Models\User;
 use App\Services\TournamentAccessService;
@@ -28,7 +29,8 @@ final class TournamentPolicy
 
     public function update(User $user, Tournament $tournament): bool
     {
-        return $this->access->canManage($user, $tournament);
+        return $this->access->canManage($user, $tournament)
+            && $tournament->status !== TournamentStatus::Finished;
     }
 
     public function delete(User $user, Tournament $tournament): bool
@@ -48,12 +50,14 @@ final class TournamentPolicy
 
     public function manageRegistrations(User $user, Tournament $tournament): bool
     {
-        return $this->access->canManage($user, $tournament);
+        return $this->access->canManage($user, $tournament)
+            && ! in_array($tournament->status, [TournamentStatus::Finished, TournamentStatus::Cancelled], true);
     }
 
     public function managePublicForms(User $user, Tournament $tournament): bool
     {
-        return $this->access->canManage($user, $tournament);
+        return $this->access->canManage($user, $tournament)
+            && ! in_array($tournament->status, [TournamentStatus::Finished, TournamentStatus::Cancelled], true);
     }
 
     public function viewDraw(User $user, Tournament $tournament): bool
@@ -63,7 +67,8 @@ final class TournamentPolicy
 
     public function manageDraw(User $user, Tournament $tournament): bool
     {
-        return $this->access->canManage($user, $tournament);
+        return $this->access->canManage($user, $tournament)
+            && in_array($tournament->status, [TournamentStatus::Registration, TournamentStatus::InProgress], true);
     }
 
     public function manageMatches(User $user, Tournament $tournament): bool

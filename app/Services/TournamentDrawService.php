@@ -169,6 +169,11 @@ final class TournamentDrawService
     {
         DB::transaction(function () use ($tournament, $actor, $drawId): void {
             $lockedTournament = Tournament::query()->whereKey($tournament->id)->lockForUpdate()->firstOrFail();
+
+            if ($lockedTournament->status === TournamentStatus::Finished) {
+                throw ValidationException::withMessages(['draw' => 'No se pueden eliminar llaves de un torneo finalizado.']);
+            }
+
             $draw = $drawId === null
                 ? $lockedTournament->draws()->reorder()->orderByDesc('batch_number')->first()
                 : $lockedTournament->draws()->whereKey($drawId)->first();

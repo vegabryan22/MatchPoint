@@ -25,7 +25,8 @@ enum PublicFormType: string
     public function isEnabled(Tournament $tournament): bool
     {
         return match ($this) {
-            self::QuickRegistration => $tournament->quick_registration_enabled,
+            self::QuickRegistration => $tournament->quick_registration_enabled
+                && ! in_array($tournament->status, [TournamentStatus::Finished, TournamentStatus::Cancelled], true),
         };
     }
 }

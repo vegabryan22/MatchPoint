@@ -101,6 +101,29 @@ class QuickRegistrationTest extends TestCase
         $this->assertDatabaseHas('players', ['nickname' => 'ExtraFC']);
     }
 
+    public function test_finished_tournament_closes_public_form_even_when_extraordinary_registration_was_enabled(): void
+    {
+        $tournament = $this->quickTournament([
+            'status' => TournamentStatus::Finished,
+            'extraordinary_registration_enabled' => true,
+        ]);
+
+        $this->get(route('quick-registrations.create', $tournament))
+            ->assertOk()
+            ->assertSee('Este torneo ya finalizó')
+            ->assertDontSee('Confirmar inscripción');
+
+        $this->post(route('quick-registrations.store', $tournament), [
+            'full_name' => 'Ingreso Tardío',
+            'username' => 'TardioFC',
+            'academic_level' => '11',
+            'controller_platform' => 'ps5',
+            'bring_own_controller' => '1',
+        ])->assertSessionHasErrors('registration');
+
+        $this->assertDatabaseMissing('players', ['nickname' => 'TardioFC']);
+    }
+
     public function test_public_routes_are_rate_limited(): void
     {
         $this->assertContains('throttle:10,1', Route::getRoutes()->getByName('quick-registrations.store')->gatherMiddleware());

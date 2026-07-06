@@ -27,6 +27,7 @@
 - Las llaves con sólo una final se centran automáticamente y los conectores usan trazos finos y discretos para reducir ruido visual.
 - Los conectores rígidos se sustituyen por curvas SVG fluidas que se recalculan con zoom, redimensionamiento y actualizaciones en vivo.
 - Los penales se muestran como subíndice del marcador oficial dentro de cada participante, siguiendo el formato de resumen deportivo.
+- Al finalizar un torneo, la configuración, las inscripciones públicas y extraordinarias, y la eliminación o generación de llaves quedan bloqueadas; la información histórica continúa disponible en modo lectura.
 
 ## 2026-06-30 — Consolas y programación automática
 

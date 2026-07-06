@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\DrawMethod;
 use App\Enums\RoleName;
+use App\Enums\TournamentStatus;
 use App\Models\Player;
 use App\Models\Role;
 use App\Models\User;
@@ -47,5 +48,31 @@ class TournamentDrawAuthorizationTest extends TestCase
 
         $this->assertTrue($referee->can('manageMatches', $tournament));
         $this->assertFalse($referee->can('manageDraw', $tournament));
+    }
+
+    public function test_finished_tournament_draw_is_visible_but_cannot_be_deleted(): void
+    {
+        $admin = $this->administrator();
+        $tournament = $this->registrationTournament();
+        $players = Player::factory()->count(2)->create();
+        $tournament->players()->attach($players->pluck('id')->all(), [
+            'registered_by' => $admin->id,
+            'source' => 'manual',
+            'registered_at' => now(),
+        ]);
+
+        $this->actingAs($admin)->post(route('tournaments.draws.store', $tournament), [
+            'method' => DrawMethod::Random->value,
+            'avoid_rematches' => '0',
+            'resolved_order' => $players->pluck('id')->all(),
+        ])->assertRedirect();
+
+        $tournament->update(['status' => TournamentStatus::Finished]);
+
+        $this->actingAs($admin)->get(route('tournaments.draws.show', $tournament))
+            ->assertOk()
+            ->assertDontSee('Eliminar esta tanda');
+        $this->actingAs($admin)->delete(route('tournaments.draws.destroy', $tournament))->assertForbidden();
+        $this->assertDatabaseHas('tournament_draws', ['tournament_id' => $tournament->id]);
     }
 }
